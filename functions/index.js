@@ -17,6 +17,6 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
 });
 
 
-exports.somethingNeedAuth = functions.https.onCall(authenticate(async (data, context) => {
+exports.thisEndpointNeedsAuth = functions.https.onCall(authenticate(async (data, context) => {
     return { result: `Check user auth` };
 }));
