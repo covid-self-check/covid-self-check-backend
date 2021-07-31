@@ -1,10 +1,11 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
 const { registerSchema } = require("./RegisterSchema");
+const { authenticate } = require("./authentication");
+const { admin, initializeApp } = require("./init");
 
 // The Firebase Admin SDK to access Firestore.
-const admin = require("firebase-admin");
-admin.initializeApp();
+initializeApp();
 
 // Take the text parameter passed to this HTTP endpoint and insert it into
 // Firestore under the path /messages/:documentId/original
@@ -35,3 +36,9 @@ exports.registerParticipant = functions.https.onCall(async (data, context) => {
   await admin.firestore().collection("patient").doc(personalID).set(obj);
   return { ok: true, id: `Registration with ID: ${personalID} added` };
 });
+
+exports.thisEndpointNeedsAuth = functions.https.onCall(
+  authenticate(async (data, context) => {
+    return { result: `Content for authorized user` };
+  })
+);
