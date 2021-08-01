@@ -42,6 +42,13 @@ exports.registerParticipant = functions
       );
     }
     const { personalID, ...obj } = value;
+    
+    var needFollowUp = true;
+    var status = "green";
+    obj["status"] = status;
+    obj["needFollowUp"] = needFollowUp;
+
+
     await admin.firestore().collection("patient").doc(personalID).set(obj);
 
     return { ok: true, id: `Registration with ID: ${personalID} added` };
