@@ -1,10 +1,13 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
-const { registerSchema } = require("./RegisterSchema");
+const { registerSchema } = require("./schema/RegisterSchema");
 const { authenticate } = require("./authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
 const { exportPatient } = require("./sheet");
+const { historySchema } = require("./schema/HistorySchema");
+const { convertTZ } = require("./utils/date");
+
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -66,4 +69,37 @@ exports.exportPatientData = functions
     const documentData = snapshot.data();
     console.log("Trigger create ");
     await exportPatient(id, documentData);
+  });
+
+exports.updateSymptom = functions
+  .region(region)
+  .https.onCall(async ( data ) => {
+    const { value, error} = historySchema.validate(data);
+    if(error){
+      // DEBUG
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง"
+      );
+    }
+
+    const { lineId, ...obj } = value;
+    
+    const createdDate = convertTZ(new Date(),'Asia/Bangkok');
+    obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
+
+    const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
+    const { followUp } = snapshot.data();
+    
+    if(!followUp){
+      await snapshot.ref.set({ followUp : [obj] })
+    } else {
+      await snapshot.ref.update({
+        followUp : admin.firestore.FieldValue.arrayUnion(obj)
+      });
+    }
+    
+    return { ok: true };
+
   });
