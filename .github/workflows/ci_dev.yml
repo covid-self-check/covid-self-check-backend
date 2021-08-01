@@ -27,6 +27,8 @@ jobs:
       run: yarn install --frozen-lockfile
       working-directory: ${{env.working-directory}}
     - name: install firebase
-      run: yarn install firebase-tools -g  
+      run: yarn install firebase-tools --frozen-lockfile 
+    - name: change to globals
+      run: yarn global add firebase-tools
     - name: deploy
       run: firebase deploy --token --only function ${{ secrets.FIREBASE_TOKEN }}
