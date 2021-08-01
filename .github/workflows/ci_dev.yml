@@ -1,9 +1,9 @@
-name: Deploy to firebase_production
+name: Deploy to firebase_development
 
 # Run this workflow every time a new commit pushed to your repository
 on:
   push:
-    branches: [ master ]
+    branches: [ development ]
 
 
 jobs:
@@ -29,4 +29,4 @@ jobs:
     - name: install firebase
       run: yarn i firebase-tools -g  
     - name: deploy
-      run: firebase deploy --token ${{ secrets.FIREBASE_TOKEN_PROD }}
+      run: firebase deploy --token ${{ secrets.FIREBASE_TOKEN }}
