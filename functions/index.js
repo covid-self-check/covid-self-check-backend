@@ -60,3 +60,5 @@ exports.exportPatientData = functions
     console.log("Trigger create ");
     await exportPatient(id, documentData);
   });
+
+  // test
