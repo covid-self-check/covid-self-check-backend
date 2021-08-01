@@ -14,6 +14,12 @@ exports.registerSchema = Joi.object({
   personalPhoneNo: Joi.string().required(),
   personalLineID: Joi.string().required(),
   closestUnriskPersonPhoneNo: Joi.string().required(),
+  //additional field added according to the pic
+  station: Joi.string().required(),
+  
+  gotFavipiravia: Joi.boolean().required(),
+  
+  
 
   // optional
   congenitalDisease: Joi.string(),
@@ -21,4 +27,5 @@ exports.registerSchema = Joi.object({
   dose1Date: Joi.date(),
   dose2Status: Joi.string(),
   dose2Date: Joi.date().greater(Joi.ref("dose1Date")),
+  favipiraviaAmount: Joi.number(),
 });
