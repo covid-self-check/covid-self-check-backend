@@ -30,4 +30,4 @@ jobs:
     - name: install firebase
       run: yarn global add firebase-tools --frozen-lockfile 
     - name: deploy
-      run: firebase deploy --token ${{ secrets.FIREBASE_TOKEN }}
+      run: firebase deploy --only function --token ${{ secrets.FIREBASE_TOKEN }}
