@@ -6,6 +6,7 @@ exports.registerSchema = Joi.object({
   personalID: Joi.string().length(13).required(),
   age: Joi.number().integer().required(),
   gender: Joi.string().valid("MALE", "FEMALE", "OTHER").required(),
+  weight: Joi.number().required(),
   height: Joi.number().required(),
   address: Joi.string().required(),
   hasHelper: Joi.boolean().required(),
