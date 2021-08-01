@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "backend-covid-7dfa5"
+    "development": "backend-covid-7dfa5",
+    "production": "comcovid-prod"
   }
 }
