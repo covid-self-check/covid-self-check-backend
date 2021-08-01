@@ -57,6 +57,6 @@ exports.exportPatientData = functions
     const id = snapshot.id;
 
     const documentData = snapshot.data();
-    console.log("Trigger create ", documentData);
+    console.log("Trigger create ");
     await exportBids(id, documentData);
   });
