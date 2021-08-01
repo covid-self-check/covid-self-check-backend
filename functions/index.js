@@ -4,7 +4,7 @@ const { registerSchema } = require("./RegisterSchema");
 const { authenticate } = require("./authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { exportBids } = require("./sheet");
+const { exportPatient } = require("./sheet");
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -58,5 +58,5 @@ exports.exportPatientData = functions
 
     const documentData = snapshot.data();
     console.log("Trigger create ");
-    await exportBids(id, documentData);
+    await exportPatient(id, documentData);
   });
