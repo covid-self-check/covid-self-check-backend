@@ -9,6 +9,12 @@ const { region } = require("./config");
 const { exportPatient, convertTZ } = require("./utils");
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
+const { exportToExcel } = require("./utils/excel");
+const XLSX = require("xlsx");
+const fs = require("fs");
+const express = require("express");
+
+const app = express();
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -164,3 +170,57 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
 
   return success();
 });
+
+// exports.createReport = functions
+//   .region(region)
+//   .https.onRequest(async (req, res) => {
+//     const { lineId } = req.body;
+
+//     // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+//     const snapshot = await admin
+//       .firestore()
+//       .collection("patient")
+//       .doc(lineId)
+//       .get();
+
+//     const wb = exportToExcel([snapshot.data()]);
+//     const filename = "test.xlsx";
+//     const opts = { bookType: "xlsx", type: "binary" };
+//     XLSX.writeFile(wb, filename, opts);
+//     const stream = fs.createReadStream(filename);
+
+//     // prepare http header
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+
+//     stream.pipe(res);
+//   });
+
+app.get("/", async (req, res) => {
+  const { lineId } = req.query;
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineId)
+    .get();
+
+  const wb = exportToExcel([snapshot.data()]);
+  const filename = "test.xlsx";
+  const opts = { bookType: "xlsx", type: "binary" };
+
+  XLSX.writeFile(wb, filename, opts);
+  const stream = fs.createReadStream(filename);
+
+  // prepare http header
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+
+  stream.pipe(res);
+});
+
+exports.createReport = functions.region(region).https.onRequest(app);
