@@ -1,8 +1,8 @@
 const Joi = require("joi");
 
 
-exports.historySchema = Joi.object({
-   lineId : Joi.string().required(),
+module.exports = Joi.object({
+   lineId : Joi.string().required(),    // TODO: get from authentication
    bodyTemperature : Joi.number().required(),
    pulse: Joi.number().required(),
    spO2 : Joi.number().required(),
