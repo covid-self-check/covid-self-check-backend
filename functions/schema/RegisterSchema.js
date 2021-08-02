@@ -16,7 +16,8 @@ module.exports = Joi.object({
   postNo: Joi.string().length(5).required(),
 
   personalPhoneNo: Joi.string().required(),
-  lineId: Joi.string().required(),
+  lineIDToken: Joi.string().required(),
+  lineUserID: Joi.string().required(),
   emergencyPhoneNo: Joi.string().required(),
 
   hasHelper: Joi.boolean().required(),

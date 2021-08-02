@@ -1,7 +1,8 @@
 const Joi = require("joi");
 
 module.exports = Joi.object({
-  lineId: Joi.string().required(), // TODO: get from authentication
+  lineIDToken: Joi.string().required(),
+  lineUserID: Joi.string().required(),
   bodyTemperature: Joi.number().required(),
   pulse: Joi.number().required(),
   spO2: Joi.number().required(),
