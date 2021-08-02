@@ -7,12 +7,12 @@ const { exportPatient, convertTZ } = require("./utils");
 const { historySchema, registerSchema } = require("./schema");
 const { success } = require("./response/success");
 const { eventHandler } = require("./handler/eventHandler");
-const line = require('@line/bot-sdk')
+const line = require('@line/bot-sdk');
 const config = {
   channelAccessToken: "lCmCyFN94c2gZfkxzog0xtf5aE2rizp/FtmZdFmsYO4MpJFZn5F+XbbDadPySauxQzi9TUU+jrK05CKnQn9+Jp+VMVNquUyMEMRwdsCy3xDOeRiZE/QRYCC7tEodeUS6qmNJq+YEPqSVf9Vl41tr3AdB04t89/1O/w1cDnyilFU=",
   channelSecret: "dd2876f67511ea13953727cc0f2d51eb"
-}
-const client = new line.Client(config)
+};
+const client = new line.Client(config);
 
 
 // The Firebase Admin SDK to access Firestore.
@@ -152,13 +152,13 @@ exports.Webhook = functions.region(region).https
   .onRequest(async (req, res) => {
     const event = req.body.events[0];
     const userId = event.source.userId;
-    const profile = client.getProfile(userId)
-    const userObject = { userId: userId, profile: (await profile) }
-    console.log(userObject)
-    await eventHandler(event, userObject, client)
-    res.status(200)
-  })
+    const profile = client.getProfile(userId);
+    const userObject = { userId: userId, profile: (await profile) };
+    console.log(userObject);
+    await eventHandler(event, userObject, client);
+    res.status(200);
+  });
 
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
-  return res.status(200).send(req.method)
-})
+  return res.status(200).send(req.method);
+});
