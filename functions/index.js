@@ -34,7 +34,14 @@ exports.registerParticipant = functions
         error.details
       );
     }
-    const { lineId, ...obj } = value;
+    const { lineUserID, lineIDToken, ...obj } = value;
+    const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "ไม่ได้รับอนุญาต"
+      );
+    }
 
     var needFollowUp = true;
     var status = "เขียว";
@@ -45,25 +52,25 @@ exports.registerParticipant = functions
     obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
     var temp = new Date();
     temp.setDate(new Date().getDate() - 1);
-    lastUpdated = convertTZ(temp, "Asia/Bangkok");
+    const lastUpdated = convertTZ(temp, "Asia/Bangkok");
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
 
     const snapshot = await admin
       .firestore()
       .collection("patient")
-      .doc(lineId)
+      .doc(lineUserID)
       .get();
 
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
-        `มีข้อมูลผู้ใช้ ${lineId} ในระบบแล้ว`
+        `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
       );
     }
 
     await snapshot.ref.create(obj);
 
-    return success(`Registration with ID: ${lineId} added`);
+    return success(`Registration with ID: ${lineUserID} added`);
   });
 
 exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
@@ -79,7 +86,10 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
 
   const { data: profileData, error: authError } = await getProfile(value);
   if (authError) {
-    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      profileData.error_description
+    );
   }
   return profileData;
 });
@@ -93,19 +103,38 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
 exports.getFollowupHistory = functions
   .region(region)
   .https.onCall(async (data, context) => {
-    const { lineId } = data;
+    const { value, error } = getProfileSchema.validate(data);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+    const { lineUserID, lineIDToken } = value;
+    const { data: errorData, error: authError } = await getProfile({
+      lineUserID,
+      lineIDToken,
+    });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        errorData.error_description
+      );
+    }
 
     // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
     const snapshot = await admin
       .firestore()
       .collection("patient")
-      .doc(lineId)
+      .doc(lineUserID)
       .get();
 
     if (!snapshot.exists) {
       throw new functions.https.HttpsError(
         "not-found",
-        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
+        `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
       );
     }
     return success(snapshot.data().followUp);
@@ -134,7 +163,17 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { lineId, ...obj } = value;
+  const { lineUserID, lineIDToken, ...obj } = value;
+  const { error: authError, data: errorData } = await getProfile({
+    lineUserID,
+    lineIDToken,
+  });
+  if (authError) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      errorData.error_description
+    );
+  }
 
   const createdDate = convertTZ(new Date(), "Asia/Bangkok");
   obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
@@ -142,10 +181,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const snapshot = await admin
     .firestore()
     .collection("patient")
-    .doc(lineId)
+    .doc(lineUserID)
     .get();
   if (!snapshot.exists) {
-    throw new functions.https.HttpsError("not-found", `ไม่พบผู้ใช้ ${lineId}`);
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
   }
 
   const { followUp } = snapshot.data();
