@@ -156,9 +156,9 @@ exports.Webhook = functions.region(region).https
     const userObject = { userId: userId, profile: (await profile) };
     console.log(userObject);
     await eventHandler(event, userObject, client);
-    res.status(200);
+    res.sendStatus(200);
   });
 
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
-  return res.status(200).send(req.method);
+  return res.sendStatus(200);
 });
