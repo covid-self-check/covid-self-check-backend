@@ -71,31 +71,22 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   })
 );
 
-exports.addFollowup = functions.https.onCall(async (data, context) => {
-    // Grab the text parameter.
-   const original = data;
-    // Push the new message into Firestore using the Firebase Admin SDK.
-    const writeResult = await admin.firestore().collection('followup').doc(data.personalId).set({ 
-        bodyTemperature: original.bodyTemperature,
-        personalId: original.personalId ,
-        pulse: original.pulse,
-        spO2: original.spO2
-    });
-    // Send back a message that we've successfully written the message
-   
-   return { result: `Message with ID: ${data.personalId} added.` };
-
-});
-
 exports.getFollowup = functions.https.onCall(async(data,context)=>{
-    const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-    var t;
-    snapshot.docs.forEach(doc =>{
-        console.log(doc.data())
-        t = doc.data()
-        
-    })
-    return t;    
+    const { lineId } = data;
+
+    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+    const snapshot = await admin.firestore()
+      .collection("patient")
+      .doc(lineId)
+      .get();
+
+    if(!snapshot.exists){
+      throw new functions.https.HttpsError(
+        "not-found",
+        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
+      );
+    }
+    return success(snapshot.data().followUp);    
 })
 
 exports.exportPatientData = functions
