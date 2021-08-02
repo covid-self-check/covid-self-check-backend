@@ -71,7 +71,7 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   })
 );
 
-exports.getFollowup = functions.https.onCall(async(data,context)=>{
+exports.getFollowupHistory = functions.https.onCall(async(data,context)=>{
     const { lineId } = data;
 
     // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
