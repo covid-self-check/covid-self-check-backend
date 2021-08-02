@@ -1,12 +1,10 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
-const { registerSchema } = require("./schema/RegisterSchema");
-const { authenticate } = require("./authentication");
+const { authenticate } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { exportPatient } = require("./sheet");
-const { historySchema } = require("./schema/HistorySchema");
-const { convertTZ } = require("./utils/date");
+const { exportPatient, convertTZ } = require("./utils");
+const { historySchema , registerSchema } = require("./schema");
 const { success } = require("./response/success");
 
 
@@ -35,7 +33,7 @@ exports.registerParticipant = functions
     const { value, error } = registerSchema.validate(data);
 
     if (error) {
-      // DEBUG
+      console.log(error.details);
       throw new functions.https.HttpsError(
         "failed-precondition",
         "ข้อมูลไม่ถูกต้อง",
@@ -51,9 +49,17 @@ exports.registerParticipant = functions
     obj["followUp"] = [];
 
 
-    await admin.firestore().collection("patient").doc(lineId).set(obj);
+    const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
 
-    
+    if(snapshot.exists){
+      throw new functions.https.HttpsError(
+        "already-exists",
+        `มีข้อมูลผู้ใช้ ${lineId} ในระบบแล้ว`
+      )
+    }
+
+    await snapshot.ref.create(obj)
+
     return success(`Registration with ID: ${lineId} added`);
   });
 
@@ -83,7 +89,8 @@ exports.updateSymptom = functions
       console.log(error.details);
       throw new functions.https.HttpsError(
         "failed-precondition",
-        "ข้อมูลไม่ถูกต้อง"
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
       );
     }
 

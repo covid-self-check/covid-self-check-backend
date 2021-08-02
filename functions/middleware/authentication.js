@@ -1,4 +1,4 @@
-const { admin } = require('./init');
+const { admin } = require('../init');
 
 /**
  * Authenticate middleware

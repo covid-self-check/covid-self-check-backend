@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-exports.registerSchema = Joi.object({
+module.exports = Joi.object({
   firstName: Joi.string().min(1).required(),
   lastName: Joi.string().min(1).required(),
   personalID: Joi.string().length(13).required(),
