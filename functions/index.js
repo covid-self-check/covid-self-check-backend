@@ -100,6 +100,84 @@ exports.exportPatientData = functions
     await exportPatient(id, documentData);
   });
 
+
+function calculateStatus(snapshot,currentSymptom){
+  console.log(isGreen(snapshot,currentSymptom));
+  
+  
+ 
+  
+  
+}
+//status 0
+function isGreen(snapshot,currentSymptom){
+  const data = snapshot.data();
+  const age = data.age;
+  const diseases = data.congenitalDisease;
+  const diseaseList = diseases.split(/[ ,]+/);
+  var ok = true;
+  const shouldBeFalse = ['cough','runnynose','redEye','rash','soreThroat','canNotSmell','canNotTaste','diarrhoeaMoreThan3','tired','stuffyChest','nausea','chestHurt','slowResponse','headAche'];
+  const shouldBeTrue = ['canBreathRegularly']
+  const shouldNotHaveCongenitalDisease = ['ปอด','หอบ','หลอดลม','ถุงลมโป่งพอง','ไต','หัวใจ','หลอดเลือด','อัมพาต','อัมพฤกษ์','เส้นเลือดในสมอง','ความดัน','ไขมัน','เบาหวาน','ภูมิคุ้มกัน','ตับ','LSD','มะเร็ง'];
+  
+  if(age>5&&age<60&&currentSymptom.bodyTemperature<37){
+   shouldBeFalse.every(symptom=>{
+     if (currentSymptom[symptom]){
+      ok = false;
+      return false;
+     }
+   })
+   shouldBeTrue.every(symptom=>{
+    if (!currentSymptom[symptom]){
+      ok = false;
+      return false;
+     }
+   })
+   diseaseList.forEach(disease=>{
+    shouldNotHaveCongenitalDisease.forEach(checkList=>{
+      if(disease.includes(checkList)){
+        ok = false;
+      }
+    })
+   })
+  }else{
+    return false;
+  }
+  return ok;
+
+
+}
+function isGreenWithSymptom(snapshot,currentSymptom){
+  const data = snapshot.data();
+  const age = data.age;
+  const diseases = data.congenitalDisease;
+  const diseaseList = diseases.split(/[ ,]+/);
+  const ok = true;
+  const shouldBeFalse = ['cough','runnyNose','redEye','rash','soreThroat','canNotSmell','canNotTaste','diarrhoeaMoreThan3','tired','stuffyChest','nausea','chestHurt','slowResponse','headAche']
+  const shouldBeTrue = ['canBreathRegularly']
+  if(age>5&&age<60){
+   shouldBeFalse.every(symptom=>{
+     if (currentSymptom[symptom]){
+      ok = false;
+      return false;
+     }
+   })
+   shouldBeTrue.every(symptom=>{
+    if (!currentSymptom[symptom]){
+      ok = false;
+      return false;
+     }
+   })
+  }
+  return ok;
+}
+function isYellow(snapshot,currentSymptom){
+  
+}
+function isRed(snapshot,currentSymptom){
+  
+}
+
 exports.updateSymptom = functions
   .region(region)
   .https.onCall(async ( data ) => {
@@ -126,6 +204,8 @@ exports.updateSymptom = functions
         `ไม่พบผู้ใช้ ${lineId}`
       );
     }
+    
+    snapshot.data().status = calculateStatus(snapshot,obj);
 
     const { followUp } = snapshot.data();
     
