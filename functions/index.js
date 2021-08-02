@@ -9,6 +9,12 @@ const { region } = require("./config");
 const { exportPatient, convertTZ } = require("./utils");
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
+const { exportToExcel } = require("./utils/excel");
+const XLSX = require("xlsx");
+const fs = require("fs");
+const express = require("express");
+
+const app = express();
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -42,6 +48,10 @@ exports.registerParticipant = functions
     obj["followUp"] = [];
     const createdDate = convertTZ(new Date(), "Asia/Bangkok");
     obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
+    var temp = new Date();
+    temp.setDate(new Date().getDate() - 1);
+    lastUpdated = convertTZ(temp, "Asia/Bangkok");
+    obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
 
     const snapshot = await admin
       .firestore()
@@ -198,3 +208,125 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
 
   return success();
 });
+
+// exports.createReport = functions
+//   .region(region)
+//   .https.onRequest(async (req, res) => {
+//     const { lineId } = req.body;
+
+//     // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+//     const snapshot = await admin
+//       .firestore()
+//       .collection("patient")
+//       .doc(lineId)
+//       .get();
+
+//     const wb = exportToExcel([snapshot.data()]);
+//     const filename = "test.xlsx";
+//     const opts = { bookType: "xlsx", type: "binary" };
+//     XLSX.writeFile(wb, filename, opts);
+//     const stream = fs.createReadStream(filename);
+
+//     // prepare http header
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+
+//     stream.pipe(res);
+//   });
+
+app.get("/", async (req, res) => {
+  const { lineId } = req.query;
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineId)
+    .get();
+
+    const wb = exportToExcel([snapshot.data()]);
+    const filename = "test.xlsx";
+    const opts = { bookType: "xlsx", type: "binary" };
+  
+    XLSX.writeFile(wb, filename, opts);
+    const stream = fs.createReadStream(filename);
+  
+    // prepare http header
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+  
+    stream.pipe(res);
+  });
+exports.createReport = functions.region(region).https.onRequest(app);
+
+exports.fetchYellowPatients = functions.region(region).https.onCall(async (data) => {
+  const snapshot = await admin
+      .firestore()
+      .collection("patient").where("status","==","เหลือง")
+      .get();
+
+  var patientList = [];
+ 
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    patientList.push(data);
+    
+  })
+  return success(patientList);
+}
+)
+exports.fetchGreenPatients = functions.region(region).https.onCall(async (data) => {
+  const snapshot = await admin
+      .firestore()
+      .collection("patient").where("status","==","เขียว")
+      .get();
+
+  var patientList = [];
+ 
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    patientList.push(data);
+    
+  })
+  return success(patientList);
+}
+)
+exports.fetchRedPatients = functions.region(region).https.onCall(async (data) => {
+  const snapshot = await admin
+      .firestore()
+      .collection("patient").where("status","==","แดง")
+      .get();
+
+  var patientList = [];
+ 
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    patientList.push(data);
+    
+  })
+  return success(patientList);
+}
+)
+
+
+
+
+exports.fetchNotUpdatedPatients = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const snapshot = await admin.firestore().collection("patient").get();
+
+    var notUpdatedList = [];
+    const currentDate = new Date().getDate();
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
+      if (lastUpdatedDate - currentDate != 0) {
+        notUpdatedList.push(data);
+      }
+    });
+    return success(notUpdatedList);
+  });
