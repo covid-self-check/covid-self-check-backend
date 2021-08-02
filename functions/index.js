@@ -61,28 +61,26 @@ exports.registerParticipant = functions
     return success(`Registration with ID: ${lineId} added`);
   });
 
-exports.getLineProfile = functions
-  .region(region)
-  .https.onCall(async (data, _) => {
-    const { value, error } = getProfileSchema.validate(data);
-    if (error) {
-      console.log(error.details);
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
-    }
+exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
+  const { value, error } = getProfileSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
 
-    const { data: profileData, error: authError } = await getProfile(value);
-    if (authError) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "ไม่ได้รับอนุญาต"
-      );
-    }
-    return profileData;
-  });
+  const { data: profileData, error: authError } = await getProfile(value);
+  if (authError) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      profileData.error_description
+    );
+  }
+  return profileData;
+});
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
@@ -103,11 +101,14 @@ exports.getFollowupHistory = functions
       );
     }
     const { lineUserID, lineIDToken } = value;
-    const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+    const { data: errorData, error: authError } = await getProfile({
+      lineUserID,
+      lineIDToken,
+    });
     if (authError) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "ไม่ได้รับอนุญาต"
+        errorData.error_description
       );
     }
 
@@ -151,9 +152,15 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   }
 
   const { lineUserID, lineIDToken, ...obj } = value;
-  const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+  const { error: authError, data: errorData } = await getProfile({
+    lineUserID,
+    lineIDToken,
+  });
   if (authError) {
-    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      errorData.error_description
+    );
   }
 
   const createdDate = convertTZ(new Date(), "Asia/Bangkok");
