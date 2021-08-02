@@ -43,7 +43,7 @@ exports.registerParticipant = functions
     const { lineId , ...obj } = value;
     
     var needFollowUp = true;
-    var status = "green";
+    var status = "เขียว";
     obj["status"] = status;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
