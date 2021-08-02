@@ -1,5 +1,5 @@
 const { google } = require("googleapis");
-const { serviceAccount, spreadsheetId } = require("./config");
+const { serviceAccount, spreadsheetId } = require("../config");
 const sheets = google.sheets("v4");
 
 const jwtClient = new google.auth.JWT({
