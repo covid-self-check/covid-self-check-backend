@@ -170,6 +170,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
 });
 
 
+
 exports.fetchNotUpdatedPatients = functions.region(region).https.onCall(async (data) => {
   const snapshot = await admin
       .firestore()
