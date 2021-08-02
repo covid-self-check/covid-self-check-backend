@@ -1,5 +1,6 @@
 const { admin } = require('./init');
 const axios = require('axios')
+const functions = require("firebase-functions");
 
 /**
  * Authenticate middleware for volunteer system
@@ -27,13 +28,15 @@ exports.getProfile = async (data) => {
     params.append("id_token", lineIDToken)
     params.append("user_id", userID)
 
-    const response = await axios.post('https://api.line.me/oauth2/v2.1/verify', params, {
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-    })
-    console.log(response, 'res')
-
-    const userProfile = { ...response }
-    return userProfile
+    try {
+        const response = await axios.post('https://api.line.me/oauth2/v2.1/verify', params, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        const userProfile = response.data
+        return { data: userProfile, error: false }
+    } catch (e) {
+        return { data: e.response.data, error: true }
+    }
 }
