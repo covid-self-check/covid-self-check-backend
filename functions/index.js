@@ -7,6 +7,7 @@ const { region } = require("./config");
 const { exportPatient } = require("./sheet");
 const { historySchema } = require("./schema/HistorySchema");
 const { convertTZ } = require("./utils/date");
+const { success } = require("./response/success");
 
 
 // The Firebase Admin SDK to access Firestore.
@@ -35,23 +36,25 @@ exports.registerParticipant = functions
 
     if (error) {
       // DEBUG
-      console.log(error.details);
       throw new functions.https.HttpsError(
         "failed-precondition",
-        "ข้อมูลไม่ถูกต้อง"
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
       );
     }
-    const { personalID, ...obj } = value;
+    const { lineId , ...obj } = value;
     
     var needFollowUp = true;
     var status = "green";
     obj["status"] = status;
     obj["needFollowUp"] = needFollowUp;
+    obj["followUp"] = [];
 
 
-    await admin.firestore().collection("patient").doc(personalID).set(obj);
+    await admin.firestore().collection("patient").doc(lineId).set(obj);
 
-    return { ok: true, id: `Registration with ID: ${personalID} added` };
+    
+    return success(`Registration with ID: ${lineId} added`);
   });
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
@@ -90,6 +93,13 @@ exports.updateSymptom = functions
     obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
 
     const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
+    if(!snapshot.exists){
+      throw new functions.https.HttpsError(
+        "not-found",
+        `ไม่พบผู้ใช้ ${lineId}`
+      );
+    }
+
     const { followUp } = snapshot.data();
     
     if(!followUp){
@@ -100,6 +110,6 @@ exports.updateSymptom = functions
       });
     }
     
-    return { ok: true };
+    return success();
 
   });
