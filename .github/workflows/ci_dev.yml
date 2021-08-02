@@ -1,0 +1,31 @@
+name: Deploy to firebase_development
+
+# Run this workflow every time a new commit pushed to your repository
+on:
+  push:
+    branches: [development]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./functions
+
+    strategy:
+      matrix:
+        node-version: [15.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: install libraries
+        run: yarn install --frozen-lockfile
+        working-directory: ${{env.working-directory}}
+
+      - name: install firebase
+        run: yarn global add firebase-tools
+      - name: deploy
+        run: firebase deploy --only functions --token ${{ secrets.FIREBASE_TOKEN }} -P development
