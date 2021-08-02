@@ -13,7 +13,7 @@ module.exports = Joi.object({
   province: Joi.string().required(),
   prefecture:Joi.string().required(),//อำเภอ
   district:Joi.string().required(),//ตำบล
-  postNo:Joi.number().length(5).required(),
+  postNo:Joi.string().length(5).required(),
 
   personalPhoneNo: Joi.string().required(),
   lineId: Joi.string().required(),
