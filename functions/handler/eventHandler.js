@@ -1,8 +1,8 @@
-
-const eventHandler = async (event, userObject, client) =>{
+const { handleFollow } = require('./subhandler/followHandler')
+const eventHandler = async (event, userObject, client) => {
     switch (event.type) {
-        case 'follow':
+        case 'message':
             await handleFollow(event, userObject, client)
     }
 }
-module.exports = {eventHandler};
+module.exports = { eventHandler };
