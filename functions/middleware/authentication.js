@@ -30,12 +30,12 @@ exports.authenticateVolunteer = (func) => {
  * @returns
  */
 exports.getProfile = async (data) => {
-  const { lineIDToken, userID } = data;
+  const { lineIDToken, lineUserID } = data;
 
   const params = new URLSearchParams();
   params.append("client_id", functions.config().liff.channelid);
   params.append("id_token", lineIDToken);
-  params.append("user_id", userID);
+  params.append("user_id", lineUserID);
 
   try {
     const response = await axios.post(
