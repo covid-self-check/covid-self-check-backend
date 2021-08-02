@@ -24,6 +24,11 @@ exports.authenticateVolunteer = (func) => {
   };
 };
 
+/**
+ * Not a middlware, will consider refactor
+ * @param {*} data
+ * @returns
+ */
 exports.getProfile = async (data) => {
   const { lineIDToken, userID } = data;
 
