@@ -72,14 +72,22 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
     );
   }
 
-  const { data: profileData, error: authError } = await getProfile(value);
+  const { data: lineProfile, error: authError } = await getProfile(value);
   if (authError) {
     throw new functions.https.HttpsError(
       "unauthenticated",
-      profileData.error_description
+      lineProfile.error_description
     );
   }
-  return profileData;
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc("testId1" || value.lineUserID)
+    .get();
+
+  const { followUp, ...patientData } = snapshot.data();
+  const { name, picture } = lineProfile;
+  return { line: { name, picture }, patient: patientData };
 });
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
