@@ -1,7 +1,7 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
 const { registerSchema } = require("./RegisterSchema");
-const { authenticateVolunteer } = require("./authentication");
+const { authenticateVolunteer, getProfile } = require("./authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
 const { exportPatient } = require("./sheet");
@@ -47,7 +47,14 @@ exports.registerParticipant = functions
 exports.getProfile = functions
   .region(region)
   .https.onCall(async (data, context) => {
-    return getProfile(data)
+    const { data: profile, error } = getProfile(data)
+    if (error) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "ข้อมูลไม่ถูกต้อง"
+      );
+    }
+    return profile
   });
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
