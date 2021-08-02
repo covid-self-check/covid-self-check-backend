@@ -71,6 +71,24 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   })
 );
 
+exports.getFollowupHistory = functions.https.onCall(async(data,context)=>{
+    const { lineId } = data;
+
+    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+    const snapshot = await admin.firestore()
+      .collection("patient")
+      .doc(lineId)
+      .get();
+
+    if(!snapshot.exists){
+      throw new functions.https.HttpsError(
+        "not-found",
+        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
+      );
+    }
+    return success(snapshot.data().followUp);    
+})
+
 exports.exportPatientData = functions
   .region(region)
   .firestore.document("patient/{id}")
