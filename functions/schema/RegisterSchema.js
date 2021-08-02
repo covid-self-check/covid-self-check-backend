@@ -4,18 +4,26 @@ module.exports = Joi.object({
   firstName: Joi.string().min(1).required(),
   lastName: Joi.string().min(1).required(),
   personalID: Joi.string().length(13).required(),
-  lineId: Joi.string().required(),
   age: Joi.number().integer().required(),
-  gender: Joi.string().valid("ชาย", "หญิง", "ไม่ระบุ").required(),
   weight: Joi.number().required(),
   height: Joi.number().required(),
+  gender: Joi.string().valid("ชาย", "หญิง", "ไม่ระบุ").required(),
+
   address: Joi.string().required(),
+  province: Joi.string().required(),
+  prefecture:Joi.string().required(),//อำเภอ
+  district:Joi.string().required(),//ตำบล
+  postNo:Joi.number().length(5).required(),
+
+  personalPhoneNo: Joi.string().required(),
+  lineId: Joi.string().required(),
+  emergencyPhoneNo: Joi.string().required(),
+
   hasHelper: Joi.boolean().required(),
   digitalLiteracy: Joi.boolean().required(),
-  personalPhoneNo: Joi.string().required(),
-  emergencyPhoneNo: Joi.string().required(),
-  //additional field added according to the pic
-  station: Joi.string().required(),
+  
+  
+  station: Joi.string().required(),//not in front-end yet na
   
   gotFavipiravia: Joi.boolean().required(),
   
