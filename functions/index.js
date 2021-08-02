@@ -52,13 +52,13 @@ exports.registerParticipant = functions
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
-        `มีข้อมูลผู้ใช้ ${lineId} ในระบบแล้ว`
+        `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
       );
     }
 
     await snapshot.ref.create(obj);
 
-    return success(`Registration with ID: ${lineId} added`);
+    return success(`Registration with ID: ${lineUserID} added`);
   });
 
 exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
@@ -116,13 +116,13 @@ exports.getFollowupHistory = functions
     const snapshot = await admin
       .firestore()
       .collection("patient")
-      .doc(lineId)
+      .doc(lineUserID)
       .get();
 
     if (!snapshot.exists) {
       throw new functions.https.HttpsError(
         "not-found",
-        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
+        `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
       );
     }
     return success(snapshot.data().followUp);
@@ -169,10 +169,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const snapshot = await admin
     .firestore()
     .collection("patient")
-    .doc(lineId)
+    .doc(lineUserID)
     .get();
   if (!snapshot.exists) {
-    throw new functions.https.HttpsError("not-found", `ไม่พบผู้ใช้ ${lineId}`);
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
   }
 
   const { followUp } = snapshot.data();
