@@ -57,6 +57,10 @@ exports.registerParticipant = functions
     obj["followUp"] = [];
     const createdDate = convertTZ(new Date(), "Asia/Bangkok");
     obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
+    var temp = new Date();
+    temp.setDate(new Date().getDate() - 1);
+    lastUpdated = convertTZ(temp, "Asia/Bangkok");
+    obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
 
     const snapshot = await admin
       .firestore()
@@ -224,3 +228,20 @@ app.get("/", async (req, res) => {
 });
 
 exports.createReport = functions.region(region).https.onRequest(app);
+
+exports.fetchNotUpdatedPatients = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const snapshot = await admin.firestore().collection("patient").get();
+
+    var notUpdatedList = [];
+    const currentDate = new Date().getDate();
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
+      if (lastUpdatedDate - currentDate != 0) {
+        notUpdatedList.push(data);
+      }
+    });
+    return success(notUpdatedList);
+  });
