@@ -82,7 +82,7 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   const snapshot = await admin
     .firestore()
     .collection("patient")
-    .doc("testId1" || value.lineUserID)
+    .doc(value.lineUserID)
     .get();
 
   const { followUp, ...patientData } = snapshot.data();
