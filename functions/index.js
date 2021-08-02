@@ -47,6 +47,8 @@ exports.registerParticipant = functions
     obj["status"] = status;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
+    const createdDate = convertTZ(new Date(),'Asia/Bangkok');
+    obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
 
 
     const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
