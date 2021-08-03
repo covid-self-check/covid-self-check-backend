@@ -67,6 +67,8 @@ exports.registerParticipant = functions
     temp.setDate(new Date().getDate() - 1);
     const lastUpdated = convertTZ(temp, "Asia/Bangkok");
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
+    obj["isRequestToCallExported"] = false;
+    obj["isRequestToCall"] = false;
 
     const snapshot = await admin
       .firestore()
@@ -394,7 +396,7 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   const { isRequestToCallExported, isRequestToCall } = snapshot.data();
 
   if (!isRequestToCall || isRequestToCallExported) {
-    await snapshot.ref.set({
+    await snapshot.ref.update({
       isRequestToCall: true,
       isRequestToCallExported: false,
     });
@@ -403,3 +405,34 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
 
   return success(`userID: ${lineUserID} has already requested to call`);
 });
+
+exports.exportRequestToCall = functions.region(region).https.onRequest(
+  authenticateVolunteerRequest(async (req, res) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("isRequestToCall", "==", true)
+      .where("isRequestToCallExported", "==", false)
+      .get();
+
+    const batch = admin.firestore().batch();
+    snapshot.docs.forEach((doc) => {
+      console.log(doc.id, "id");
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      batch.update(docRef, {
+        isRequestToCallExported: true,
+      });
+    });
+    // console.log(batch, 'batch')
+    await batch.commit();
+
+    var patientList = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log(data, "data");
+      patientList.push(data);
+    });
+    return res.status(200).json(success(patientList));
+  })
+);
