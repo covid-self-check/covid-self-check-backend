@@ -1,4 +1,3 @@
-const { object } = require("joi");
 const Joi = require("joi");
 
 module.exports = Joi.object({
@@ -24,7 +23,8 @@ module.exports = Joi.object({
   //hasHelper: Joi.boolean().required(),
   //digitalLiteracy: Joi.boolean().required(),
 
-  station: Joi.string().required(), //not in front-end yet na
+  //not in front-end yet na
+  // station: Joi.string().required(),
 
   gotFavipiravia: Joi.number().allow(0, 1).required(),
 
