@@ -3,6 +3,7 @@ const functions = require("firebase-functions");
 const {
   authenticateVolunteer,
   getProfile,
+  authenticateVolunteerRequest,
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
@@ -212,34 +213,37 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-app.get("/", async (req, res) => {
-  const { lineId } = req.query;
-  try {
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineId)
-      .get();
+app.get(
+  "/",
+  authenticateVolunteerRequest(async (req, res) => {
+    const { lineId } = req.query;
+    try {
+      const snapshot = await admin
+        .firestore()
+        .collection("patient")
+        .doc(lineId)
+        .get();
 
-    const wb = exportToExcel([snapshot.data()]);
-    const filename = "test.xlsx";
-    const opts = { bookType: "xlsx", type: "binary" };
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
-    const stream = fs.createReadStream(pathToSave);
+      const wb = exportToExcel([snapshot.data()]);
+      const filename = "test.xlsx";
+      const opts = { bookType: "xlsx", type: "binary" };
+      const pathToSave = path.join("/tmp", filename);
+      XLSX.writeFile(wb, pathToSave, opts);
+      const stream = fs.createReadStream(pathToSave);
 
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      // prepare http header
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
 
-    stream.pipe(res);
-  } catch (err) {
-    return { ok: false, message: err.message };
-  }
-});
+      stream.pipe(res);
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  })
+);
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
