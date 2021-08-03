@@ -27,8 +27,19 @@ module.exports = Joi.object({
 
   gotFavipiravia: Joi.boolean().required(),
 
+  // โรคประจำตัว
+  COPD: Joi.boolean().required(),
+  chronicLungDisease: Joi.boolean().required(),
+  CKDStage3or4: Joi.boolean().required(),
+  chronicHeartDisease: Joi.boolean().required(),
+  CVA: Joi.boolean().required(),
+  T2DM: Joi.boolean().required(),
+  cirrhosis: Joi.boolean().required(),
+  immunocompronise: Joi.boolean().required(),
+
+
   // optional
-  congenitalDisease: Joi.string(),
+  otherDisease: Joi.string(),
   dose1Name: Joi.string(),
   dose1Date: Joi.date().allow("", null),
   dose2Name: Joi.string(),
