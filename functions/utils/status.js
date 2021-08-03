@@ -1,3 +1,5 @@
+const { calculateAge } = require("./date");
+
 exports.makeStatusPayload = (data) => {
   const { followUp } = data;
   const lastFollowUp = followUp[followUp.length - 1];
@@ -11,14 +13,14 @@ exports.makeStatusPayload = (data) => {
   const bmiOver30 = bmi > 30 || data.weight > 90;
   const cirrhosis = data.rf_cirrhosis;
   const immunocompromise = data.rf_immunocompromise;
-
-  const payload = {
+  const age = calculateAge(data.birthDate.toDate());
+  return {
     //passport:"", length is 7 or 8 or 9
     cid: data.personalId,
     firstname: data.firstName,
     lastname: data.lastName,
     contact_number: data.personalPhoneNo,
-    age: data.age,
+    age: age,
     gender: data.gender,
     height: data.height,
     weight: data.weight,
@@ -72,10 +74,7 @@ exports.makeStatusPayload = (data) => {
     fac_chest_discomfort: lastFollowUp.fac_chest_discomfort,
     fac_gi_symptomss: lastFollowUp.fac_gi_symptomss,
   };
-
-  return payload;
 };
-const { admin } = require("../init");
 const { convertTZ } = require("./date");
 
 const status = ["noSuggestion", "G1", "G2", "Y1", "Y2", "R1", "R2"];
@@ -90,7 +89,6 @@ exports.sheetName = [
 ];
 
 exports.patientReportHeader = [
-  "สถานี",
   "รหัสบัตรประจำตัวประชาชน",
   "ชื่อ",
   "นามสกุล",
@@ -112,13 +110,12 @@ exports.patientReportHeader = [
  */
 exports.convertToArray = (data) => {
   return [
-    data.station,
     data.personalID,
     data.firstName,
     data.lastName,
     data.personalPhoneNo,
     data.emergencyPhoneNo,
-    data.age,
+    calculateAge(data.birthDate.toDate()),
     data.weight,
     data.height,
     data.gender,
@@ -146,13 +143,12 @@ exports.convertToAoA = (doc) => {
     }
 
     result.push([
-      data.station,
       data.personalID,
       data.firstName,
       data.lastName,
       data.personalPhoneNo,
       data.emergencyPhoneNo,
-      data.age,
+      calculateAge(data.birthDate.toDate()),
       data.weight,
       data.height,
       data.gender,
@@ -213,5 +209,3 @@ exports.isY1 = (snapshot) => {
 
   return isOld || hasCongenitalDisease || bmiExceed || isObese || isIll;
 };
-
-exports.isG1 = (snapshot) => {};
