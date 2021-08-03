@@ -19,7 +19,7 @@ module.exports = Joi.object({
   sp_o2: Joi.number().required(),
   sp_o2_ra: Joi.number().required(),
   //sp_o2_after_eih: Joi.number().required(),
-  //eig_result: Joi.string().required(),
+  //eih_result: Joi.string().required(),
   sym1_severe_cough: Joi.number().allow(0, 1).required(),
   sym1_chest_tightness: Joi.number().allow(0, 1).required(),
   sym1_poor_appetite: Joi.number().allow(0, 1).required(),
