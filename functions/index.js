@@ -15,8 +15,10 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
