@@ -361,3 +361,45 @@ exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
   return res.sendStatus(200);
 });
+
+exports.requestToCall = functions.region(region).https.onCall(async (data) => {
+  const { value, error } = getProfileSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { lineUserID, lineIDToken } = value;
+  const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+  if (authError) {
+    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineUserID)
+    .get();
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
+  }
+
+  const { isRequestToCallExported, isRequestToCall } = snapshot.data();
+
+  if (!isRequestToCall || isRequestToCallExported) {
+    await snapshot.ref.set({
+      isRequestToCall: true,
+      isRequestToCallExported: false,
+    });
+    return success();
+  }
+
+  return success(`userID: ${lineUserID} has already requested to call`);
+});
