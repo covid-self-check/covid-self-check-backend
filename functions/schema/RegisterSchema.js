@@ -49,15 +49,7 @@ module.exports = Joi.object({
   fac_asthma: Joi.number().allow(0, 1).required(),
   fac_pregnancy: Joi.number().allow(0, 1).required(),
 
-  // โรคประจำตัว
-  COPD: Joi.boolean().required(),
-  chronicLungDisease: Joi.boolean().required(),
-  CKDStage3or4: Joi.boolean().required(),
-  chronicHeartDisease: Joi.boolean().required(),
-  CVA: Joi.boolean().required(),
-  T2DM: Joi.boolean().required(),
-  cirrhosis: Joi.boolean().required(),
-  immunocompromise: Joi.boolean().required(),
+ 
 
   // optional
   personalID: Joi.string().length(13).allow(null),
