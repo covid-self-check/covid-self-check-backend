@@ -171,17 +171,6 @@ exports.getFollowupHistory = functions
     return success(snapshot.data().followUp);
   });
 
-exports.exportPatientData = functions
-  .region(region)
-  .firestore.document("patient/{id}")
-  .onCreate(async (snapshot, _) => {
-    const id = snapshot.id;
-
-    const documentData = snapshot.data();
-    console.log("Trigger create ");
-    await exportPatient(id, documentData);
-  });
-
 function calculateStatus(snapshot, currentSymptom) {
   console.log(isGreen(snapshot, currentSymptom));
 }
