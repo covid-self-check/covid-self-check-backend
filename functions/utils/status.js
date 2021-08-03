@@ -65,4 +65,6 @@ exports.makeStatusPayload = (data) => {
     fac_chest_discomfort: lastFollowUp.fac_chest_discomfort,
     fac_gi_symptomss: lastFollowUp.fac_gi_symptomss,
   };
+
+  return payload;
 };
