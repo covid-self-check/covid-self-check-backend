@@ -72,7 +72,6 @@ exports.registerParticipant = functions
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
     obj["isRequestToCallExported"] = false;
     obj["isRequestToCall"] = false;
-    obj["hasCalled"] = 0;
 
     const snapshot = await admin
       .firestore()
@@ -538,18 +537,17 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { isRequestToCallExported, isRequestToCall } = snapshot.data();
+  const { isRequestToCall } = snapshot.data();
 
-  if (!isRequestToCall || isRequestToCallExported) {
-    await snapshot.ref.update({
-      isRequestToCall: true,
-      isRequestToCallExported: false,
-      hasCalled: 0,
-    });
-    return success();
+  if (isRequestToCall) {
+    return success(`userID: ${lineUserID} has already requested to call`);
   }
 
-  return success(`userID: ${lineUserID} has already requested to call`);
+  await snapshot.ref.update({
+    isRequestToCall: true,
+    isRequestToCallExported: false,
+  });
+  return success();
 });
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
@@ -587,7 +585,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      const dataResult = { firstName: data.firstName, lastName: data.firstName, hasCalled: data.hasCalled, id: doc.id, personalPhoneNo: data.personalPhoneNo }
+      const dataResult = { firstName: data.firstName, lastName: data.firstName, hasCalled: 0, id: doc.id, personalPhoneNo: data.personalPhoneNo }
       patientList.push(dataResult);
     });
     generateZipFile(res, size, patientList)
@@ -607,7 +605,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
         error.details
       );
     }
-    const { ids } = importPatientIdSchema
+    const { ids } = value
     const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -617,16 +615,21 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
 
     const batch = admin.firestore().batch();
     snapshot.docs.forEach((doc) => {
-      if (ids.includes(doc.id)) {
-        const docRef = admin.firestore().collection("patient").doc(doc.id);
+      const hasCalled = ids.includes(doc.id)
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      if (hasCalled) {
         batch.update(docRef, {
-          isRequestToCallExported: true,
-          hasCalled: 0,
+          isRequestToCall: false,
+          isRequestToCallExported: false,
+        });
+      } else {
+        batch.update(docRef, {
+          isRequestToCallExported: false,
         });
       }
     });
 
     await batch.commit();
-    return success(patientList)
+    return success()
   })
 );
