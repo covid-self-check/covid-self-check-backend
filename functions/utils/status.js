@@ -90,7 +90,6 @@ exports.sheetName = [
 ];
 
 exports.patientReportHeader = [
-  "สถานี",
   "รหัสบัตรประจำตัวประชาชน",
   "ชื่อ",
   "นามสกุล",
@@ -112,7 +111,6 @@ exports.patientReportHeader = [
  */
 exports.convertToArray = (data) => {
   return [
-    data.station,
     data.personalID,
     data.firstName,
     data.lastName,
@@ -146,7 +144,6 @@ exports.convertToAoA = (doc) => {
     }
 
     result.push([
-      data.station,
       data.personalID,
       data.firstName,
       data.lastName,
