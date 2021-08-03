@@ -26,8 +26,8 @@ exports.makeStatusPayload = (data) => {
 
     sp_o2: lastFollowUp.sp_o2,
     sp_o2_ra: lastFollowUp.sp_o2_ra,
-    sp_o2_after_eih: null, //can this even be null?
-    eih_result: "unknown",
+    sp_o2_after_eih: lastFollowUp.sp_o2_after_eih, //can this even be null?
+    eih_result: lastFollowUp.eih_result,
 
     sym1_severe_cough: lastFollowUp.sym1_severe_cough,
     sym1_chest_tightness: lastFollowUp.sym1_chest_tightness,
