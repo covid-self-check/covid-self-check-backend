@@ -2,15 +2,15 @@ exports.makeStatusPayload = (data) => {
   const { followUp } = data;
   const lastFollowUp = followUp[followUp.length - 1];
   const age60 = data.age > 60;
-  const copd = data.COPD;
-  const ckd34 = data.CKDStage3or4;
-  const chronicHeartDisease = data.chronicHeartDisease;
-  const CVA = data.CVA;
-  const T2DM = data.T2DM;
+  const copd = data.rf_copd_chronic_lung_disease;
+  const ckd34 = data.rf_ckd_stagr_3_to_4;
+  const chronicHeartDisease = data.rf_chronic_heart_disease;
+  const CVA = data.rf_cva;
+  const T2DM = data.rf_t2dm;
   const bmi = (data.weight * 10000) / (data.height * data.height);
   const bmiOver30 = bmi > 30 || data.weight > 90;
-  const cirrhosis = data.cirrhosis;
-  const immunocompromise = data.immunocompromise;
+  const cirrhosis = data.rf_cirrhosis;
+  const immunocompromise = data.rf_immunocompromise;
 
   const payload = {
     //passport:"", length is 7 or 8 or 9

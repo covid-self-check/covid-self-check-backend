@@ -29,14 +29,14 @@ module.exports = Joi.object({
   gotFavipiravia: Joi.number().allow(0, 1).required(),
 
   // โรคประจำตัว
-  COPD: Joi.number().allow(0, 1).required(),
-  chronicLungDisease: Joi.number().allow(0, 1).required(),
-  CKDStage3or4: Joi.number().allow(0, 1).required(),
-  chronicHeartDisease: Joi.number().allow(0, 1).required(),
-  CVA: Joi.number().allow(0, 1).required(),
-  T2DM: Joi.number().allow(0, 1).required(),
-  cirrhosis: Joi.number().allow(0, 1).required(),
-  immunocompromise: Joi.number().allow(0, 1).required(),
+  rf_copd_chronic_lung_disease: Joi.number().allow(0, 1).required(),
+  
+  rf_ckd_stagr_3_to_4: Joi.number().allow(0, 1).required(),
+  rf_chronic_heart_disease: Joi.number().allow(0, 1).required(),
+  rf_cva: Joi.number().allow(0, 1).required(),
+  rf_t2dm: Joi.number().allow(0, 1).required(),
+  rf_cirrhosis: Joi.number().allow(0, 1).required(),
+  rf_immunocompromise: Joi.number().allow(0, 1).required(),
 
   fac_diabetes: Joi.number().allow(0, 1).required(),
   fac_dyslipidemia: Joi.number().allow(0, 1).required(),
