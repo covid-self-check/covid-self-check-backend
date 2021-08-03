@@ -9,8 +9,8 @@ const { success } = require("./response/success");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require('@line/bot-sdk');
 const config = {
-  channelAccessToken: "lCmCyFN94c2gZfkxzog0xtf5aE2rizp/FtmZdFmsYO4MpJFZn5F+XbbDadPySauxQzi9TUU+jrK05CKnQn9+Jp+VMVNquUyMEMRwdsCy3xDOeRiZE/QRYCC7tEodeUS6qmNJq+YEPqSVf9Vl41tr3AdB04t89/1O/w1cDnyilFU=",
-  channelSecret: "dd2876f67511ea13953727cc0f2d51eb"
+  channelAccessToken: functions.config().line.CHANNEL_TOKEN,
+  channelSecret: functions.config().line.CHANNEL_SECRET
 };
 const client = new line.Client(config);
 
