@@ -259,3 +259,56 @@ exports.fetchNotUpdatedPatients = functions
   });
 
 exports.createReport = functions.region(region).https.onRequest(app);
+
+exports.fetchYellowPatients = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("status", "==", "เหลือง")
+      .get();
+
+    var patientList = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      patientList.push(data);
+    });
+    return success(patientList);
+  });
+
+exports.fetchGreenPatients = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("status", "==", "เขียว")
+      .get();
+
+    var patientList = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      patientList.push(data);
+    });
+    return success(patientList);
+  });
+exports.fetchRedPatients = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("status", "==", "แดง")
+      .get();
+
+    var patientList = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      patientList.push(data);
+    });
+    return success(patientList);
+  });
