@@ -243,65 +243,62 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-app.get(
-  "/",
-  authenticateVolunteerRequest(async (req, res) => {
-    try {
-      const snapshot = await admin.firestore().collection("patient").get();
+app.get("/", async (req, res) => {
+  try {
+    const snapshot = await admin.firestore().collection("patient").get();
 
-      const results = [
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-      ];
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const arr = convertToArray(data);
-        if (data.status > 0 && data.status < result.length) {
+    const results = [
+      [patientReportHeader],
+      [patientReportHeader],
+      [patientReportHeader],
+      [patientReportHeader],
+      [patientReportHeader],
+      [patientReportHeader],
+      [patientReportHeader],
+    ];
+    console.log(1);
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const arr = convertToArray(data);
+      if (typeof data.status === "number") {
+        if (data.status > 0 && data.status < results.length) {
           results[data.status].push(arr);
-        } else {
-          results[0].push(arr);
         }
-      });
-
-      const wb = XLSX.utils.book_new();
-      // append result to sheet
-      for (let i = 0; i < results.length && i < sheetName.length; i++) {
-        const ws = XLSX.utils.aoa_to_sheet(results[i]);
-        XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
+      } else {
+        results[0].push(arr);
       }
-
-      // write workbook file
-      const filename = `report.xlsx`;
-      const opts = { bookType: "xlsx", type: "binary" };
-
-      // it must be save to tmp directory because it run on firebase
-      const pathToSave = path.join("/tmp", filename);
-      XLSX.writeFile(wb, pathToSave, opts);
-      // create read stream
-      const stream = fs.createReadStream(pathToSave);
-
-      // prepare http header
-      res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${filename}"`
-      );
-
-      stream.pipe(res);
-    } catch (err) {
-      return { ok: false, message: err.message };
+    });
+    console.log(2);
+    const wb = XLSX.utils.book_new();
+    // append result to sheet
+    for (let i = 0; i < results.length && i < sheetName.length; i++) {
+      const ws = XLSX.utils.aoa_to_sheet(results[i]);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
     }
-  })
-);
+    console.log(3);
+    // write workbook file
+    const filename = `report.xlsx`;
+    const opts = { bookType: "xlsx", type: "binary" };
+
+    console.log(4);
+    // it must be save to tmp directory because it run on firebase
+    const pathToSave = path.join("/tmp", filename);
+    XLSX.writeFile(wb, pathToSave, opts);
+    // create read stream
+    const stream = fs.createReadStream(pathToSave);
+    console.log(5);
+    // prepare http header
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    stream.pipe(res);
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+});
 
 /**
  * generate multiple csv file and send zip file back to client

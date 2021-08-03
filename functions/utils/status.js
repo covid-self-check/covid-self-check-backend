@@ -110,7 +110,7 @@ exports.patientReportHeader = [
 /**
  * @param {*} data
  */
-exports.convertToArray = async (data) => {
+exports.convertToArray = (data) => {
   return [
     data.station,
     data.personalID,
