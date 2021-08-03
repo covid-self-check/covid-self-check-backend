@@ -79,41 +79,56 @@ const { admin } = require("../init");
 const { convertTZ } = require("./date");
 
 const status = ["noSuggestion", "G1", "G2", "Y1", "Y2", "R1", "R2"];
+exports.sheetName = [
+  "ไม่ระบุุ",
+  "รายงานผู้ป่วยเขียวไม่มีอาการ",
+  "รายงานผู้ป่วยเขียวมีอาการ",
+  "รายงานผู้ป่วยเหลืองไม่มีอาการ",
+  "รายงานผู้ป่วยเหลืองมีอาการ",
+  "รายงานผู้ป่วยแดงอ่อน",
+  "รายงานผู้ป่วยแดงเข้ม",
+];
 
+exports.patientReportHeader = [
+  "สถานี",
+  "รหัสบัตรประจำตัวประชาชน",
+  "ชื่อ",
+  "นามสกุล",
+  "เบอร์ติดต่อ",
+  "เบอร์ติดต่อฉุกเฉิน",
+  "อายุ",
+  "น้ำหนัก",
+  "ส่วนสูง",
+  "เพศ",
+  "วันที่ติดตามอาการล่าสุด",
+  "ที่อยู่",
+  "ตำบล",
+  "อำเภอ",
+  "จังหวัด",
+  "สถานะ",
+];
 /**
- *
- * @param {number} color
+ * @param {*} data
  */
-const getPatientByStatus = async (color) => {
-  if (color < 0 || color >= status.length) return [];
-
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .where("status", "==", color)
-    .get();
-
-  const result = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    result.push([
-      data.station,
-      data.personalID,
-      data.firstName,
-      data.lastName,
-      data.age,
-      data.gender,
-      data.height,
-      convertTZ(data.lastUpdatedAt),
-      data.hasHelper,
-      data.address,
-      data.district,
-      data.prefecture,
-      data.province,
-    ]);
-  });
-
-  return result;
+exports.convertToArray = async (data) => {
+  return [
+    data.station,
+    data.personalID,
+    data.firstName,
+    data.lastName,
+    data.personalPhoneNo,
+    data.emergencyPhoneNo,
+    data.age,
+    data.weight,
+    data.height,
+    data.gender,
+    convertTZ(data.lastUpdatedAt.toDate()),
+    data.address,
+    data.district,
+    data.prefecture,
+    data.province,
+    status[data.status],
+  ];
 };
 
 /**
@@ -135,32 +150,22 @@ exports.convertToAoA = (doc) => {
       data.personalID,
       data.firstName,
       data.lastName,
+      data.personalPhoneNo,
+      data.emergencyPhoneNo,
       data.age,
-      data.gender,
+      data.weight,
       data.height,
-      convertTZ(data.lastUpdatedAt),
-      currentStatus,
-      data.hasHelper,
+      data.gender,
+      convertTZ(data.lastUpdatedAt.toDate()),
       data.address,
       data.district,
       data.prefecture,
       data.province,
+      currentStatus,
     ]);
   });
 
   return result;
-};
-
-exports.getNoSuggestPatient = () => {
-  return getPatientByStatus(0);
-};
-
-exports.getY1Patient = () => {
-  return getPatientByStatus(3);
-};
-
-exports.getY2Patient = () => {
-  return getPatientByStatus(4);
 };
 
 /**
