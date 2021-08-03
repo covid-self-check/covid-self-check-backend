@@ -62,7 +62,14 @@ exports.isY1 = (snapshot)=>{
   const bmiExceed = bmi>30;
   const isObese = snapshot.weight >90;
 
-  return isOld || hasCongenitalDisease || bmiExceed|| isObese;
+  const isIll = lastFollowUp.tired ||
+  lastFollowUp.cough||
+  lastFollowUp.diarrhea||
+  lastFollowUp.canNotSmell||
+  lastFollowUp.rash||
+  lastFollowUp.redEye;
+
+  return isOld || hasCongenitalDisease || bmiExceed|| isObese || isIll;
   
 }
 
