@@ -13,7 +13,7 @@ exports.makeStatusPayload = (data) => {
   const immunocompromise = data.immunocompromise;
 
   const payload = {
-    //passport:"",
+    //passport:"", length is 7 or 8 or 9
     cid: data.personalId,
     firstname: data.firstName,
     lastname: data.lastName,
