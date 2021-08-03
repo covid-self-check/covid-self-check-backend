@@ -4,7 +4,7 @@ module.exports = Joi.object({
   firstName: Joi.string().min(1).required(),
   lastName: Joi.string().min(1).required(),
 
-  age: Joi.number().integer().required(),
+  birthDate: Joi.date().max("now").required(),
   weight: Joi.number().required(),
   height: Joi.number().required(),
   gender: Joi.string().valid("male", "female", "unknown").required(),

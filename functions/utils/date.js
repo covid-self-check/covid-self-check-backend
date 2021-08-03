@@ -16,3 +16,14 @@ exports.convertTZ = (date, tzString) => {
 exports.formatDateTime = (date) => {
   return moment(date).format("MM-DD-YYYY hh:mm:ss");
 };
+
+/**
+ *
+ * @param {Date} date
+ * @returns
+ */
+exports.calculateAge = (date) => {
+  var ageDifMs = Date.now() - date.getTime();
+  var ageDate = new Date(ageDifMs); // miliseconds from epoch
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+};

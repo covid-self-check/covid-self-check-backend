@@ -7,7 +7,7 @@ const {
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { convertTZ } = require("./utils");
+const { convertTZ, calculateAge } = require("./utils");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require("@line/bot-sdk");
 const config = {
