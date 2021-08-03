@@ -366,8 +366,8 @@ exports.fetchNotUpdatedPatients = functions
     var notUpdatedList = [];
     const currentDate = new Date().getDate();
     snapshot.forEach((doc) => {
-      const data = doc.data();
-      const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
+      const patient = doc.data();
+      const lastUpdatedDate = patient.lastUpdatedAt.toDate().getDate();
       if (lastUpdatedDate - currentDate !== 0) {
         notUpdatedList.push(data);
       }
@@ -387,10 +387,6 @@ exports.fetchYellowPatients = functions
       .get();
 
     var patientList = [];
-
-    snapshot.data().status = calculateStatus(snapshot, obj);
-    snapshot.data().lastUpdatedAt =
-      admin.firestore.Timestamp.fromDate(createdDate);
 
     snapshot.forEach((doc) => {
       const data = doc.data();

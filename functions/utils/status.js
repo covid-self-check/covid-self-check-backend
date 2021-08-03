@@ -26,3 +26,21 @@ exports.isY2 = (data) => {
     lastFollowUp.persistentFever
   );
 };
+
+exports.isY1 = (snapshot) => {
+  const isOld = snapshot.age > 60;
+  const bmi = (snapshot.weight / (snapshot.height * snapshot.height)) * 10000;
+  const hasDisease =
+    snapshot.COPD ||
+    snapshot.chronicLungDisease ||
+    snapshot.CKDStage3or4 ||
+    snapshot.chronicHeartDisease ||
+    snapshot.CVA ||
+    snapshot.T2DM ||
+    snapshot.cirrhosis ||
+    snapshot.immunocompronise;
+  const bmiExceed = bmi > 30;
+  const isObese = snapshot.weight > 90;
+
+  return isOld || hasDisease || bmiExceed || isObese;
+};
