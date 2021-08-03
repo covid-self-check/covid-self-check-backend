@@ -33,7 +33,7 @@ exports.authenticateVolunteer = (func) => {
 exports.authenticateVolunteerRequest = (func) => {
   return async (req, res) => {
     try {
-      const tokenId = req.get("Authorization").split("Bearer ")[2];
+      const tokenId = req.get("Authorization").split("Bearer ")[1];
       const decoded = await admin.auth().verifyIdToken(tokenId);
       const email = decoded.email || null;
       const userInfo = await admin
