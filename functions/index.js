@@ -74,16 +74,16 @@ exports.registerParticipant = functions
     }
 
     var needFollowUp = true;
-
+    // TODO : fix schema
+    obj["gotFavipiravir"] = obj["gotFavipiravia"];
+    delete obj["gotFavipiravia"];
     obj["status"] = 0;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
     const createdDate = convertTZ(new Date(), "Asia/Bangkok");
-    obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
-    var temp = new Date();
-    temp.setDate(new Date().getDate() - 1);
-    const lastUpdated = convertTZ(temp, "Asia/Bangkok");
-    obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
+    const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
+    obj["createdDate"] = createdTimestamp;
+    obj["lastUpdatedAt"] = createdTimestamp;
     obj["isRequestToCallExported"] = false;
     obj["isRequestToCall"] = false;
 
@@ -341,7 +341,7 @@ exports.fetchNotUpdatedPatients = functions
     //   }
     // });
     // return success(notUpdatedList);
-    return success()
+    return success();
   });
 
 exports.createReport = functions.region(region).https.onRequest(app);
@@ -362,7 +362,7 @@ exports.fetchYellowPatients = functions
     //   patientList.push(data);
     // });
     // return success(patientList);
-    return success()
+    return success();
   });
 
 exports.fetchGreenPatients = functions
@@ -381,7 +381,7 @@ exports.fetchGreenPatients = functions
     //   patientList.push(data);
     // });
     // return success(patientList);
-    return success()
+    return success();
   });
 exports.fetchRedPatients = functions
   .region(region)
@@ -398,7 +398,7 @@ exports.fetchRedPatients = functions
     //   patientList.push(data);
     // });
     // return success(patientList);
-    return success()
+    return success();
   });
 
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
@@ -459,7 +459,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
     const { value, error } = exportRequestToCallSchema.validate(req.body);
     if (error) {
       console.log(error.details);
-      return res.status(412).json(error.details)
+      return res.status(412).json(error.details);
     }
     const { size } = value;
 
