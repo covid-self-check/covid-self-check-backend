@@ -1,6 +1,6 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
-const { authenticate } = require("./middleware/authentication");
+const { authenticateVolunteer } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
 const { exportPatient, convertTZ } = require("./utils");
@@ -72,12 +72,6 @@ exports.registerParticipant = functions
     return success(`Registration with ID: ${lineId} added`);
   });
 
-exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
-  authenticate(async (data, context) => {
-    return { result: `Content for authorized user` };
-  })
-);
-
 exports.getFollowupHistory = functions.region(region).https.onCall(async (data, context) => {
   const { lineId } = data;
 
@@ -148,15 +142,16 @@ exports.updateSymptom = functions
 
   });
 
-exports.Webhook = functions.region(region).https
+exports.webhook = functions.region(region).https
   .onRequest(async (req, res) => {
-    const event = req.body.events[0];
-    const userId = event.source.userId;
-    const profile = client.getProfile(userId);
-    const userObject = { userId: userId, profile: (await profile) };
-    // console.log(userObject);
-    await eventHandler(event, userObject, client);
     res.sendStatus(200);
+      const event = req.body.events[0];
+      const userId = event.source.userId;
+      const profile = client.getProfile(userId);
+      const userObject = { userId: userId, profile: (await profile) };
+      // console.log(userObject);
+      // console.log(event)
+      await eventHandler(event, userObject, client);
   });
 
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
