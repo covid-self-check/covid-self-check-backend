@@ -39,6 +39,41 @@ const getPatientByStatus = async (color) => {
   return result;
 };
 
+/**
+ * convert data from
+ * @param {[string]} headers
+ * @param {*} snapshot
+ * @returns
+ */
+exports.convertToAoA = (doc) => {
+  const result = [];
+  doc.forEach((data) => {
+    let currentStatus = status[0];
+    if (data.status >= 0 || data.status < status.length) {
+      currentStatus = status[data.status];
+    }
+
+    result.push([
+      data.station,
+      data.personalID,
+      data.firstName,
+      data.lastName,
+      data.age,
+      data.gender,
+      data.height,
+      convertTZ(data.lastUpdatedAt),
+      currentStatus,
+      data.hasHelper,
+      data.address,
+      data.district,
+      data.prefecture,
+      data.province,
+    ]);
+  });
+
+  return result;
+};
+
 exports.getNoSuggestPatient = () => {
   return getPatientByStatus(0);
 };
