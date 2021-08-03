@@ -12,7 +12,7 @@ const { eventHandler } = require("./handler/eventHandler");
 const line = require("@line/bot-sdk");
 const config = {
   channelAccessToken: functions.config().line.channel_token,
-  channelSecret: functions.config().line.channel_secret
+  channelSecret: functions.config().line.channel_secret,
 };
 const client = new line.Client(config);
 const {
@@ -87,15 +87,20 @@ exports.registerParticipant = functions
     obj["isRequestToCallExported"] = false;
     obj["isRequestToCall"] = false;
 
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(lineUserID)
+      .get();
 
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
         `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
-      )
+      );
     }
 
-    await snapshot.ref.create(obj)
+    await snapshot.ref.create(obj);
 
     return success(`Registration with ID: ${lineUserID} added`);
   });
@@ -416,9 +421,6 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-
-
-
   const { lineUserID, lineIDToken, noAuth } = value;
   const { error: authError } = await getProfile({
     lineUserID,
@@ -537,17 +539,14 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
     await batch.commit();
     return success();
   })
-  
 );
-exports.webhook = functions.region(region).https
-  .onRequest(async (req, res) => {
-    res.sendStatus(200);
-      const event = req.body.events[0];
-      const userId = event.source.userId;
-      const profile = client.getProfile(userId);
-      const userObject = { userId: userId, profile: (await profile) };
-      // console.log(userObject);
-      // console.log(event)
-      await eventHandler(event, userObject, client);
-  });
-
+exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
+  res.sendStatus(200);
+  const event = req.body.events[0];
+  const userId = event.source.userId;
+  const profile = client.getProfile(userId);
+  const userObject = { userId: userId, profile: await profile };
+  // console.log(userObject);
+  // console.log(event)
+  await eventHandler(event, userObject, client);
+});
