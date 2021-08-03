@@ -67,3 +67,5 @@ node_modules/
 .vscode
 
 *.xlsx
+
+functions/.runtimeconfig.json
