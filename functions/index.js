@@ -1,5 +1,6 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
+const { exportPatient, convertTZ } = require("./utils");
 const {
   authenticateVolunteer,
   getProfile,
@@ -7,13 +8,11 @@ const {
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { convertTZ } = require("./utils");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require("@line/bot-sdk");
 const config = {
-  channelAccessToken:
-    "lCmCyFN94c2gZfkxzog0xtf5aE2rizp/FtmZdFmsYO4MpJFZn5F+XbbDadPySauxQzi9TUU+jrK05CKnQn9+Jp+VMVNquUyMEMRwdsCy3xDOeRiZE/QRYCC7tEodeUS6qmNJq+YEPqSVf9Vl41tr3AdB04t89/1O/w1cDnyilFU=",
-  channelSecret: "dd2876f67511ea13953727cc0f2d51eb",
+  channelAccessToken: functions.config().line.channel_token,
+  channelSecret: functions.config().line.channel_secret
 };
 const client = new line.Client(config);
 const {
@@ -45,6 +44,7 @@ app.use(cors());
 initializeApp();
 
 // Take the text parameter passed to this HTTP endpoint and insert it into
+// Firestore under the path /messages/:documentId/original
 
 exports.registerParticipant = functions
   .region(region)
@@ -87,20 +87,15 @@ exports.registerParticipant = functions
     obj["isRequestToCallExported"] = false;
     obj["isRequestToCall"] = false;
 
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineUserID)
-      .get();
 
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
         `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
-      );
+      )
     }
 
-    await snapshot.ref.create(obj);
+    await snapshot.ref.create(obj)
 
     return success(`Registration with ID: ${lineUserID} added`);
   });
@@ -406,16 +401,6 @@ exports.fetchRedPatients = functions
     return success()
   });
 
-exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
-  const event = req.body.events[0];
-  const userId = event.source.userId;
-  const profile = client.getProfile(userId);
-  const userObject = { userId: userId, profile: await profile };
-  console.log(userObject);
-  await eventHandler(event, userObject, client);
-  res.sendStatus(200);
-});
-
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
   return res.sendStatus(200);
 });
@@ -430,6 +415,9 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
       error.details
     );
   }
+
+
+
 
   const { lineUserID, lineIDToken, noAuth } = value;
   const { error: authError } = await getProfile({
@@ -549,4 +537,17 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
     await batch.commit();
     return success();
   })
+  
 );
+exports.webhook = functions.region(region).https
+  .onRequest(async (req, res) => {
+    res.sendStatus(200);
+      const event = req.body.events[0];
+      const userId = event.source.userId;
+      const profile = client.getProfile(userId);
+      const userObject = { userId: userId, profile: (await profile) };
+      // console.log(userObject);
+      // console.log(event)
+      await eventHandler(event, userObject, client);
+  });
+
