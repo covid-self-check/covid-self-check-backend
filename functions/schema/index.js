@@ -3,4 +3,5 @@ module.exports = {
   registerSchema: require("./RegisterSchema"),
   getProfileSchema: require("./GetProfileSchema"),
   importPatientIdSchema: require("./ImportPatientIdSchema"),
+  exportRequestToCallSchema: require("./ExportRequestToCallSchema"),
 };
