@@ -9,8 +9,8 @@ const { success } = require("./response/success");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require('@line/bot-sdk');
 const config = {
-  channelAccessToken: functions.config().line.CHANNEL_TOKEN,
-  channelSecret: functions.config().line.CHANNEL_SECRET
+  channelAccessToken: functions.config().line.channel_token,
+  channelSecret: functions.config().line.channel_secret
 };
 const client = new line.Client(config);
 
