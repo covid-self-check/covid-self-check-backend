@@ -63,6 +63,7 @@ exports.registerParticipant = functions
     //testing puspose only
     const s = [0, 1, 2, 3, 4, 5, 6];
     var status = s[Math.floor(Math.random() * 6)];
+    obj["status"] = status;
     /////////////////////////////////////////
 
     //obj["status"] = 0;
