@@ -35,7 +35,7 @@ module.exports = Joi.object({
   CVA: Joi.boolean().required(),
   T2DM: Joi.boolean().required(),
   cirrhosis: Joi.boolean().required(),
-  immunocompronise: Joi.boolean().required(),
+  immunocompromise: Joi.boolean().required(),
 
   // optional
   congenitalDisease: Joi.string().allow("", null),
