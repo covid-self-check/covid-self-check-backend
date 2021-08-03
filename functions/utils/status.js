@@ -1,11 +1,54 @@
-const status = {
-  noSuggestion: 0,
-  G1: 1,
-  G2: 2,
-  Y1: 3, // เหลืองไม่มีอาการ
-  Y2: 4, // เหลืองมีอาการ
-  R1: 5,
-  R2: 6,
+const { admin } = require("../init");
+const { convertTZ } = require("./date");
+
+const status = ["noSuggestion", "G1", "G2", "Y1", "Y2", "R1", "R2"];
+
+/**
+ *
+ * @param {number} color
+ */
+const getPatientByStatus = async (color) => {
+  if (color < 0 || color >= status.length) return [];
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .where("status", "==", color)
+    .get();
+
+  const result = [];
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    result.push([
+      data.station,
+      data.personalID,
+      data.firstName,
+      data.lastName,
+      data.age,
+      data.gender,
+      data.height,
+      convertTZ(data.lastUpdatedAt),
+      data.hasHelper,
+      data.address,
+      data.district,
+      data.prefecture,
+      data.province,
+    ]);
+  });
+
+  return result;
+};
+
+exports.getNoSuggestPatient = () => {
+  return getPatientByStatus(0);
+};
+
+exports.getY1Patient = () => {
+  return getPatientByStatus(3);
+};
+
+exports.getY2Patient = () => {
+  return getPatientByStatus(4);
 };
 
 /**
