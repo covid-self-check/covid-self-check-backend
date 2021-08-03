@@ -7,6 +7,13 @@ const {
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
 const { exportPatient, convertTZ } = require("./utils");
+const { eventHandler } = require("./handler/eventHandler");
+const line = require('@line/bot-sdk');
+const config = {
+  channelAccessToken: "lCmCyFN94c2gZfkxzog0xtf5aE2rizp/FtmZdFmsYO4MpJFZn5F+XbbDadPySauxQzi9TUU+jrK05CKnQn9+Jp+VMVNquUyMEMRwdsCy3xDOeRiZE/QRYCC7tEodeUS6qmNJq+YEPqSVf9Vl41tr3AdB04t89/1O/w1cDnyilFU=",
+  channelSecret: "dd2876f67511ea13953727cc0f2d51eb"
+};
+const client = new line.Client(config);
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
 const { exportToExcel } = require("./utils/excel");
@@ -14,7 +21,6 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-
 const app = express();
 
 // The Firebase Admin SDK to access Firestore.
@@ -35,6 +41,9 @@ exports.registerParticipant = functions
         error.details
       );
     }
+
+    const { lineId, ...obj } = value;
+
     const { lineUserID, lineIDToken, ...obj } = value;
     const { error: authError } = await getProfile({ lineUserID, lineIDToken });
     if (authError) {
@@ -49,7 +58,7 @@ exports.registerParticipant = functions
     obj["status"] = status;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
-    const createdDate = convertTZ(new Date(), "Asia/Bangkok");
+    const createdDate = convertTZ(new Date(), 'Asia/Bangkok');
     obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
     var temp = new Date();
     temp.setDate(new Date().getDate() - 1);
@@ -61,6 +70,8 @@ exports.registerParticipant = functions
       .collection("patient")
       .doc(lineUserID)
       .get();
+
+    const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
 
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
@@ -108,6 +119,24 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
     return { result: `Content for authorized user` };
   })
 );
+
+exports.getFollowupHistory = functions.region(region).https.onCall(async (data, context) => {
+  const { lineId } = data;
+
+  // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+  const snapshot = await admin.firestore()
+    .collection("patient")
+    .doc(lineId)
+    .get();
+
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบข้อมูลผู้ใช้ ${lineId}`
+    );
+  }
+  return success(snapshot.data().followUp);
+})
 
 exports.getFollowupHistory = functions
   .region(region)
@@ -263,6 +292,40 @@ exports.createReport = functions.region(region).https.onRequest(app);
 exports.fetchYellowPatients = functions
   .region(region)
   .https.onCall(async (data) => {
+    const { value, error } = historySchema.validate(data);
+    if (error) {
+      // DEBUG
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+
+    const { lineId, ...obj } = value;
+
+    const createdDate = convertTZ(new Date(), 'Asia/Bangkok');
+    obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
+
+    const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
+    if (!snapshot.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        `ไม่พบผู้ใช้ ${lineId}`
+      );
+    }
+
+    const { followUp } = snapshot.data();
+    if (!followUp) {
+      await snapshot.ref.set({ followUp: [obj] })
+    } else {
+      await snapshot.ref.update({
+        followUp: admin.firestore.FieldValue.arrayUnion(obj)
+      });
+    }
+    return success();
+
     const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -305,10 +368,24 @@ exports.fetchRedPatients = functions
       .get();
 
     var patientList = [];
-
     snapshot.forEach((doc) => {
       const data = doc.data();
       patientList.push(data);
     });
     return success(patientList);
   });
+
+exports.Webhook = functions.region(region).https
+  .onRequest(async (req, res) => {
+    const event = req.body.events[0];
+    const userId = event.source.userId;
+    const profile = client.getProfile(userId);
+    const userObject = { userId: userId, profile: (await profile) };
+    console.log(userObject);
+    await eventHandler(event, userObject, client);
+    res.sendStatus(200);
+  });
+
+exports.check = functions.region(region).https.onRequest(async (req, res) => {
+  return res.sendStatus(200);
+});
