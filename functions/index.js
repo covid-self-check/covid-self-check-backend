@@ -7,7 +7,7 @@ const {
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { exportPatient, convertTZ } = require("./utils");
+const { convertTZ } = require("./utils");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require("@line/bot-sdk");
 const config = {
@@ -16,7 +16,13 @@ const config = {
   channelSecret: "dd2876f67511ea13953727cc0f2d51eb",
 };
 const client = new line.Client(config);
-const { historySchema, registerSchema, getProfileSchema, importPatientIdSchema, exportRequestToCallSchema } = require("./schema");
+const {
+  historySchema,
+  registerSchema,
+  getProfileSchema,
+  importPatientIdSchema,
+  exportRequestToCallSchema,
+} = require("./schema");
 const { success } = require("./response/success");
 const { getY1Patient, getY2Patient, convertToAoA } = require("./utils/status");
 const XLSX = require("xlsx");
@@ -285,8 +291,8 @@ function isGreenWithSymptom(snapshot, currentSymptom) {
   return ok;
 }
 
-function isYellow(snapshot, currentSymptom) { }
-function isRed(snapshot, currentSymptom) { }
+function isYellow(snapshot, currentSymptom) {}
+function isRed(snapshot, currentSymptom) {}
 
 exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { value, error } = historySchema.validate(data);
@@ -557,7 +563,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
         error.details
       );
     }
-    const { size } = value
+    const { size } = value;
 
     const snapshot = await admin
       .firestore()
@@ -581,13 +587,18 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      const dataResult = { firstName: data.firstName, lastName: data.firstName, hasCalled: 0, id: doc.id, personalPhoneNo: data.personalPhoneNo }
+      const dataResult = {
+        firstName: data.firstName,
+        lastName: data.firstName,
+        hasCalled: 0,
+        id: doc.id,
+        personalPhoneNo: data.personalPhoneNo,
+      };
       patientList.push(dataResult);
     });
-    generateZipFile(res, size, patientList)
+    generateZipFile(res, size, patientList);
   })
 );
-
 
 exports.importFinishedRequestToCall = functions.region(region).https.onCall(
   authenticateVolunteer(async (data) => {
@@ -601,7 +612,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
         error.details
       );
     }
-    const { ids } = value
+    const { ids } = value;
     const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -611,7 +622,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
 
     const batch = admin.firestore().batch();
     snapshot.docs.forEach((doc) => {
-      const hasCalled = ids.includes(doc.id)
+      const hasCalled = ids.includes(doc.id);
       const docRef = admin.firestore().collection("patient").doc(doc.id);
       if (hasCalled) {
         batch.update(docRef, {
@@ -626,6 +637,6 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
     });
 
     await batch.commit();
-    return success()
+    return success();
   })
 );
