@@ -1,39 +1,39 @@
 {
-    "type": "flex",
-    "altText": "สวัสดีคับ",
-    "contents": {
-      "type": "bubble",
-      "direction": "ltr",
-      "body": {
-        "type": "box",
-        "layout": "vertical",
-        "flex": 0,
-        "contents": [
-          {
-            "type": "text",
-            "text": "สวัสดีคับ",
-            "flex": 0,
-            "align": "center",
-            "color": "#FFFFFF"
-          },
-          {
-            "type": "text",
-            "text": "ยินดีที่ได้รู้จักคับ👋",
-            "align": "center",
-            "color": "#FFFFFF"
-          },
-          {
-            "type": "text",
-            "text": "คุณ",
-            "align": "center",
-            "color": "#FFFFFF"
-          }
-        ]
-      },
-      "styles": {
-        "body": {
-          "backgroundColor": "#3F54D1"
+  "type": "flex",
+  "altText": "สวัสดีคับ",
+  "contents": {
+    "type": "bubble",
+    "direction": "ltr",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "flex": 0,
+      "contents": [
+        {
+          "type": "text",
+          "text": "สวัสดีคับ",
+          "flex": 0,
+          "align": "center",
+          "color": "#FFFFFF"
+        },
+        {
+          "type": "text",
+          "text": "ยินดีที่ได้รู้จักคับ👋",
+          "align": "center",
+          "color": "#FFFFFF"
+        },
+        {
+          "type": "text",
+          "text": "คุณ",
+          "align": "center",
+          "color": "#FFFFFF"
         }
+      ]
+    },
+    "styles": {
+      "body": {
+        "backgroundColor": "#3F54D1"
       }
     }
   }
+}
