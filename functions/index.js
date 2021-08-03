@@ -16,7 +16,7 @@ const config = {
   channelSecret: "dd2876f67511ea13953727cc0f2d51eb",
 };
 const client = new line.Client(config);
-const { historySchema, registerSchema, getProfileSchema } = require("./schema");
+const { historySchema, registerSchema, getProfileSchema, importPatientIdSchema } = require("./schema");
 const { success } = require("./response/success");
 const { getY1Patient, getY2Patient } = require("./utils/status");
 const XLSX = require("xlsx");
@@ -69,6 +69,7 @@ exports.registerParticipant = functions
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
     obj["isRequestToCallExported"] = false;
     obj["isRequestToCall"] = false;
+    obj["hasCalled"] = 0;
 
     const snapshot = await admin
       .firestore()
@@ -309,8 +310,8 @@ function isGreenWithSymptom(snapshot, currentSymptom) {
   return ok;
 }
 
-function isYellow(snapshot, currentSymptom) {}
-function isRed(snapshot, currentSymptom) {}
+function isYellow(snapshot, currentSymptom) { }
+function isRed(snapshot, currentSymptom) { }
 
 exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { value, error } = historySchema.validate(data);
@@ -355,7 +356,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { followUp } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
-  snapshot.ref.update({lastUpdatedAt:admin.firestore.Timestamp.fromDate(createdDate)});
+  snapshot.ref.update({ lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate) });
 
   if (!followUp) {
     await snapshot.ref.set({ followUp: [obj] });
@@ -527,6 +528,7 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
     await snapshot.ref.update({
       isRequestToCall: true,
       isRequestToCallExported: false,
+      hasCalled: 0,
     });
     return success();
   }
@@ -562,5 +564,42 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
       patientList.push(data);
     });
     return res.status(200).json(success(patientList));
+  })
+);
+
+
+exports.importFinishedRequestToCall = functions.region(region).https.onCall(
+  authenticateVolunteer(async (data) => {
+    const { value, error } = importPatientIdSchema.validate(data);
+
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+    const { ids } = importPatientIdSchema
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("isRequestToCall", "==", true)
+      .where("isRequestToCallExported", "==", true)
+      .get();
+
+    const batch = admin.firestore().batch();
+    snapshot.docs.forEach((doc) => {
+      if (ids.includes(doc.id)) {
+        const docRef = admin.firestore().collection("patient").doc(doc.id);
+        batch.update(docRef, {
+          isRequestToCallExported: true,
+          hasCalled: 0,
+        });
+      }
+    });
+
+    await batch.commit();
+    return success(patientList)
   })
 );
