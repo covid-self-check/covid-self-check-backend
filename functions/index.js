@@ -50,7 +50,7 @@ exports.registerParticipant = functions
       );
     }
 
-    // const { lineUserID, lineIDToken, ...obj } = value;
+     const { lineUserID, lineIDToken, ...obj } = value;
     // const { error: authError } = await getProfile({ lineUserID, lineIDToken });
     // if (authError) {
     //   throw new functions.https.HttpsError(
