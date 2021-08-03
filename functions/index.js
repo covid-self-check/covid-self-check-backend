@@ -346,7 +346,7 @@ exports.fetchNotUpdatedPatients = functions
     //   }
     // });
     // return success(notUpdatedList);
-    success()
+    return success()
   });
 
 exports.createReport = functions.region(region).https.onRequest(app);
@@ -367,7 +367,7 @@ exports.fetchYellowPatients = functions
     //   patientList.push(data);
     // });
     // return success(patientList);
-    success()
+    return success()
   });
 
 exports.fetchGreenPatients = functions
@@ -386,7 +386,7 @@ exports.fetchGreenPatients = functions
     //   patientList.push(data);
     // });
     // return success(patientList);
-    success()
+    return success()
   });
 exports.fetchRedPatients = functions
   .region(region)
@@ -403,7 +403,7 @@ exports.fetchRedPatients = functions
     //   patientList.push(data);
     // });
     // return success(patientList);
-    success()
+    return success()
   });
 
 exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
