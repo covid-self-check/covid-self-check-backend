@@ -18,12 +18,15 @@ const config = {
 const client = new line.Client(config);
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
-const { exportToExcel } = require("./utils/excel");
+const { getY1Patient, getY2Patient, convertToAoA } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
+const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
+const _ = require("lodash");
+const { mockData } = require("./data/mock");
 
 const app = express();
 app.use(cors());
@@ -71,6 +74,8 @@ exports.registerParticipant = functions
     temp.setDate(new Date().getDate() - 1);
     const lastUpdated = convertTZ(temp, "Asia/Bangkok");
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
+    obj["isRequestToCallExported"] = false;
+    obj["isRequestToCall"] = false;
 
     const snapshot = await admin
       .firestore()
@@ -124,27 +129,6 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
     return { result: `Content for authorized user` };
   })
 );
-
-exports.getFollowupHistory = functions
-  .region(region)
-  .https.onCall(async (data, context) => {
-    const { lineId } = data;
-
-    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineId)
-      .get();
-
-    if (!snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
-      );
-    }
-    return success(snapshot.data().followUp);
-  });
 
 exports.getFollowupHistory = functions
   .region(region)
@@ -237,6 +221,11 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   }
 
   const { followUp } = snapshot.data();
+  //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
+  //update lastUpdatedAt field on patient
+  snapshot.ref.update({
+    lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
+  });
 
   if (!followUp) {
     await snapshot.ref.set({ followUp: [obj] });
@@ -245,26 +234,29 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
-
   return success();
 });
 
 app.get(
   "/",
   authenticateVolunteerRequest(async (req, res) => {
-    const { lineId } = req.query;
     try {
-      const snapshot = await admin
-        .firestore()
-        .collection("patient")
-        .doc(lineId)
-        .get();
+      const [y1, y2] = await Promise.all([getY1Patient(), getY2Patient()]);
 
-      const wb = exportToExcel([snapshot.data()]);
-      const filename = "test.xlsx";
+      const wb = XLSX.utils.book_new();
+      // append result to sheet
+      const wsY1 = XLSX.utils.aoa_to_sheet(y1);
+      const wsY2 = XLSX.utils.aoa_to_sheet(y2);
+      // write workbook file
+      XLSX.utils.book_append_sheet(wb, wsY1, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
+      XLSX.utils.book_append_sheet(wb, wsY2, "รายงานผู้ป่วยสีเหลืองมีอาการ");
+      const filename = `report.xlsx`;
       const opts = { bookType: "xlsx", type: "binary" };
+
+      // it must be save to tmp directory because it run on firebase
       const pathToSave = path.join("/tmp", filename);
       XLSX.writeFile(wb, pathToSave, opts);
+      // create read stream
       const stream = fs.createReadStream(pathToSave);
 
       // prepare http header
@@ -272,7 +264,10 @@ app.get(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
-      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
 
       stream.pipe(res);
     } catch (err) {
@@ -281,18 +276,54 @@ app.get(
   })
 );
 
+/**
+ * generate multiple csv file and send zip file back to client
+ * @param {Express.Response} res
+ * @param {number} size - number of volunteer
+ * @param {data} data - snapshot from firebase (need to convert to array of obj)
+ */
+const generateZipFile = (res, size, data, fields) => {
+  const arrs = _.chunk(data, size);
+
+  const zip = new JSZip();
+
+  arrs.forEach((arr, i) => {
+    const aoa = convertToAoA(arr);
+    const filename = `${i + 1}.csv`;
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
+    zip.file(filename, csv);
+  });
+
+  zip
+    .generateAsync({ type: "base64" })
+    .then(function (content) {
+      res.json({
+        title: "report.zip",
+        content: content,
+      });
+    })
+    .catch((err) => {
+      res.json({
+        err,
+      });
+    });
+};
+
 exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
     const snapshot = await admin.firestore().collection("patient").get();
-
     var notUpdatedList = [];
-    const currentDate = new Date().getDate();
+    const currentDate = convertTZ(new Date(), "Asia/Bangkok");
     snapshot.forEach((doc) => {
-      const data = doc.data();
-      const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
-      if (lastUpdatedDate - currentDate !== 0) {
-        notUpdatedList.push(data);
+      const patient = doc.data();
+
+      const lastUpdatedDate = patient.lastUpdatedAt.toDate();
+      var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+      if (hours >= 36) {
+        notUpdatedList.push(patient);
       }
     });
     return success(notUpdatedList);
@@ -365,3 +396,76 @@ exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
   return res.sendStatus(200);
 });
+
+exports.requestToCall = functions.region(region).https.onCall(async (data) => {
+  const { value, error } = getProfileSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { lineUserID, lineIDToken } = value;
+  const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+  if (authError) {
+    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineUserID)
+    .get();
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
+  }
+
+  const { isRequestToCallExported, isRequestToCall } = snapshot.data();
+
+  if (!isRequestToCall || isRequestToCallExported) {
+    await snapshot.ref.update({
+      isRequestToCall: true,
+      isRequestToCallExported: false,
+    });
+    return success();
+  }
+
+  return success(`userID: ${lineUserID} has already requested to call`);
+});
+
+exports.exportRequestToCall = functions.region(region).https.onRequest(
+  authenticateVolunteerRequest(async (req, res) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("isRequestToCall", "==", true)
+      .where("isRequestToCallExported", "==", false)
+      .get();
+
+    const batch = admin.firestore().batch();
+    snapshot.docs.forEach((doc) => {
+      console.log(doc.id, "id");
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      batch.update(docRef, {
+        isRequestToCallExported: true,
+      });
+    });
+    // console.log(batch, 'batch')
+    await batch.commit();
+
+    var patientList = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log(data, "data");
+      patientList.push(data);
+    });
+    return res.status(200).json(success(patientList));
+  })
+);
