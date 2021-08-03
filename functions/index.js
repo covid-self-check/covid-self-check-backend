@@ -18,12 +18,15 @@ const config = {
 const client = new line.Client(config);
 const { historySchema, registerSchema, getProfileSchema, importPatientIdSchema, exportRequestToCallSchema } = require("./schema");
 const { success } = require("./response/success");
-const { getY1Patient, getY2Patient } = require("./utils/status");
+const { getY1Patient, getY2Patient, convertToAoA } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
+const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
+const _ = require("lodash");
+const { mockData } = require("./data/mock");
 
 const app = express();
 app.use(cors());
@@ -123,27 +126,6 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
     return { result: `Content for authorized user` };
   })
 );
-
-exports.getFollowupHistory = functions
-  .region(region)
-  .https.onCall(async (data, context) => {
-    const { lineId } = data;
-
-    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineId)
-      .get();
-
-    if (!snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
-      );
-    }
-    return success(snapshot.data().followUp);
-  });
 
 exports.getFollowupHistory = functions
   .region(region)
@@ -340,7 +322,6 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const createdDate = convertTZ(new Date(), "Asia/Bangkok");
   obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
 
-
   const snapshot = await admin
     .firestore()
     .collection("patient")
@@ -406,6 +387,41 @@ app.get(
     }
   })
 );
+
+/**
+ * generate multiple csv file and send zip file back to client
+ * @param {Express.Response} res
+ * @param {number} size - number of volunteer
+ * @param {data} data - snapshot from firebase (need to convert to array of obj)
+ */
+const generateZipFile = (res, size, data, fields) => {
+  const arrs = _.chunk(data, size);
+
+  const zip = new JSZip();
+
+  arrs.forEach((arr, i) => {
+    const aoa = convertToAoA(arr);
+    const filename = `${i + 1}.csv`;
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
+    zip.file(filename, csv);
+  });
+
+  zip
+    .generateAsync({ type: "base64" })
+    .then(function (content) {
+      res.json({
+        title: "report.zip",
+        content: content,
+      });
+    })
+    .catch((err) => {
+      res.json({
+        err,
+      });
+    });
+};
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
