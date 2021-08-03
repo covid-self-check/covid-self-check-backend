@@ -591,9 +591,8 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
       const dataResult = { firstName: data.firstName, lastName: data.firstName, hasCalled: data.hasCalled, id: doc.id, personalPhoneNo: data.personalPhoneNo }
       patientList.push(dataResult);
     });
+    console.log(patientList, 'list')
     generateZipFile(res, size, patientList)
-
-    return res.status(200).json(success(patientList));
   })
 );
 
