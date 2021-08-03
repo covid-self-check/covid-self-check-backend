@@ -3,8 +3,13 @@
     // Required for certain syntax usages
     "ecmaVersion": 2019
   },
-  "plugins": ["promise"],
-  "extends": ["eslint:recommended", "prettier"],
+  "plugins": [
+    "promise"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
   "rules": {
     // Removed rule "disallow the use of console" from recommended eslint rules
     "no-console": "off",
