@@ -10,7 +10,7 @@ module.exports = Joi.object({
   //cid
   //Firstname
   //Lastname
-  //contect_number
+  //contact_number
   //age
   //gender
   //height
@@ -29,7 +29,7 @@ module.exports = Joi.object({
   //----Need to add by Backend----
   //rf_age_60
   //rf_copd_chronic_lung_disease
-  // rf_ckd_stagr_3_to_4
+  // rf_ckd_stage_3_to_4
   // rf_chronic_heart_disease
   // rf_cva
   // rf_t2dm
