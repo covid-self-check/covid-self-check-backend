@@ -12,12 +12,15 @@ const { success } = require("./response/success");
 const { exportToExcel } = require("./utils/excel");
 const XLSX = require("xlsx");
 const fs = require("fs");
+const path = require("path");
 const express = require("express");
 
 const app = express();
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
+
+// Take the text parameter passed to this HTTP endpoint and insert it into
 
 exports.registerParticipant = functions
   .region(region)
@@ -50,7 +53,7 @@ exports.registerParticipant = functions
     obj["createdDate"] = admin.firestore.Timestamp.fromDate(createdDate);
     var temp = new Date();
     temp.setDate(new Date().getDate() - 1);
-    lastUpdated = convertTZ(temp, "Asia/Bangkok");
+    const lastUpdated = convertTZ(temp, "Asia/Bangkok");
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
 
     const snapshot = await admin
@@ -209,110 +212,34 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-// exports.createReport = functions
-//   .region(region)
-//   .https.onRequest(async (req, res) => {
-//     const { lineId } = req.body;
-
-//     // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-//     const snapshot = await admin
-//       .firestore()
-//       .collection("patient")
-//       .doc(lineId)
-//       .get();
-
-//     const wb = exportToExcel([snapshot.data()]);
-//     const filename = "test.xlsx";
-//     const opts = { bookType: "xlsx", type: "binary" };
-//     XLSX.writeFile(wb, filename, opts);
-//     const stream = fs.createReadStream(filename);
-
-//     // prepare http header
-//     res.setHeader(
-//       "Content-Type",
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//     );
-
-//     stream.pipe(res);
-//   });
-
 app.get("/", async (req, res) => {
   const { lineId } = req.query;
-
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .doc(lineId)
-    .get();
+  try {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(lineId)
+      .get();
 
     const wb = exportToExcel([snapshot.data()]);
     const filename = "test.xlsx";
     const opts = { bookType: "xlsx", type: "binary" };
-  
-    XLSX.writeFile(wb, filename, opts);
-    const stream = fs.createReadStream(filename);
-  
+    const pathToSave = path.join("/tmp", filename);
+    XLSX.writeFile(wb, pathToSave, opts);
+    const stream = fs.createReadStream(pathToSave);
+
     // prepare http header
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
-  
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+
     stream.pipe(res);
-  });
-exports.createReport = functions.region(region).https.onRequest(app);
-
-exports.fetchYellowPatients = functions.region(region).https.onCall(async (data) => {
-  const snapshot = await admin
-      .firestore()
-      .collection("patient").where("status","==","เหลือง")
-      .get();
-
-  var patientList = [];
- 
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    patientList.push(data);
-    
-  })
-  return success(patientList);
-}
-)
-exports.fetchGreenPatients = functions.region(region).https.onCall(async (data) => {
-  const snapshot = await admin
-      .firestore()
-      .collection("patient").where("status","==","เขียว")
-      .get();
-
-  var patientList = [];
- 
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    patientList.push(data);
-    
-  })
-  return success(patientList);
-}
-)
-exports.fetchRedPatients = functions.region(region).https.onCall(async (data) => {
-  const snapshot = await admin
-      .firestore()
-      .collection("patient").where("status","==","แดง")
-      .get();
-
-  var patientList = [];
- 
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    patientList.push(data);
-    
-  })
-  return success(patientList);
-}
-)
-
-
-
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+});
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
@@ -330,3 +257,5 @@ exports.fetchNotUpdatedPatients = functions
     });
     return success(notUpdatedList);
   });
+
+exports.createReport = functions.region(region).https.onRequest(app);
