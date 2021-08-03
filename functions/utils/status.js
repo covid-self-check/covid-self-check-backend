@@ -48,9 +48,10 @@ exports.isYellow = (snapshot) => {
 };
 
 exports.isY1 = (snapshot)=>{
+  const lastFollowUp = snapshot.followUp[snapshot.lastFollowUp.length - 1];
   const isOld = snapshot.age >60;
   const bmi = (snapshot.weight/(snapshot.height*snapshot.height))*10000;
-  const hasDisease = snapshot.COPD ||
+  const hasCongenitalDisease = snapshot.COPD ||
   snapshot.chronicLungDisease ||
   snapshot.CKDStage3or4 ||
   snapshot.chronicHeartDisease ||
@@ -61,6 +62,10 @@ exports.isY1 = (snapshot)=>{
   const bmiExceed = bmi>30;
   const isObese = snapshot.weight >90;
 
-  return isOld || hasDisease || bmiExceed|| isObese;
+  return isOld || hasCongenitalDisease || bmiExceed|| isObese;
   
+}
+
+exports.isG1 = (snapshot)=>{
+
 }
