@@ -587,11 +587,9 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log(data, "data");
       const dataResult = { firstName: data.firstName, lastName: data.firstName, hasCalled: data.hasCalled, id: doc.id, personalPhoneNo: data.personalPhoneNo }
       patientList.push(dataResult);
     });
-    console.log(patientList, 'list')
     generateZipFile(res, size, patientList)
   })
 );
