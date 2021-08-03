@@ -11,7 +11,6 @@ exports.authenticateVolunteer = (func) => {
   return async (data, context) => {
     if (!context.auth)
       return { status: "error", code: 401, message: "Not signed in" };
-    console.log(context.auth, 'auth')
     const email = context.auth.token.email || null;
     const userInfo = await admin
       .firestore()
@@ -49,7 +48,6 @@ exports.authenticateVolunteerRequest = (func) => {
       }
       return await func(req, res);
     } catch (e) {
-      console.log(e, 'e')
       return res
         .status(401)
         .json({ status: "error", message: "Not signed in" });
