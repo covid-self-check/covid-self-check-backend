@@ -1,8 +1,11 @@
 const status = {
-  noSymptom: 0,
-  green: 1,
-  yellow: 2,
-  red: 3,
+  noSuggestion: 0,
+  G1: 1,
+  G2: 2,
+  Y1: 3,
+  Y2:4,
+  R1:5,
+  R2:6
 };
 
 exports.isYellow = (snapshot) => {
@@ -43,3 +46,21 @@ exports.isYellow = (snapshot) => {
 
   return isOld || isCold || isCough || isExhausted || hasDisease;
 };
+
+exports.isY1 = (snapshot)=>{
+  const isOld = snapshot.age >60;
+  const bmi = (snapshot.weight/(snapshot.height*snapshot.height))*10000;
+  const hasDisease = snapshot.COPD ||
+  snapshot.chronicLungDisease ||
+  snapshot.CKDStage3or4 ||
+  snapshot.chronicHeartDisease ||
+  snapshot.CVA ||
+  snapshot.T2DM||
+  snapshot.cirrhosis||
+  snapshot.immunocompronise;
+  const bmiExceed = bmi>30;
+  const isObese = snapshot.weight >90;
+
+  return isOld || hasDisease || bmiExceed|| isObese;
+  
+}
