@@ -16,7 +16,7 @@ const config = {
   channelSecret: "dd2876f67511ea13953727cc0f2d51eb",
 };
 const client = new line.Client(config);
-const { historySchema, registerSchema, getProfileSchema, importPatientIdSchema } = require("./schema");
+const { historySchema, registerSchema, getProfileSchema, importPatientIdSchema, exportRequestToCallSchema } = require("./schema");
 const { success } = require("./response/success");
 const { getY1Patient, getY2Patient } = require("./utils/status");
 const XLSX = require("xlsx");
@@ -538,6 +538,17 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
   authenticateVolunteerRequest(async (req, res) => {
+    const { value, error } = exportRequestToCallSchema.validate(req.body);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+    const { size } = value
+
     const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -561,8 +572,11 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
     snapshot.forEach((doc) => {
       const data = doc.data();
       console.log(data, "data");
-      patientList.push(data);
+      const dataResult = { firstName: data.firstName, lastName: data.firstName, hasCalled: data.hasCalled, id: doc.id, personalPhoneNo: data.personalPhoneNo }
+      patientList.push(dataResult);
     });
+    generateZipFile(res, size, patientList)
+
     return res.status(200).json(success(patientList));
   })
 );

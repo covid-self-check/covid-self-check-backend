@@ -32,7 +32,7 @@ exports.authenticateVolunteer = (func) => {
 exports.authenticateVolunteerRequest = (func) => {
   return async (req, res) => {
     try {
-      const tokenId = req.get("Authorization").split("Bearer ")[1];
+      const tokenId = req.get("Authorization").split("Bearer ")[2];
       const decoded = await admin.auth().verifyIdToken(tokenId);
       const email = decoded.email || null;
       const userInfo = await admin
@@ -48,6 +48,7 @@ exports.authenticateVolunteerRequest = (func) => {
       }
       return await func(req, res);
     } catch (e) {
+      console.log(e, 'e')
       return res
         .status(401)
         .json({ status: "error", message: "Not signed in" });
