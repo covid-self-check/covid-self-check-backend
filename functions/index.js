@@ -67,6 +67,8 @@ exports.registerParticipant = functions
     temp.setDate(new Date().getDate() - 1);
     const lastUpdated = convertTZ(temp, "Asia/Bangkok");
     obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(lastUpdated);
+    obj["isRequestToCallExported"] = false;
+    obj["isRequestToCall"] = false;
 
     const snapshot = await admin
       .firestore()
@@ -489,3 +491,76 @@ exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
   return res.sendStatus(200);
 });
+
+exports.requestToCall = functions.region(region).https.onCall(async (data) => {
+  const { value, error } = getProfileSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { lineUserID, lineIDToken } = value;
+  const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+  if (authError) {
+    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineUserID)
+    .get();
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
+  }
+
+  const { isRequestToCallExported, isRequestToCall } = snapshot.data();
+
+  if (!isRequestToCall || isRequestToCallExported) {
+    await snapshot.ref.update({
+      isRequestToCall: true,
+      isRequestToCallExported: false,
+    });
+    return success();
+  }
+
+  return success(`userID: ${lineUserID} has already requested to call`);
+});
+
+exports.exportRequestToCall = functions.region(region).https.onRequest(
+  authenticateVolunteerRequest(async (req, res) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("isRequestToCall", "==", true)
+      .where("isRequestToCallExported", "==", false)
+      .get();
+
+    const batch = admin.firestore().batch();
+    snapshot.docs.forEach((doc) => {
+      console.log(doc.id, "id");
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      batch.update(docRef, {
+        isRequestToCallExported: true,
+      });
+    });
+    // console.log(batch, 'batch')
+    await batch.commit();
+
+    var patientList = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log(data, "data");
+      patientList.push(data);
+    });
+    return res.status(200).json(success(patientList));
+  })
+);
