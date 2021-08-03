@@ -7,7 +7,7 @@ const {
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { exportPatient, convertTZ } = require("./utils");
+const { convertTZ } = require("./utils");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require("@line/bot-sdk");
 const config = {
@@ -16,7 +16,13 @@ const config = {
   channelSecret: "dd2876f67511ea13953727cc0f2d51eb",
 };
 const client = new line.Client(config);
-const { historySchema, registerSchema, getProfileSchema } = require("./schema");
+const {
+  historySchema,
+  registerSchema,
+  getProfileSchema,
+  importPatientIdSchema,
+  exportRequestToCallSchema,
+} = require("./schema");
 const { success } = require("./response/success");
 const { getY1Patient, getY2Patient, convertToAoA } = require("./utils/status");
 const XLSX = require("xlsx");
@@ -50,7 +56,7 @@ exports.registerParticipant = functions
       );
     }
 
-     const { lineUserID, lineIDToken, ...obj } = value;
+    const { lineUserID, lineIDToken, ...obj } = value;
     // const { error: authError } = await getProfile({ lineUserID, lineIDToken });
     // if (authError) {
     //   throw new functions.https.HttpsError(
@@ -171,16 +177,122 @@ exports.getFollowupHistory = functions
     return success(snapshot.data().followUp);
   });
 
-exports.exportPatientData = functions
-  .region(region)
-  .firestore.document("patient/{id}")
-  .onCreate(async (snapshot, _) => {
-    const id = snapshot.id;
+function calculateStatus(snapshot, currentSymptom) {
+  console.log(isGreen(snapshot, currentSymptom));
+}
 
-    const documentData = snapshot.data();
-    console.log("Trigger create ");
-    await exportPatient(id, documentData);
-  });
+//status 0
+function isGreen(snapshot, currentSymptom) {
+  const data = snapshot.data();
+  const age = data.age;
+  const diseases = data.congenitalDisease;
+  const diseaseList = diseases.split(/[ ,]+/);
+  var ok = true;
+  const shouldBeFalse = [
+    "cough",
+    "runnynose",
+    "redEye",
+    "rash",
+    "soreThroat",
+    "canNotSmell",
+    "canNotTaste",
+    "diarrhoeaMoreThan3",
+    "tired",
+    "stuffyChest",
+    "nausea",
+    "chestHurt",
+    "slowResponse",
+    "headAche",
+  ];
+  const shouldBeTrue = ["canBreathRegularly"];
+  const shouldNotHaveCongenitalDisease = [
+    "ปอด",
+    "หอบ",
+    "หลอดลม",
+    "ถุงลมโป่งพอง",
+    "ไต",
+    "หัวใจ",
+    "หลอดเลือด",
+    "อัมพาต",
+    "อัมพฤกษ์",
+    "เส้นเลือดในสมอง",
+    "ความดัน",
+    "ไขมัน",
+    "เบาหวาน",
+    "ภูมิคุ้มกัน",
+    "ตับ",
+    "LSD",
+    "มะเร็ง",
+  ];
+
+  if (age > 5 && age < 60 && currentSymptom.bodyTemperature < 37) {
+    shouldBeFalse.every((symptom) => {
+      if (currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+    shouldBeTrue.every((symptom) => {
+      if (!currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+    diseaseList.forEach((disease) => {
+      shouldNotHaveCongenitalDisease.forEach((checkList) => {
+        if (disease.includes(checkList)) {
+          ok = false;
+        }
+      });
+    });
+  } else {
+    return false;
+  }
+  return ok;
+}
+
+function isGreenWithSymptom(snapshot, currentSymptom) {
+  const data = snapshot.data();
+  const age = data.age;
+  const diseases = data.congenitalDisease;
+  const diseaseList = diseases.split(/[ ,]+/);
+  let ok = true;
+  const shouldBeFalse = [
+    "cough",
+    "runnyNose",
+    "redEye",
+    "rash",
+    "soreThroat",
+    "canNotSmell",
+    "canNotTaste",
+    "diarrhoeaMoreThan3",
+    "tired",
+    "stuffyChest",
+    "nausea",
+    "chestHurt",
+    "slowResponse",
+    "headAche",
+  ];
+  const shouldBeTrue = ["canBreathRegularly"];
+  if (age > 5 && age < 60) {
+    shouldBeFalse.every((symptom) => {
+      if (currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+    shouldBeTrue.every((symptom) => {
+      if (!currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+  }
+  return ok;
+}
+
+function isYellow(snapshot, currentSymptom) {}
+function isRed(snapshot, currentSymptom) {}
 
 exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { value, error } = historySchema.validate(data);
@@ -427,21 +539,32 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { isRequestToCallExported, isRequestToCall } = snapshot.data();
+  const { isRequestToCall } = snapshot.data();
 
-  if (!isRequestToCall || isRequestToCallExported) {
-    await snapshot.ref.update({
-      isRequestToCall: true,
-      isRequestToCallExported: false,
-    });
-    return success();
+  if (isRequestToCall) {
+    return success(`userID: ${lineUserID} has already requested to call`);
   }
 
-  return success(`userID: ${lineUserID} has already requested to call`);
+  await snapshot.ref.update({
+    isRequestToCall: true,
+    isRequestToCallExported: false,
+  });
+  return success();
 });
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
   authenticateVolunteerRequest(async (req, res) => {
+    const { value, error } = exportRequestToCallSchema.validate(req.body);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+    const { size } = value;
+
     const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -464,9 +587,56 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log(data, "data");
-      patientList.push(data);
+      const dataResult = {
+        firstName: data.firstName,
+        lastName: data.firstName,
+        hasCalled: 0,
+        id: doc.id,
+        personalPhoneNo: data.personalPhoneNo,
+      };
+      patientList.push(dataResult);
     });
-    return res.status(200).json(success(patientList));
+    generateZipFile(res, size, patientList);
+  })
+);
+
+exports.importFinishedRequestToCall = functions.region(region).https.onCall(
+  authenticateVolunteer(async (data) => {
+    const { value, error } = importPatientIdSchema.validate(data);
+
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+    const { ids } = value;
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("isRequestToCall", "==", true)
+      .where("isRequestToCallExported", "==", true)
+      .get();
+
+    const batch = admin.firestore().batch();
+    snapshot.docs.forEach((doc) => {
+      const hasCalled = ids.includes(doc.id);
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      if (hasCalled) {
+        batch.update(docRef, {
+          isRequestToCall: false,
+          isRequestToCallExported: false,
+        });
+      } else {
+        batch.update(docRef, {
+          isRequestToCallExported: false,
+        });
+      }
+    });
+
+    await batch.commit();
+    return success();
   })
 );
