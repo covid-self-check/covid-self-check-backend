@@ -333,19 +333,20 @@ const generateZipFile = (res, size, data, fields) => {
 exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
-    const snapshot = await admin.firestore().collection("patient").get();
-    var notUpdatedList = [];
-    const currentDate = convertTZ(new Date(), "Asia/Bangkok");
-    snapshot.forEach((doc) => {
-      const patient = doc.data();
+    // const snapshot = await admin.firestore().collection("patient").get();
+    // var notUpdatedList = [];
+    // const currentDate = convertTZ(new Date(), "Asia/Bangkok");
+    // snapshot.forEach((doc) => {
+    //   const patient = doc.data();
 
-      const lastUpdatedDate = patient.lastUpdatedAt.toDate();
-      var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
-      if (hours >= 36) {
-        notUpdatedList.push(patient);
-      }
-    });
-    return success(notUpdatedList);
+    //   const lastUpdatedDate = patient.lastUpdatedAt.toDate();
+    //   var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    //   if (hours >= 36) {
+    //     notUpdatedList.push(patient);
+    //   }
+    // });
+    // return success(notUpdatedList);
+    return success()
   });
 
 exports.createReport = functions.region(region).https.onRequest(app);
@@ -353,53 +354,56 @@ exports.createReport = functions.region(region).https.onRequest(app);
 exports.fetchYellowPatients = functions
   .region(region)
   .https.onCall(async () => {
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("status", "==", "เหลือง")
-      .get();
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("status", "==", "เหลือง")
+    //   .get();
 
-    var patientList = [];
+    // var patientList = [];
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      patientList.push(data);
-    });
-    return success(patientList);
+    // snapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   patientList.push(data);
+    // });
+    // return success(patientList);
+    return success()
   });
 
 exports.fetchGreenPatients = functions
   .region(region)
   .https.onCall(async (data) => {
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("status", "==", "เขียว")
-      .get();
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("status", "==", "เขียว")
+    //   .get();
 
-    var patientList = [];
+    // var patientList = [];
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      patientList.push(data);
-    });
-    return success(patientList);
+    // snapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   patientList.push(data);
+    // });
+    // return success(patientList);
+    return success()
   });
 exports.fetchRedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("status", "==", "แดง")
-      .get();
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("status", "==", "แดง")
+    //   .get();
 
-    var patientList = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      patientList.push(data);
-    });
-    return success(patientList);
+    // var patientList = [];
+    // snapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   patientList.push(data);
+    // });
+    // return success(patientList);
+    return success()
   });
 
 exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
