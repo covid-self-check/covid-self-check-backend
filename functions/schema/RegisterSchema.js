@@ -1,11 +1,10 @@
-const { object } = require("joi");
 const Joi = require("joi");
 
 module.exports = Joi.object({
   firstName: Joi.string().min(1).required(),
   lastName: Joi.string().min(1).required(),
 
-  age: Joi.number().integer().required(),
+  birthDate: Joi.date().max("now").required(),
   weight: Joi.number().required(),
   height: Joi.number().required(),
   gender: Joi.string().valid("male", "female", "unknown").required(),
@@ -21,10 +20,11 @@ module.exports = Joi.object({
   lineUserID: Joi.string().required(),
   emergencyPhoneNo: Joi.string().required(),
 
-  //hasHelper: Joi.boolean().required(),
+  hasHelper: Joi.boolean().required(),
   //digitalLiteracy: Joi.boolean().required(),
 
-  station: Joi.string().required(), //not in front-end yet na
+  //not in front-end yet na
+  // station: Joi.string().required(),
 
   gotFavipiravia: Joi.number().allow(0, 1).required(),
 
@@ -61,9 +61,12 @@ module.exports = Joi.object({
     }),
 
   dose1Name: Joi.string().allow("", null),
-  dose1Date: Joi.date().allow("", null),
+  dose1Date: Joi.date().max("now").allow("", null),
   dose2Name: Joi.string().allow("", null),
-  dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
+  dose2Date: Joi.date()
+    .greater(Joi.ref("dose1Date"))
+    .max("now")
+    .allow("", null),
   favipiraviaAmount: Joi.number().allow("", null),
   noAuth: Joi.boolean(),
 });
