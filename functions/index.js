@@ -61,11 +61,11 @@ exports.registerParticipant = functions
 
     var needFollowUp = true;
     //testing puspose only
-    // const s = [0, 1, 2, 3, 4, 5, 6];
-    // var status = s[Math.floor(Math.random() * 6)];
+    const s = [0, 1, 2, 3, 4, 5, 6];
+    var status = s[Math.floor(Math.random() * 6)];
     /////////////////////////////////////////
 
-    obj["status"] = 0;
+    //obj["status"] = 0;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
     const createdDate = convertTZ(new Date(), "Asia/Bangkok");
