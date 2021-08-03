@@ -51,17 +51,22 @@ exports.registerParticipant = functions
     }
 
     const { lineUserID, lineIDToken, ...obj } = value;
-    const { error: authError } = await getProfile({ lineUserID, lineIDToken });
-    if (authError) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "ไม่ได้รับอนุญาต"
-      );
-    }
+    // const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+    // if (authError) {
+    //   throw new functions.https.HttpsError(
+    //     "unauthenticated",
+    //     "ไม่ได้รับอนุญาต"
+    //   );
+    // }
 
     var needFollowUp = true;
-    var status = "เขียว";
+    //testing puspose only
+    const s = [0, 1, 2, 3, 4, 5, 6];
+    var status = s[Math.floor(Math.random() * 6)];
     obj["status"] = status;
+    /////////////////////////////////////////
+
+    //obj["status"] = 0;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
     const createdDate = convertTZ(new Date(), "Asia/Bangkok");
@@ -336,7 +341,9 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { followUp } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
-  snapshot.ref.update({ lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate) });
+  await snapshot.ref.update({
+    lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
+  });
 
   if (!followUp) {
     await snapshot.ref.set({ followUp: [obj] });
