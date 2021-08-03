@@ -82,7 +82,7 @@ exports.isY1 = (snapshot) => {
     snapshot.CVA ||
     snapshot.T2DM ||
     snapshot.cirrhosis ||
-    snapshot.immunocompronise;
+    snapshot.immunocompromise;
   const bmiExceed = bmi > 30;
   const isObese = snapshot.weight > 90;
 

@@ -337,6 +337,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const createdDate = convertTZ(new Date(), "Asia/Bangkok");
   obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
 
+
   const snapshot = await admin
     .firestore()
     .collection("patient")
@@ -350,6 +351,9 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   }
 
   const { followUp } = snapshot.data();
+  //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
+  //update lastUpdatedAt field on patient
+  snapshot.ref.update({lastUpdatedAt:admin.firestore.Timestamp.fromDate(createdDate)});
 
   if (!followUp) {
     await snapshot.ref.set({ followUp: [obj] });
