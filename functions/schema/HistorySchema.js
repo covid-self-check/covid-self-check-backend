@@ -8,6 +8,7 @@ module.exports = Joi.object({
   spO2: Joi.number().required(),
 
   cough: Joi.boolean().required(),
+  severeCough: Joi.boolean().required(),
   runnyNose: Joi.boolean().required(),
   redEye: Joi.boolean().required(),
   rash: Joi.boolean().required(),
@@ -15,9 +16,10 @@ module.exports = Joi.object({
   canNotSmell: Joi.boolean().required(),
   canNotTaste: Joi.boolean().required(),
   canBreathRegularly: Joi.boolean().required(), //หายใจปกติไม่เหนื่อยหอบ
+  poorAppetite: Joi.boolean().required(),
 
   diarrhoeaMoreThan3: Joi.boolean().required(),
-  tired: Joi.boolean().required(),
+  fatigue: Joi.boolean().required(),
   stuffyChest: Joi.boolean().required(),
   nausea: Joi.boolean().required(),
 
