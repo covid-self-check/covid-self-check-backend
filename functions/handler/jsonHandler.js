@@ -8,6 +8,11 @@ const info2 = require("../json/info2.json");
 const info3 = require("../json/info3.json");
 const defaultReply = require("../json/defaultReply.json");
 
+<<<<<<< HEAD
 const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3,defaultReply };
 
 module.exports = { jsonController: (json) => map[json] };
+=======
+const map = { greeting };
+module.exports = { jsonController: (json) => map[json] };
+>>>>>>> development
