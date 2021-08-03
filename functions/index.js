@@ -557,11 +557,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
     const { value, error } = exportRequestToCallSchema.validate(req.body);
     if (error) {
       console.log(error.details);
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
+      return res.status(412).json(error.details)
     }
     const { size } = value;
 
