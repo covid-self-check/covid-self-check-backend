@@ -283,7 +283,7 @@ const generateZipFile = (res, size, data, fields) => {
 
   arrs.forEach((arr, i) => {
     const aoa = convertToAoA(arr);
-    const filename = `${i + 1}.xlsx`;
+    const filename = `${i + 1}.csv`;
     const ws = XLSX.utils.aoa_to_sheet(aoa);
 
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
