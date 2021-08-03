@@ -20,7 +20,7 @@ module.exports = Joi.object({
   lineUserID: Joi.string().required(),
   emergencyPhoneNo: Joi.string().required(),
 
-  //hasHelper: Joi.boolean().required(),
+  hasHelper: Joi.boolean().required(),
   //digitalLiteracy: Joi.boolean().required(),
 
   //not in front-end yet na
@@ -61,9 +61,12 @@ module.exports = Joi.object({
     }),
 
   dose1Name: Joi.string().allow("", null),
-  dose1Date: Joi.date().allow("", null),
+  dose1Date: Joi.date().max("now").allow("", null),
   dose2Name: Joi.string().allow("", null),
-  dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
+  dose2Date: Joi.date()
+    .greater(Joi.ref("dose1Date"))
+    .max("now")
+    .allow("", null),
   favipiraviaAmount: Joi.number().allow("", null),
   noAuth: Joi.boolean(),
 });
