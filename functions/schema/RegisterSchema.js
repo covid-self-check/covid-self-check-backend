@@ -21,7 +21,7 @@ module.exports = Joi.object({
   emergencyPhoneNo: Joi.string().required(),
 
   hasHelper: Joi.boolean().default(false),
-  //digitalLiteracy: Joi.boolean().required(),
+  digitalLiteracy: Joi.boolean().default(false),
 
   //not in front-end yet na
   // station: Joi.string().required(),
