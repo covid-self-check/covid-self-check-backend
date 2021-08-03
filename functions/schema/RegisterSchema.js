@@ -30,7 +30,7 @@ module.exports = Joi.object({
 
   // โรคประจำตัว
   rf_copd_chronic_lung_disease: Joi.number().allow(0, 1).required(),
-  
+
   rf_ckd_stagr_3_to_4: Joi.number().allow(0, 1).required(),
   rf_chronic_heart_disease: Joi.number().allow(0, 1).required(),
   rf_cva: Joi.number().allow(0, 1).required(),
@@ -49,7 +49,7 @@ module.exports = Joi.object({
   fac_asthma: Joi.number().allow(0, 1).required(),
   fac_pregnancy: Joi.number().allow(0, 1).required(),
 
- 
+
 
   // optional
   personalID: Joi.string().length(13).allow(null),
@@ -66,4 +66,5 @@ module.exports = Joi.object({
   dose2Name: Joi.string().allow("", null),
   dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
   favipiraviaAmount: Joi.number().allow("", null),
+  noAuth: Joi.boolean()
 });
