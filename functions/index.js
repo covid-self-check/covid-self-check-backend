@@ -223,7 +223,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { followUp } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
-  snapshot.ref.update({
+  await snapshot.ref.update({
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
