@@ -18,13 +18,15 @@ const config = {
 const client = new line.Client(config);
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
-const { getY1Patient, getY2Patient } = require("./utils/status");
+const { getY1Patient, getY2Patient, convertToAoA } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
+const _ = require("lodash");
+const { mockData } = require("./data/mock");
 
 const app = express();
 app.use(cors());
@@ -268,65 +270,40 @@ app.get(
   })
 );
 
-app.get("/zip", async (req, res) => {
-  const wb1 = XLSX.utils.book_new();
-  const ws1 = XLSX.utils.aoa_to_sheet([["1", "2", "3"]]);
-  const wb2 = XLSX.utils.book_new();
-  const ws2 = XLSX.utils.aoa_to_sheet([["1", "2", "3"]]);
-
-  XLSX.utils.book_append_sheet(wb1, ws1, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
-  XLSX.utils.book_append_sheet(wb2, ws2, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
-
-  const filename1 = "1.xlsx";
-  const filename2 = "2.xlsx";
-  const opts = { bookType: "xlsx", type: "binary" };
-  const dir = "/tmp";
-  XLSX.writeFile(wb1, path.join(dir, filename1), opts);
-  XLSX.writeFile(wb2, path.join(dir, filename2), opts);
+/**
+ * generate multiple csv file and send zip file back to client
+ * @param {Express.Response} res
+ * @param {number} size - number of volunteer
+ * @param {data} data - snapshot from firebase (need to convert to array of obj)
+ */
+const generateZipFile = (res, size, data, fields) => {
+  const arrs = _.chunk(data, size);
 
   const zip = new JSZip();
 
-  zip.file(path.join(dir, filename1), filename1);
+  arrs.forEach((arr, i) => {
+    const aoa = convertToAoA(arr);
+    const filename = `${i + 1}.xlsx`;
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-  fs.readdir(dir, async (err, files) => {
-    if (err) {
+    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
+    zip.file(filename, csv);
+  });
+
+  zip
+    .generateAsync({ type: "base64" })
+    .then(function (content) {
+      res.json({
+        title: "report.zip",
+        content: content,
+      });
+    })
+    .catch((err) => {
       res.json({
         err,
       });
-    } else {
-      const promises = files.map(function (_path) {
-        return new Promise(
-          function (_path, resolve, reject) {
-            fs.readFile(dir + _path, "utf8", function (err, data) {
-              if (err) {
-                console.log(err);
-                resolve("");
-              } else {
-                resolve({ filename: _path, content: data });
-              }
-            });
-          }.bind(this, _path)
-        );
-      });
-
-      Promise.all(promises).then(function (results) {
-        results.forEach((obj) => {
-          zip.file(obj.filename, obj.content);
-        });
-        try {
-          zip.generateAsync({ type: "base64" }).then(function (content) {
-            res.json({
-              title: "template.zip",
-              content: content,
-            });
-          });
-        } catch (e) {
-          console.error(e);
-        }
-      });
-    }
-  });
-});
+    });
+};
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
