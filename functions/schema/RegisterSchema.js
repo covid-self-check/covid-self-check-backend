@@ -26,7 +26,7 @@ module.exports = Joi.object({
 
   station: Joi.string().required(), //not in front-end yet na
 
-  gotFavipiravia: Joi.boolean().required(),
+  gotFavipiravia: Joi.number().allow(0, 1).required(),
 
   // โรคประจำตัว
   COPD: Joi.number().allow(0, 1).required(),
@@ -58,7 +58,7 @@ module.exports = Joi.object({
       is: "",
       then: Joi.string().min(7).max(9).required(),
     }),
-  congenitalDisease: Joi.string().allow("", null),
+
   dose1Name: Joi.string().allow("", null),
   dose1Date: Joi.date().allow("", null),
   dose2Name: Joi.string().allow("", null),
