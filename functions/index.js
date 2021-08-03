@@ -56,14 +56,14 @@ exports.registerParticipant = functions
       );
     }
 
-    const { lineUserID, lineIDToken, ...obj } = value;
-    // const { error: authError } = await getProfile({ lineUserID, lineIDToken });
-    // if (authError) {
-    //   throw new functions.https.HttpsError(
-    //     "unauthenticated",
-    //     "ไม่ได้รับอนุญาต"
-    //   );
-    // }
+    const { lineUserID, lineIDToken, noAuth, ...obj } = value;
+    const { error: authError } = await getProfile({ lineUserID, lineIDToken, noAuth });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "ไม่ได้รับอนุญาต"
+      );
+    }
 
     var needFollowUp = true;
     //testing puspose only
@@ -113,7 +113,9 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
     );
   }
 
-  const { data: lineProfile, error: authError } = await getProfile(value);
+
+  const { lineUserID, lineIDToken, noAuth } = value;
+  const { data: lineProfile, error: authError } = await getProfile({ lineUserID, lineIDToken, noAuth });
   if (authError) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -149,10 +151,11 @@ exports.getFollowupHistory = functions
         error.details
       );
     }
-    const { lineUserID, lineIDToken } = value;
+    const { lineUserID, lineIDToken, noAuth } = value;
     const { data: errorData, error: authError } = await getProfile({
       lineUserID,
       lineIDToken,
+      noAuth
     });
     if (authError) {
       throw new functions.https.HttpsError(
@@ -291,8 +294,8 @@ function isGreenWithSymptom(snapshot, currentSymptom) {
   return ok;
 }
 
-function isYellow(snapshot, currentSymptom) {}
-function isRed(snapshot, currentSymptom) {}
+function isYellow(snapshot, currentSymptom) { }
+function isRed(snapshot, currentSymptom) { }
 
 exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { value, error } = historySchema.validate(data);
@@ -306,11 +309,8 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { lineUserID, lineIDToken, ...obj } = value;
-  const { error: authError, data: errorData } = await getProfile({
-    lineUserID,
-    lineIDToken,
-  });
+  const { lineUserID, lineIDToken, noAuth, ...obj } = value;
+  const { error: authError, data: errorData } = await getProfile({ lineUserID, lineIDToken, noAuth });
   if (authError) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -521,8 +521,8 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { lineUserID, lineIDToken } = value;
-  const { error: authError } = await getProfile({ lineUserID, lineIDToken });
+  const { lineUserID, lineIDToken, noAuth } = value;
+  const { error: authError } = await getProfile({ lineUserID, lineIDToken, noAuth });
   if (authError) {
     throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
   }

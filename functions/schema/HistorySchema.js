@@ -64,4 +64,5 @@ module.exports = Joi.object({
   fac_dyspnea: Joi.number().allow(0, 1).required(),
   fac_chest_discomfort: Joi.number().allow(0, 1).required(),
   fac_gi_symptomss: Joi.number().allow(0, 1).required(),
+  noAuth: Joi.boolean()
 });
