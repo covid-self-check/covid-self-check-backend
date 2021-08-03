@@ -239,7 +239,7 @@ function isGreenWithSymptom(snapshot, currentSymptom) {
   const age = data.age;
   const diseases = data.congenitalDisease;
   const diseaseList = diseases.split(/[ ,]+/);
-  const ok = true;
+  let ok = true;
   const shouldBeFalse = [
     "cough",
     "runnyNose",
@@ -273,6 +273,7 @@ function isGreenWithSymptom(snapshot, currentSymptom) {
   }
   return ok;
 }
+
 function isYellow(snapshot, currentSymptom) {}
 function isRed(snapshot, currentSymptom) {}
 
@@ -390,15 +391,6 @@ exports.fetchYellowPatients = functions
     snapshot.data().status = calculateStatus(snapshot, obj);
     snapshot.data().lastUpdatedAt =
       admin.firestore.Timestamp.fromDate(createdDate);
-    const { followUp } = snapshot.data();
-
-    if (!followUp) {
-      await snapshot.ref.set({ followUp: [obj] });
-    } else {
-      await snapshot.ref.update({
-        followUp: admin.firestore.FieldValue.arrayUnion(obj),
-      });
-    }
 
     snapshot.forEach((doc) => {
       const data = doc.data();
