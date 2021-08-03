@@ -18,7 +18,7 @@ const config = {
 const client = new line.Client(config);
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
-const { exportToExcel } = require("./utils/excel");
+const { getY1Patient, getY2Patient } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
@@ -193,6 +193,123 @@ exports.exportPatientData = functions
     await exportPatient(id, documentData);
   });
 
+function calculateStatus(snapshot, currentSymptom) {
+  console.log(isGreen(snapshot, currentSymptom));
+}
+
+//status 0
+function isGreen(snapshot, currentSymptom) {
+  const data = snapshot.data();
+  const age = data.age;
+  const diseases = data.congenitalDisease;
+  const diseaseList = diseases.split(/[ ,]+/);
+  var ok = true;
+  const shouldBeFalse = [
+    "cough",
+    "runnynose",
+    "redEye",
+    "rash",
+    "soreThroat",
+    "canNotSmell",
+    "canNotTaste",
+    "diarrhoeaMoreThan3",
+    "tired",
+    "stuffyChest",
+    "nausea",
+    "chestHurt",
+    "slowResponse",
+    "headAche",
+  ];
+  const shouldBeTrue = ["canBreathRegularly"];
+  const shouldNotHaveCongenitalDisease = [
+    "ปอด",
+    "หอบ",
+    "หลอดลม",
+    "ถุงลมโป่งพอง",
+    "ไต",
+    "หัวใจ",
+    "หลอดเลือด",
+    "อัมพาต",
+    "อัมพฤกษ์",
+    "เส้นเลือดในสมอง",
+    "ความดัน",
+    "ไขมัน",
+    "เบาหวาน",
+    "ภูมิคุ้มกัน",
+    "ตับ",
+    "LSD",
+    "มะเร็ง",
+  ];
+
+  if (age > 5 && age < 60 && currentSymptom.bodyTemperature < 37) {
+    shouldBeFalse.every((symptom) => {
+      if (currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+    shouldBeTrue.every((symptom) => {
+      if (!currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+    diseaseList.forEach((disease) => {
+      shouldNotHaveCongenitalDisease.forEach((checkList) => {
+        if (disease.includes(checkList)) {
+          ok = false;
+        }
+      });
+    });
+  } else {
+    return false;
+  }
+  return ok;
+}
+
+function isGreenWithSymptom(snapshot, currentSymptom) {
+  const data = snapshot.data();
+  const age = data.age;
+  const diseases = data.congenitalDisease;
+  const diseaseList = diseases.split(/[ ,]+/);
+  let ok = true;
+  const shouldBeFalse = [
+    "cough",
+    "runnyNose",
+    "redEye",
+    "rash",
+    "soreThroat",
+    "canNotSmell",
+    "canNotTaste",
+    "diarrhoeaMoreThan3",
+    "tired",
+    "stuffyChest",
+    "nausea",
+    "chestHurt",
+    "slowResponse",
+    "headAche",
+  ];
+  const shouldBeTrue = ["canBreathRegularly"];
+  if (age > 5 && age < 60) {
+    shouldBeFalse.every((symptom) => {
+      if (currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+    shouldBeTrue.every((symptom) => {
+      if (!currentSymptom[symptom]) {
+        ok = false;
+        return false;
+      }
+    });
+  }
+  return ok;
+}
+
+function isYellow(snapshot, currentSymptom) {}
+function isRed(snapshot, currentSymptom) {}
+
 exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { value, error } = historySchema.validate(data);
   if (error) {
@@ -220,6 +337,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const createdDate = convertTZ(new Date(), "Asia/Bangkok");
   obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
 
+
   const snapshot = await admin
     .firestore()
     .collection("patient")
@@ -233,6 +351,9 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   }
 
   const { followUp } = snapshot.data();
+  //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
+  //update lastUpdatedAt field on patient
+  snapshot.ref.update({lastUpdatedAt:admin.firestore.Timestamp.fromDate(createdDate)});
 
   if (!followUp) {
     await snapshot.ref.set({ followUp: [obj] });
@@ -241,26 +362,29 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
-
   return success();
 });
 
 app.get(
   "/",
   authenticateVolunteerRequest(async (req, res) => {
-    const { lineId } = req.query;
     try {
-      const snapshot = await admin
-        .firestore()
-        .collection("patient")
-        .doc(lineId)
-        .get();
+      const [y1, y2] = await Promise.all([getY1Patient(), getY2Patient()]);
 
-      const wb = exportToExcel([snapshot.data()]);
-      const filename = "test.xlsx";
+      const wb = XLSX.utils.book_new();
+      // append result to sheet
+      const wsY1 = XLSX.utils.aoa_to_sheet(y1);
+      const wsY2 = XLSX.utils.aoa_to_sheet(y2);
+      // write workbook file
+      XLSX.utils.book_append_sheet(wb, wsY1, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
+      XLSX.utils.book_append_sheet(wb, wsY2, "รายงานผู้ป่วยสีเหลืองมีอาการ");
+      const filename = `report.xlsx`;
       const opts = { bookType: "xlsx", type: "binary" };
+
+      // it must be save to tmp directory because it run on firebase
       const pathToSave = path.join("/tmp", filename);
       XLSX.writeFile(wb, pathToSave, opts);
+      // create read stream
       const stream = fs.createReadStream(pathToSave);
 
       // prepare http header
@@ -268,7 +392,10 @@ app.get(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
-      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
 
       stream.pipe(res);
     } catch (err) {
@@ -285,8 +412,8 @@ exports.fetchNotUpdatedPatients = functions
     var notUpdatedList = [];
     const currentDate = new Date().getDate();
     snapshot.forEach((doc) => {
-      const data = doc.data();
-      const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
+      const patient = doc.data();
+      const lastUpdatedDate = patient.lastUpdatedAt.toDate().getDate();
       if (lastUpdatedDate - currentDate !== 0) {
         notUpdatedList.push(data);
       }
