@@ -20,7 +20,7 @@ module.exports = Joi.object({
   sp_o2_ra: Joi.number().required(),
   sp_o2_after_eih: Joi.number().required(),
   eih_result: Joi.string()
-    .allow(["positive", "negative", "neutral", "unknown"])
+    .allow("positive", "negative", "neutral", "unknown")
     .required(),
   sym1_severe_cough: Joi.number().allow(0, 1).required(),
   sym1_chest_tightness: Joi.number().allow(0, 1).required(),

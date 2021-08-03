@@ -50,12 +50,12 @@ module.exports = Joi.object({
   fac_pregnancy: Joi.number().allow(0, 1).required(),
 
   // optional
-  personalID: Joi.string().length(13).default(""),
+  personalID: Joi.string().length(13).allow(null),
   passport: Joi.string()
     .min(7)
     .max(9)
     .when("personalID", {
-      is: "",
+      is: null,
       then: Joi.string().min(7).max(9).required(),
     }),
 
