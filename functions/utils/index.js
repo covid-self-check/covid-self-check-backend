@@ -1,4 +1,4 @@
 module.exports = {
   convertTZ: require("./date").convertTZ,
-  exportPatient: require("./sheet").exportPatient,
+  formatDateTime: require("./date").formatDateTime,
 };
