@@ -38,14 +38,12 @@ module.exports = Joi.object({
   immunocompronise: Joi.boolean().required(),
 
   // optional
-  congenitalDisease: Joi.string().allow("", null, undefined),
-  dose1Name: Joi.string().allow("", null, undefined),
-  dose1Date: Joi.date().allow("", null, undefined),
-  dose2Name: Joi.string().allow("", null, undefined),
-  dose2Date: Joi.date()
-    .greater(Joi.ref("dose1Date"))
-    .allow("", null, undefined),
-  favipiraviaAmount: Joi.number().allow("", null, undefined),
+  congenitalDisease: Joi.string().allow("", null),
+  dose1Name: Joi.string().allow("", null),
+  dose1Date: Joi.date().allow("", null),
+  dose2Name: Joi.string().allow("", null),
+  dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
+  favipiraviaAmount: Joi.number().allow("", null),
 
   // โรคประจำตัว
 });
