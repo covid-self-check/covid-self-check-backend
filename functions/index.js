@@ -22,6 +22,7 @@ const { getY1Patient, getY2Patient } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
+const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
 
@@ -124,27 +125,6 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
 exports.getFollowupHistory = functions
   .region(region)
   .https.onCall(async (data, context) => {
-    const { lineId } = data;
-
-    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineId)
-      .get();
-
-    if (!snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
-      );
-    }
-    return success(snapshot.data().followUp);
-  });
-
-exports.getFollowupHistory = functions
-  .region(region)
-  .https.onCall(async (data, context) => {
     const { value, error } = getProfileSchema.validate(data);
     if (error) {
       console.log(error.details);
@@ -193,123 +173,6 @@ exports.exportPatientData = functions
     await exportPatient(id, documentData);
   });
 
-function calculateStatus(snapshot, currentSymptom) {
-  console.log(isGreen(snapshot, currentSymptom));
-}
-
-//status 0
-function isGreen(snapshot, currentSymptom) {
-  const data = snapshot.data();
-  const age = data.age;
-  const diseases = data.congenitalDisease;
-  const diseaseList = diseases.split(/[ ,]+/);
-  var ok = true;
-  const shouldBeFalse = [
-    "cough",
-    "runnynose",
-    "redEye",
-    "rash",
-    "soreThroat",
-    "canNotSmell",
-    "canNotTaste",
-    "diarrhoeaMoreThan3",
-    "tired",
-    "stuffyChest",
-    "nausea",
-    "chestHurt",
-    "slowResponse",
-    "headAche",
-  ];
-  const shouldBeTrue = ["canBreathRegularly"];
-  const shouldNotHaveCongenitalDisease = [
-    "ปอด",
-    "หอบ",
-    "หลอดลม",
-    "ถุงลมโป่งพอง",
-    "ไต",
-    "หัวใจ",
-    "หลอดเลือด",
-    "อัมพาต",
-    "อัมพฤกษ์",
-    "เส้นเลือดในสมอง",
-    "ความดัน",
-    "ไขมัน",
-    "เบาหวาน",
-    "ภูมิคุ้มกัน",
-    "ตับ",
-    "LSD",
-    "มะเร็ง",
-  ];
-
-  if (age > 5 && age < 60 && currentSymptom.bodyTemperature < 37) {
-    shouldBeFalse.every((symptom) => {
-      if (currentSymptom[symptom]) {
-        ok = false;
-        return false;
-      }
-    });
-    shouldBeTrue.every((symptom) => {
-      if (!currentSymptom[symptom]) {
-        ok = false;
-        return false;
-      }
-    });
-    diseaseList.forEach((disease) => {
-      shouldNotHaveCongenitalDisease.forEach((checkList) => {
-        if (disease.includes(checkList)) {
-          ok = false;
-        }
-      });
-    });
-  } else {
-    return false;
-  }
-  return ok;
-}
-
-function isGreenWithSymptom(snapshot, currentSymptom) {
-  const data = snapshot.data();
-  const age = data.age;
-  const diseases = data.congenitalDisease;
-  const diseaseList = diseases.split(/[ ,]+/);
-  let ok = true;
-  const shouldBeFalse = [
-    "cough",
-    "runnyNose",
-    "redEye",
-    "rash",
-    "soreThroat",
-    "canNotSmell",
-    "canNotTaste",
-    "diarrhoeaMoreThan3",
-    "tired",
-    "stuffyChest",
-    "nausea",
-    "chestHurt",
-    "slowResponse",
-    "headAche",
-  ];
-  const shouldBeTrue = ["canBreathRegularly"];
-  if (age > 5 && age < 60) {
-    shouldBeFalse.every((symptom) => {
-      if (currentSymptom[symptom]) {
-        ok = false;
-        return false;
-      }
-    });
-    shouldBeTrue.every((symptom) => {
-      if (!currentSymptom[symptom]) {
-        ok = false;
-        return false;
-      }
-    });
-  }
-  return ok;
-}
-
-function isYellow(snapshot, currentSymptom) {}
-function isRed(snapshot, currentSymptom) {}
-
 exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { value, error } = historySchema.validate(data);
   if (error) {
@@ -337,7 +200,6 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const createdDate = convertTZ(new Date(), "Asia/Bangkok");
   obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
 
-
   const snapshot = await admin
     .firestore()
     .collection("patient")
@@ -353,7 +215,9 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { followUp } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
-  snapshot.ref.update({lastUpdatedAt:admin.firestore.Timestamp.fromDate(createdDate)});
+  snapshot.ref.update({
+    lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
+  });
 
   if (!followUp) {
     await snapshot.ref.set({ followUp: [obj] });
@@ -403,6 +267,66 @@ app.get(
     }
   })
 );
+
+app.get("/zip", async (req, res) => {
+  const wb1 = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.aoa_to_sheet([["1", "2", "3"]]);
+  const wb2 = XLSX.utils.book_new();
+  const ws2 = XLSX.utils.aoa_to_sheet([["1", "2", "3"]]);
+
+  XLSX.utils.book_append_sheet(wb1, ws1, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
+  XLSX.utils.book_append_sheet(wb2, ws2, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
+
+  const filename1 = "1.xlsx";
+  const filename2 = "2.xlsx";
+  const opts = { bookType: "xlsx", type: "binary" };
+  const dir = "/tmp";
+  XLSX.writeFile(wb1, path.join(dir, filename1), opts);
+  XLSX.writeFile(wb2, path.join(dir, filename2), opts);
+
+  const zip = new JSZip();
+
+  zip.file(path.join(dir, filename1), filename1);
+
+  fs.readdir(dir, async (err, files) => {
+    if (err) {
+      res.json({
+        err,
+      });
+    } else {
+      const promises = files.map(function (_path) {
+        return new Promise(
+          function (_path, resolve, reject) {
+            fs.readFile(dir + _path, "utf8", function (err, data) {
+              if (err) {
+                console.log(err);
+                resolve("");
+              } else {
+                resolve({ filename: _path, content: data });
+              }
+            });
+          }.bind(this, _path)
+        );
+      });
+
+      Promise.all(promises).then(function (results) {
+        results.forEach((obj) => {
+          zip.file(obj.filename, obj.content);
+        });
+        try {
+          zip.generateAsync({ type: "base64" }).then(function (content) {
+            res.json({
+              title: "template.zip",
+              content: content,
+            });
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    }
+  });
+});
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
