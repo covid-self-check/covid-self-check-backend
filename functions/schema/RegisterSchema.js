@@ -28,10 +28,14 @@ module.exports = Joi.object({
   gotFavipiravia: Joi.boolean().required(),
 
   // optional
-  congenitalDisease: Joi.string(),
-  dose1Name: Joi.string(),
-  dose1Date: Joi.date().allow("", null),
-  dose2Name: Joi.string(),
-  dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
-  favipiraviaAmount: Joi.number(),
+  congenitalDisease: Joi.string().allow("", null, undefined),
+  dose1Name: Joi.string().allow("", null, undefined),
+  dose1Date: Joi.date().allow("", null, undefined),
+  dose2Name: Joi.string().allow("", null, undefined),
+  dose2Date: Joi.date()
+    .greater(Joi.ref("dose1Date"))
+    .allow("", null, undefined),
+  favipiraviaAmount: Joi.number().allow("", null, undefined),
+
+  // โรคประจำตัว
 });
