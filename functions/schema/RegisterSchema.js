@@ -7,7 +7,7 @@ module.exports = Joi.object({
   age: Joi.number().integer().required(),
   weight: Joi.number().required(),
   height: Joi.number().required(),
-  gender: Joi.string().valid("ชาย", "หญิง", "ไม่ระบุ").required(),
+  gender: Joi.string().valid("male", "female", "unknown").required(),
 
   address: Joi.string().required(),
   province: Joi.string().required(),
@@ -27,11 +27,23 @@ module.exports = Joi.object({
 
   gotFavipiravia: Joi.boolean().required(),
 
+  // โรคประจำตัว
+  COPD: Joi.boolean().required(),
+  chronicLungDisease: Joi.boolean().required(),
+  CKDStage3or4: Joi.boolean().required(),
+  chronicHeartDisease: Joi.boolean().required(),
+  CVA: Joi.boolean().required(),
+  T2DM: Joi.boolean().required(),
+  cirrhosis: Joi.boolean().required(),
+  immunocompromise: Joi.boolean().required(),
+
   // optional
-  congenitalDisease: Joi.string(),
-  dose1Name: Joi.string(),
+  congenitalDisease: Joi.string().allow("", null),
+  dose1Name: Joi.string().allow("", null),
   dose1Date: Joi.date().allow("", null),
-  dose2Name: Joi.string(),
+  dose2Name: Joi.string().allow("", null),
   dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
-  favipiraviaAmount: Joi.number(),
+  favipiraviaAmount: Joi.number().allow("", null),
+
+  // โรคประจำตัว
 });
