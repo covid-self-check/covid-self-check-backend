@@ -7,7 +7,7 @@
     "predeploy": [
       "npm --prefix \"$RESOURCE_DIR\" run lint"
     ],
-    "runtime": "nodejs15",
+    "runtime" : "nodejs14",
     "source": "functions"
   },
   "emulators": {
