@@ -12,6 +12,7 @@ const { success } = require("./response/success");
 const { exportToExcel } = require("./utils/excel");
 const XLSX = require("xlsx");
 const fs = require("fs");
+const path = require("path");
 const express = require("express");
 
 const app = express();
@@ -203,56 +204,33 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-// exports.createReport = functions
-//   .region(region)
-//   .https.onRequest(async (req, res) => {
-//     const { lineId } = req.body;
-
-//     // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-//     const snapshot = await admin
-//       .firestore()
-//       .collection("patient")
-//       .doc(lineId)
-//       .get();
-
-//     const wb = exportToExcel([snapshot.data()]);
-//     const filename = "test.xlsx";
-//     const opts = { bookType: "xlsx", type: "binary" };
-//     XLSX.writeFile(wb, filename, opts);
-//     const stream = fs.createReadStream(filename);
-
-//     // prepare http header
-//     res.setHeader(
-//       "Content-Type",
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//     );
-
-//     stream.pipe(res);
-//   });
-
 app.get("/", async (req, res) => {
   const { lineId } = req.query;
+  try {
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(lineId)
+      .get();
 
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .doc(lineId)
-    .get();
+    const wb = exportToExcel([snapshot.data()]);
+    const filename = "test.xlsx";
+    const opts = { bookType: "xlsx", type: "binary" };
+    const pathToSave = path.join("/tmp", filename);
+    XLSX.writeFile(wb, pathToSave, opts);
+    const stream = fs.createReadStream(pathToSave);
 
-  const wb = exportToExcel([snapshot.data()]);
-  const filename = "test.xlsx";
-  const opts = { bookType: "xlsx", type: "binary" };
+    // prepare http header
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
 
-  XLSX.writeFile(wb, filename, opts);
-  const stream = fs.createReadStream(filename);
-
-  // prepare http header
-  res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  );
-
-  stream.pipe(res);
+    stream.pipe(res);
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
 });
 
 exports.createReport = functions.region(region).https.onRequest(app);
