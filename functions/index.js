@@ -154,7 +154,7 @@ exports.Webhook = functions.region(region).https
     const userId = event.source.userId;
     const profile = client.getProfile(userId);
     const userObject = { userId: userId, profile: (await profile) };
-    console.log(userObject);
+    // console.log(userObject);
     await eventHandler(event, userObject, client);
     res.sendStatus(200);
   });
