@@ -9,6 +9,9 @@ const functions = require("firebase-functions");
  */
 exports.authenticateVolunteer = (func) => {
   return async (data, context) => {
+    if (data.noAuth && functions.config().environment.isdevelopment) {
+      return await func(data, context);
+    }
     if (!context.auth)
       return { status: "error", code: 401, message: "Not signed in" };
     console.log(context.auth, 'auth')
@@ -33,6 +36,9 @@ exports.authenticateVolunteer = (func) => {
 exports.authenticateVolunteerRequest = (func) => {
   return async (req, res) => {
     try {
+      if (req.body.noAuth && functions.config().environment.isdevelopment) {
+        return await func(req, res);
+      }
       const tokenId = req.get("Authorization").split("Bearer ")[1];
       const decoded = await admin.auth().verifyIdToken(tokenId);
       const email = decoded.email || null;
@@ -63,6 +69,9 @@ exports.authenticateVolunteerRequest = (func) => {
  * @returns
  */
 exports.getProfile = async (data) => {
+  if (data.noAuth && functions.config().environment.isdevelopment) {
+    return { data: userProfile, error: false };
+  }
   const { lineIDToken, lineUserID } = data;
 
   const params = new URLSearchParams();
