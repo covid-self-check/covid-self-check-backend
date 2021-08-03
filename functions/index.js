@@ -201,6 +201,7 @@ exports.updateSymptom = functions
     const createdDate = convertTZ(new Date(),'Asia/Bangkok');
     obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
 
+
     const snapshot = await admin.firestore().collection("patient").doc(lineId).get();
     if(!snapshot.exists){
       throw new functions.https.HttpsError(
@@ -210,7 +211,7 @@ exports.updateSymptom = functions
     }
     
     snapshot.data().status = calculateStatus(snapshot,obj);
-
+    snapshot.data().lastUpdatedAt = admin.firestore.Timestamp.fromDate(createdDate); 
     const { followUp } = snapshot.data();
     
     if(!followUp){
