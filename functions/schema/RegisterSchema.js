@@ -20,7 +20,7 @@ module.exports = Joi.object({
   lineUserID: Joi.string().required(),
   emergencyPhoneNo: Joi.string().required(),
 
-  hasHelper: Joi.boolean().required(),
+  hasHelper: Joi.boolean().default(false),
   //digitalLiteracy: Joi.boolean().required(),
 
   //not in front-end yet na
