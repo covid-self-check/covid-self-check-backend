@@ -20,8 +20,8 @@ module.exports = Joi.object({
   lineUserID: Joi.string().required(),
   emergencyPhoneNo: Joi.string().required(),
 
-  hasHelper: Joi.boolean().required(),
-  digitalLiteracy: Joi.boolean().required(),
+  //hasHelper: Joi.boolean().required(),
+  //digitalLiteracy: Joi.boolean().required(),
 
   station: Joi.string().required(), //not in front-end yet na
 
@@ -36,6 +36,17 @@ module.exports = Joi.object({
   T2DM: Joi.boolean().required(),
   cirrhosis: Joi.boolean().required(),
   immunocompromise: Joi.boolean().required(),
+
+  fac_diabetes: Joi.number().allow(0, 1).required(),
+  fac_dyslipidemia: Joi.number().allow(0, 1).required(),
+  fac_hypertension: Joi.number().allow(0, 1).required(),
+  fac_heart_diseases: Joi.number().allow(0, 1).required(),
+  fac_esrd: Joi.number().allow(0, 1).required(),
+  fac_cancer: Joi.number().allow(0, 1).required(),
+  fac_tuberculosis: Joi.number().allow(0, 1).required(),
+  fac_hiv: Joi.number().allow(0, 1).required(),
+  fac_asthma: Joi.number().allow(0, 1).required(),
+  fac_pregnancy: Joi.number().allow(0, 1).required(),
 
   // optional
   congenitalDisease: Joi.string().allow("", null),
