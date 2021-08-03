@@ -245,14 +245,14 @@ exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
     const snapshot = await admin.firestore().collection("patient").get();
-
     var notUpdatedList = [];
-    const currentDate = new Date().getDate();
+    const currentDate = convertTZ(new Date(), "Asia/Bangkok");
     snapshot.forEach((doc) => {
-      const data = doc.data();
-      const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
-      if (lastUpdatedDate - currentDate !== 0) {
-        notUpdatedList.push(data);
+      const patient = doc.data();
+      const lastUpdatedDate = patient.lastUpdatedAt.toDate();
+      var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+      if (hours >= 36) {
+        notUpdatedList.push(patient);
       }
     });
     return success(notUpdatedList);
