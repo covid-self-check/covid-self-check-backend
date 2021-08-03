@@ -3,10 +3,19 @@ const functions = require("firebase-functions");
 const {
   authenticateVolunteer,
   getProfile,
+  authenticateVolunteerRequest,
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { region } = require("./config");
-const { exportPatient, convertTZ, formatDateTime } = require("./utils");
+const { exportPatient, convertTZ } = require("./utils");
+const { eventHandler } = require("./handler/eventHandler");
+const line = require("@line/bot-sdk");
+const config = {
+  channelAccessToken:
+    "lCmCyFN94c2gZfkxzog0xtf5aE2rizp/FtmZdFmsYO4MpJFZn5F+XbbDadPySauxQzi9TUU+jrK05CKnQn9+Jp+VMVNquUyMEMRwdsCy3xDOeRiZE/QRYCC7tEodeUS6qmNJq+YEPqSVf9Vl41tr3AdB04t89/1O/w1cDnyilFU=",
+  channelSecret: "dd2876f67511ea13953727cc0f2d51eb",
+};
+const client = new line.Client(config);
 const { historySchema, registerSchema, getProfileSchema } = require("./schema");
 const { success } = require("./response/success");
 const { getY1Patient, getY2Patient } = require("./utils/status");
@@ -14,8 +23,10 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -35,6 +46,7 @@ exports.registerParticipant = functions
         error.details
       );
     }
+
     const { lineUserID, lineIDToken, ...obj } = value;
     const { error: authError } = await getProfile({ lineUserID, lineIDToken });
     if (authError) {
@@ -108,6 +120,27 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
     return { result: `Content for authorized user` };
   })
 );
+
+exports.getFollowupHistory = functions
+  .region(region)
+  .https.onCall(async (data, context) => {
+    const { lineId } = data;
+
+    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(lineId)
+      .get();
+
+    if (!snapshot.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        `ไม่พบข้อมูลผู้ใช้ ${lineId}`
+      );
+    }
+    return success(snapshot.data().followUp);
+  });
 
 exports.getFollowupHistory = functions
   .region(region)
@@ -328,38 +361,44 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-app.get("/", async (req, res) => {
-  try {
-    const [y1, y2] = await Promise.all([getY1Patient(), getY2Patient()]);
+app.get(
+  "/",
+  authenticateVolunteerRequest(async (req, res) => {
+    try {
+      const [y1, y2] = await Promise.all([getY1Patient(), getY2Patient()]);
 
-    const wb = XLSX.utils.book_new();
-    // append result to sheet
-    const wsY1 = XLSX.utils.aoa_to_sheet(y1);
-    const wsY2 = XLSX.utils.aoa_to_sheet(y2);
-    // write workbook file
-    XLSX.utils.book_append_sheet(wb, wsY1, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
-    XLSX.utils.book_append_sheet(wb, wsY2, "รายงานผู้ป่วยสีเหลืองมีอาการ");
-    const filename = `report.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
+      const wb = XLSX.utils.book_new();
+      // append result to sheet
+      const wsY1 = XLSX.utils.aoa_to_sheet(y1);
+      const wsY2 = XLSX.utils.aoa_to_sheet(y2);
+      // write workbook file
+      XLSX.utils.book_append_sheet(wb, wsY1, "รายงานผู้ป่วยสีเหลืองไม่มีอาการ");
+      XLSX.utils.book_append_sheet(wb, wsY2, "รายงานผู้ป่วยสีเหลืองมีอาการ");
+      const filename = `report.xlsx`;
+      const opts = { bookType: "xlsx", type: "binary" };
 
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
-    // create read stream
-    const stream = fs.createReadStream(pathToSave);
+      // it must be save to tmp directory because it run on firebase
+      const pathToSave = path.join("/tmp", filename);
+      XLSX.writeFile(wb, pathToSave, opts);
+      // create read stream
+      const stream = fs.createReadStream(pathToSave);
 
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      // prepare http header
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
 
-    stream.pipe(res);
-  } catch (err) {
-    return { ok: false, message: err.message };
-  }
-});
+      stream.pipe(res);
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  })
+);
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
@@ -382,7 +421,7 @@ exports.createReport = functions.region(region).https.onRequest(app);
 
 exports.fetchYellowPatients = functions
   .region(region)
-  .https.onCall(async (data) => {
+  .https.onCall(async () => {
     const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -425,10 +464,23 @@ exports.fetchRedPatients = functions
       .get();
 
     var patientList = [];
-
     snapshot.forEach((doc) => {
       const data = doc.data();
       patientList.push(data);
     });
     return success(patientList);
   });
+
+exports.Webhook = functions.region(region).https.onRequest(async (req, res) => {
+  const event = req.body.events[0];
+  const userId = event.source.userId;
+  const profile = client.getProfile(userId);
+  const userObject = { userId: userId, profile: await profile };
+  console.log(userObject);
+  await eventHandler(event, userObject, client);
+  res.sendStatus(200);
+});
+
+exports.check = functions.region(region).https.onRequest(async (req, res) => {
+  return res.sendStatus(200);
+});
