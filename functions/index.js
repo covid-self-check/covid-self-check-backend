@@ -257,3 +257,5 @@ exports.fetchNotUpdatedPatients = functions
     });
     return success(notUpdatedList);
   });
+
+exports.createReport = functions.region(region).https.onRequest(app);
