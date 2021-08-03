@@ -233,8 +233,6 @@ app.get("/", async (req, res) => {
   }
 });
 
-exports.createReport = functions.region(region).https.onRequest(app);
-
 exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
@@ -245,7 +243,7 @@ exports.fetchNotUpdatedPatients = functions
     snapshot.forEach((doc) => {
       const data = doc.data();
       const lastUpdatedDate = data.lastUpdatedAt.toDate().getDate();
-      if (lastUpdatedDate - currentDate != 0) {
+      if (lastUpdatedDate - currentDate !== 0) {
         notUpdatedList.push(data);
       }
     });
