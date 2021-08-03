@@ -49,13 +49,12 @@ module.exports = Joi.object({
   fac_asthma: Joi.number().allow(0, 1).required(),
   fac_pregnancy: Joi.number().allow(0, 1).required(),
 
-
-
   // optional
   personalID: Joi.string().length(13).allow(null),
   passport: Joi.string()
     .min(7)
     .max(9)
+    .allow(null)
     .when("personalID", {
       is: null,
       then: Joi.string().min(7).max(9).required(),
@@ -66,5 +65,5 @@ module.exports = Joi.object({
   dose2Name: Joi.string().allow("", null),
   dose2Date: Joi.date().greater(Joi.ref("dose1Date")).allow("", null),
   favipiraviaAmount: Joi.number().allow("", null),
-  noAuth: Joi.boolean()
+  noAuth: Joi.boolean(),
 });
