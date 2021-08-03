@@ -60,8 +60,12 @@ exports.registerParticipant = functions
     }
 
     var needFollowUp = true;
-    var status = "เขียว";
-    obj["status"] = status;
+    //testing puspose only
+    // const s = [0, 1, 2, 3, 4, 5, 6];
+    // var status = s[Math.floor(Math.random() * 6)];
+    /////////////////////////////////////////
+
+    obj["status"] = 0;
     obj["needFollowUp"] = needFollowUp;
     obj["followUp"] = [];
     const createdDate = convertTZ(new Date(), "Asia/Bangkok");
@@ -219,7 +223,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const { followUp } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
-  snapshot.ref.update({
+  await snapshot.ref.update({
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
