@@ -2,7 +2,7 @@ const functions = require("firebase-functions");
 
 exports.config = {
   backupAccount: {
-    clientId: functions.config().backup_account.client_email,
+    clientEmail: functions.config().backup_account.client_email,
     privateKey: functions.config().backup_account.private_key,
   },
   line: {
