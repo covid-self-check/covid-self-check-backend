@@ -10,3 +10,5 @@ The server application to handle chat bot and dealing with both patients and von
 ## Get environment variable for local development
 
 `firebase functions:config:get > .runtimeconfig.json`
+
+`firebase functions:config:get | ac .runtimeconfig.json`
