@@ -562,11 +562,11 @@ exports.backupFirestore = functions
   .timeZone("Asia/Bangkok");
 
 
-exports.getNumberOfPatients = functions.region(region).https.onCall(async () => {
+exports.getNumberOfPatients = functions.region(region).https.onRequest(async (req, res) => {
   const snapshot = await admin
     .firestore()
     .collection("patient")
     .get();
 
-  return success(snapshot.size);
+  return res.status(200).json(success(snapshot.size));
 });
