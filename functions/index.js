@@ -40,6 +40,8 @@ const { generateZipFileRoundRobin } = require("./utils/zip");
 
 const region = require("./config/index").config.region;
 
+const { sendPatientstatus } = require("./linefunctions/linepushmessage");
+
 const app = express();
 app.use(cors({ origin: true }));
 
@@ -247,7 +249,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     });
   }
   const status = "We are the CHAMPION!!";
-  // sendPatientstatus(lineUserID, status, config.channelAccessToken);
+  sendPatientstatus(lineUserID, status, config.channelAccessToken);
   return success();
 });
 
