@@ -556,7 +556,8 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 exports.backupFirebase = functions
   .region(region)
   .pubsub.schedule("every day 18:00")
-  .timeZone("Asia/Bangkok");
+  .timeZone("Asia/Bangkok")
+  .onRun(backup);
 
 exports.getNumberOfPatients = functions
   .region(region)
