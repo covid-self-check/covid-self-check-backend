@@ -563,5 +563,12 @@ exports.getNumberOfPatients = functions
   .https.onCall(async () => {
     const snapshot = await admin.firestore().collection("patient").get();
 
-    return success(snapshot.size);
-  });
+
+exports.getNumberOfPatients = functions.region(region).https.onRequest(async (req, res) => {
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .get();
+
+  return res.status(200).json(success(snapshot.size));
+});
