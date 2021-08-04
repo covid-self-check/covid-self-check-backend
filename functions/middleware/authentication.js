@@ -35,7 +35,12 @@ exports.authenticateVolunteer = (func) => {
 exports.authenticateVolunteerRequest = (func) => {
   return async (req, res) => {
     try {
-      res.set({ 'Access-Control-Allow-Origin': '*' })
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET , POST , PUT , PATCH , DELETE"
+      );
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
       if (req.body.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
         console.log("in if");
         return await func(req, res);
