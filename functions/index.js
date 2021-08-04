@@ -277,8 +277,7 @@ app.get("/master", async (req, res) => {
     const opts = { bookType: "xlsx", type: "binary" };
 
     // it must be save to tmp directory because it run on firebase
-    // const pathToSave = path.join("/tmp", filename);
-    const pathToSave = filename;
+    const pathToSave = path.join("/tmp", filename);
     XLSX.writeFile(wb, pathToSave, opts);
 
     const stream = fs.createReadStream(pathToSave);
