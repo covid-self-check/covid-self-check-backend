@@ -1,5 +1,6 @@
 const { admin } = require("../init");
 const axios = require("axios");
+
 const functions = require("firebase-functions");
 
 /**
@@ -9,7 +10,11 @@ const functions = require("firebase-functions");
  */
 exports.authenticateVolunteer = (func) => {
   return async (data, context) => {
-    if (data.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+    if (
+      data.noAuth &&
+      functions.config().environment &&
+      functions.config().environment.isdevelopment
+    ) {
       return await func(data, context);
     }
     if (!context.auth)
@@ -35,11 +40,15 @@ exports.authenticateVolunteer = (func) => {
 exports.authenticateVolunteerRequest = (func) => {
   return async (req, res) => {
     try {
-      if (req.body.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+      if (
+        req.body.noAuth &&
+        functions.config().environment &&
+        functions.config().environment.isdevelopment
+      ) {
         console.log("in if");
         return await func(req, res);
       }
-     
+
       const tokenId = req.get("Authorization").split("Bearer ")[1];
       const decoded = await admin.auth().verifyIdToken(tokenId);
       const email = decoded.email || null;
@@ -57,13 +66,11 @@ exports.authenticateVolunteerRequest = (func) => {
       try {
         return await func(req, res);
       } catch (e) {
-        console.log(e)
-        return res
-          .status(500)
-          .json({ status: "error", message: "Unknown" });
+        console.log(e);
+        return res.status(500).json({ status: "error", message: "Unknown" });
       }
     } catch (e) {
-     console.log(e);
+      console.log(e);
       return res
         .status(401)
         .json({ status: "error", message: "Not signed in" });
@@ -77,7 +84,11 @@ exports.authenticateVolunteerRequest = (func) => {
  * @returns
  */
 exports.getProfile = async (data) => {
-  if (data.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+  if (
+    data.noAuth &&
+    functions.config().environment &&
+    functions.config().environment.isdevelopment
+  ) {
     return { data: {}, error: false };
   }
   const { lineIDToken, lineUserID } = data;

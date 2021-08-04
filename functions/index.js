@@ -36,11 +36,12 @@ const express = require("express");
 const cors = require("cors");
 const _ = require("lodash");
 const { backup } = require("./backup");
+const { generateZipFileRoundRobin } = require("./utils/zip");
 
 const region = require("./config/index").config.region;
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: true }));
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -235,15 +236,18 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
+  obj["status"] = 0;
+
   if (!followUp) {
-    await snapshot.ref.set({ followUp: [obj] });
+    await snapshot.ref.set({ ...obj, followUp: [obj] });
   } else {
     await snapshot.ref.update({
+      ...obj,
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
-  const status = "We are the CHAMPION!!"
-  sendPatientstatus(lineUserID,status,config.channelAccessToken)
+  const status = "We are the CHAMPION!!";
+  // sendPatientstatus(lineUserID, status, config.channelAccessToken);
   return success();
 });
 
@@ -389,71 +393,6 @@ const generateZipFile = (res, size, data) => {
     });
 };
 
-
-/**
- * generate multiple csv file and send zip file back to client
- * @param {Express.Response} res
- * @param {number} size - number of volunteer
- * @param {data} data - snapshot from firebase (need to convert to array of obj)
- */
-const generateZipFileRoundRobin = (res, size, data, fields) => {
-  //console.log("size is: ",size);
-  var arrs = new Array(size);
-
-  for (let i = 0; i < size; i++) {
-    arrs[i] = [];
-  }
-  for (let i = 0; i < data.length; i++) {
-    arrs[i % size].push(data[i]);
-  }
-  const zip = new JSZip();
-  //console.log(arrs);
-  arrs.forEach((arr, i) => {
-
-    const aoa = [];
-    arr.forEach((data) => {
-      aoa.push([
-        data.firstName,
-        data.firstName,
-        data.hasCalled,
-        data.id,
-        data.personalPhoneNo,
-      ])
-    });
-
-    //const aoa = convertToAoA(arr);
-
-
-    // console.log("aoa: ",aoa);
-    const filename = `${i + 1}.csv`;
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
-    if (i === 0) {
-
-      var output_file_name = "out.csv";
-      var stream = XLSX.stream.to_csv(ws);
-      stream.pipe(fs.createWriteStream(output_file_name))
-    }
-    zip.file(filename, csv);
-  });
-  //console.log("arrs0",arrs[0]);
-
-  zip
-    .generateAsync({ type: "base64" })
-    .then(function (content) {
-      res.json({
-        title: "report.zip",
-        content: content,
-      });
-    })
-    .catch((err) => {
-
-      res.json({
-        err,
-      });
-    });
-};
-
 exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
@@ -580,9 +519,9 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-exports.exportRequestToCall = functions.region(region).https.onRequest(
-  authenticateVolunteerRequest(async (req, res) => {
-    const { value, error } = exportRequestToCallSchema.validate(req.body);
+exports.exportRequestToCall = functions.region(region).https.onCall(
+  authenticateVolunteer(async (data, context) => {
+    const { value, error } = exportRequestToCallSchema.validate(data);
     if (error) {
       console.log(error.details);
       return res.status(412).json(error.details);
@@ -598,27 +537,29 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
       .orderBy("lastUpdatedAt")
       .get();
 
-    await Promise.all(snapshot.docs.map((doc) => {
-      // WARNING SIDE EFFECT inside map
-      const data = doc.data();
-      const dataResult = {
-        firstName: data.firstName,
-        lastName: data.firstName,
-        hasCalled: 0,
-        id: doc.id,
-        personalPhoneNo: data.personalPhoneNo,
-      };
-      patientList.push(dataResult);
-      // end of side effects
+    await Promise.all(
+      snapshot.docs.map((doc) => {
+        // WARNING SIDE EFFECT inside map
+        const docData = doc.data();
+        const dataResult = {
+          firstName: docData.firstName,
+          lastName: docData.firstName,
+          hasCalled: 0,
+          id: doc.id,
+          personalPhoneNo: docData.personalPhoneNo,
+        };
+        patientList.push(dataResult);
+        // end of side effects
 
-      const docRef = admin.firestore().collection("patient").doc(doc.id);
-      docRef.update({
-        isRequestToCallExported: true,
-      });
-    }));
+        const docRef = admin.firestore().collection("patient").doc(doc.id);
+        docRef.update({
+          isRequestToCallExported: true,
+        });
+      })
+    );
 
     //generateZipFile(res, size, patientList);
-    generateZipFileRoundRobin(res, volunteerSize, patientList);
+    return generateZipFileRoundRobin(volunteerSize, patientList);
   })
 );
 
@@ -664,7 +605,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
 );
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
-  try{
+  try {
     const event = req.body.events[0];
     const userId = event.source.userId;
     const profile = client.getProfile(userId);
@@ -673,11 +614,9 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
     // console.log(event)
     await eventHandler(event, userObject, client);
   } catch (err) {
-    console.log("Not from line application.")
+    console.log("Not from line application.");
   }
 });
-
-
 
 // exports.testExportRequestToCall = functions.region(region).https.onRequest(
 //   authenticateVolunteerRequest(async (req, res) => {
@@ -717,8 +656,6 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 
 //       // console.log(batch, 'batch')
 
-
-
 //       snapshot.forEach((doc) => {
 //         const data = doc.data();
 //         const dataResult = {
@@ -730,8 +667,6 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 //         };
 //         patientList.push(dataResult);
 //       });
-
-
 
 //       snapshot.docs.forEach((doc) => {
 //         const docRef = admin.firestore().collection("patient").doc(doc.id);
@@ -746,8 +681,6 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 //     console.log("patientlist is:",patientList.length);
 //     //generateZipFile(res, size, patientList);
 //     generateZipFileRoundRobin(res, volunteerSize, patientList);
-
-
 
 //   })
 // );
@@ -765,4 +698,3 @@ exports.getNumberOfPatients = functions
 
     return res.status(200).json(success(snapshot.size));
   });
-
