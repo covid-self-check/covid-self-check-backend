@@ -137,28 +137,34 @@ exports.convertToArray = (data) => {
 exports.convertToAoA = (doc) => {
   const result = [];
   doc.forEach((data) => {
-    let currentStatus = status[0];
-    if (data.status >= 0 || data.status < status.length) {
-      currentStatus = status[data.status];
-    }
-
+    // let currentStatus = status[0];
+    // if (data.status >= 0 || data.status < status.length) {
+    //   currentStatus = status[data.status];
+    // }
     result.push([
-      data.personalID,
-      data.firstName,
-      data.lastName,
-      data.personalPhoneNo,
-      data.emergencyPhoneNo,
-      calculateAge(data.birthDate.toDate()),
-      data.weight,
-      data.height,
-      data.gender,
-      convertTZ(data.lastUpdatedAt.toDate()),
-      data.address,
-      data.district,
-      data.prefecture,
-      data.province,
-      currentStatus,
+       data.firstName,
+       data.firstName,
+       data.hasCalled,
+       data.id,
+       data.personalPhoneNo,
     ]);
+    // result.push([
+    //   data.personalID,
+    //   data.firstName,
+    //   data.lastName,
+    //   data.personalPhoneNo,
+    //   data.emergencyPhoneNo,
+    //   calculateAge(data.birthDate.toDate()),
+    //   data.weight,
+    //   data.height,
+    //   data.gender,
+    //   convertTZ(data.lastUpdatedAt.toDate()),
+    //   data.address,
+    //   data.district,
+    //   data.prefecture,
+    //   data.province,
+    //   currentStatus,
+    // ]);
   });
 
   return result;

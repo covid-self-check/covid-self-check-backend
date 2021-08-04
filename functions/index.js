@@ -338,25 +338,42 @@ const generateZipFile = (res, size, data, fields) => {
  * @param {data} data - snapshot from firebase (need to convert to array of obj)
  */
  const generateZipFileRoundRobin = (res, size, data, fields) => {
-  const arrs = new Array(size);
+ 
+  var arrs = new Array(size);
+ 
     for(let i =0;i<size;i++){
      arrs[i] = [];
     }
     for(let i =0;i<data.length;i++){
      arrs[i%size].push(data[i]);
     }
-
+    console.log("7");
   const zip = new JSZip();
-
+    console.log(arrs);
   arrs.forEach((arr, i) => {
-    const aoa = convertToAoA(arr);
+    //const aoa = convertToAoA(arr);
+    const aoa = [];
+    try{
+      aoa.push([
+       arr[0].firstName,
+       arr[0].firstName,
+       arr[0].hasCalled,
+       arr[0].id,
+       arr[0].personalPhoneNo
+    ]);
+  }catch{
+    console.log("something went wrong");
+  }
+    
+    console.log("aoa: ",aoa);
     const filename = `${i + 1}.csv`;
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-
+    //const ws = XLSX.utils.aoa_to_sheet(aoa);
+    console.log("zip");
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
     zip.file(filename, csv);
   });
-
+  console.log("8");
   zip
     .generateAsync({ type: "base64" })
     .then(function (content) {
@@ -366,6 +383,7 @@ const generateZipFile = (res, size, data, fields) => {
       });
     })
     .catch((err) => {
+      
       res.json({
         err,
       });
@@ -500,20 +518,21 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
   authenticateVolunteerRequest(async (req, res) => {
+    console.log("1");
     const { value, error } = exportRequestToCallSchema.validate(req.body);
     if (error) {
       console.log(error.details);
       return res.status(412).json(error.details);
     }
-    const { size } = value;
-
+    const { volunteerSize } = value;
+    console.log("2");
     const snapshot = await admin
       .firestore()
       .collection("patient")
       .where("isRequestToCall", "==", true)
       .where("isRequestToCallExported", "==", false)
       .get();
-
+    console.log("3");
     const batch = admin.firestore().batch();
     snapshot.docs.forEach((doc) => {
       console.log(doc.id, "id");
@@ -522,6 +541,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
         isRequestToCallExported: true,
       });
     });
+    console.log("4");
     // console.log(batch, 'batch')
     await batch.commit();
 
@@ -538,7 +558,10 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
       };
       patientList.push(dataResult);
     });
-    generateZipFile(res, size, patientList);
+    console.log("5");
+    //generateZipFile(res, size, patientList);
+    generateZipFileRoundRobin(res, volunteerSize, patientList);
+    console.log("6");
   })
 );
 
