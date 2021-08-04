@@ -249,7 +249,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     });
   }
   const status = "We are the CHAMPION!!";
-  sendPatientstatus(lineUserID, status, config.channelAccessToken);
+
+  try {
+    sendPatientstatus(lineUserID, status, config.channelAccessToken);
+  } catch (err) {
+    console.log(err);
+  }
+
   return success();
 });
 
@@ -359,41 +365,6 @@ app.get(
     }
   })
 );
-
-/**
- * generate multiple csv file and send zip file back to client
- * @param {Express.Response} res
- * @param {number} size - number of volunteer
- * @param {data} data - snapshot from firebase (need to convert to array of obj)
- */
-const generateZipFile = (res, size, data) => {
-  const arrs = _.chunk(data, size);
-
-  const zip = new JSZip();
-
-  arrs.forEach((arr, i) => {
-    const aoa = convertToAoA(arr);
-    const filename = `${i + 1}.csv`;
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
-    zip.file(filename, csv);
-  });
-
-  zip
-    .generateAsync({ type: "base64" })
-    .then(function (content) {
-      res.json({
-        title: "report.zip",
-        content: content,
-      });
-    })
-    .catch((err) => {
-      res.json({
-        err,
-      });
-    });
-};
 
 exports.fetchNotUpdatedPatients = functions
   .region(region)
@@ -521,22 +492,21 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-exports.exportRequestToCall = functions.region(region).https.onCall(
+exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
     const { value, error } = exportRequestToCallSchema.validate(data);
     if (error) {
       console.log(error.details);
       return res.status(412).json(error.details);
     }
+
     const { volunteerSize } = value;
-    var patientList = [];
+    const patientList = [];
 
     const snapshot = await admin
       .firestore()
       .collection("patient")
-      .where("isRequestToCall", "==", true)
-      .where("isRequestToCallExported", "==", false)
-      .orderBy("lastUpdatedAt")
+      .limit(200)
       .get();
 
     await Promise.all(
@@ -551,17 +521,54 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
           personalPhoneNo: docData.personalPhoneNo,
         };
         patientList.push(dataResult);
-        // end of side effects
-
-        const docRef = admin.firestore().collection("patient").doc(doc.id);
-        docRef.update({
-          isRequestToCallExported: true,
-        });
       })
     );
 
-    //generateZipFile(res, size, patientList);
     return generateZipFileRoundRobin(volunteerSize, patientList);
+  })
+);
+
+exports.exportRequestToCall = functions.region(region).https.onCall(
+  authenticateVolunteer(async (data, context) => {
+    // const { value, error } = exportRequestToCallSchema.validate(data);
+    // if (error) {
+    //   console.log(error.details);
+    //   return res.status(412).json(error.details);
+    // }
+    // const { volunteerSize } = value;
+    // var patientList = [];
+
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("isRequestToCall", "==", true)
+    //   .where("isRequestToCallExported", "==", false)
+    //   .orderBy("lastUpdatedAt")
+    //   .get();
+
+    // await Promise.all(
+    //   snapshot.docs.map((doc) => {
+    //     // WARNING SIDE EFFECT inside map
+    //     const docData = doc.data();
+    //     const dataResult = {
+    //       firstName: docData.firstName,
+    //       lastName: docData.firstName,
+    //       hasCalled: 0,
+    //       id: doc.id,
+    //       personalPhoneNo: docData.personalPhoneNo,
+    //     };
+    //     patientList.push(dataResult);
+    //     // end of side effects
+
+    //     const docRef = admin.firestore().collection("patient").doc(doc.id);
+    //     docRef.update({
+    //       isRequestToCallExported: true,
+    //     });
+    //   })
+    // );
+
+    // return generateZipFileRoundRobin(volunteerSize, patientList);
+    return success();
   })
 );
 
