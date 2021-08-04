@@ -45,11 +45,11 @@ const generateZipFile = (res, size, data) => {
 exports.generateZipFileRoundRobin = async (size, data) => {
   var arrs = new Array(size);
   const header = [
-    "ไอดีข้างใน",
-    "ชื่อ",
-    "นามสกุล",
-    "สถานะการโทร",
-    "เบอร์ติดต่อ",
+    "internal id",
+    "first name",
+    "last name",
+    "call status",
+    "tel",
   ];
 
   for (let i = 0; i < size; i++) {
