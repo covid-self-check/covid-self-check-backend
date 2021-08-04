@@ -37,7 +37,7 @@ exports.authenticateVolunteer = (func) => {
  * @returns error 401 if not authorized email
  */
 exports.authenticateVolunteerRequest = (func) => {
-  return require("cors")({ origin: true })(req, res, async () => {
+  return async (req, res) => {
     try {
       if (
         req.body.noAuth &&
@@ -74,7 +74,7 @@ exports.authenticateVolunteerRequest = (func) => {
         .status(401)
         .json({ status: "error", message: "Not signed in" });
     }
-  });
+  };
 };
 
 /**
