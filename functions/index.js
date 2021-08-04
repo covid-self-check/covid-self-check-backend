@@ -40,7 +40,7 @@ const { backup } = require("./backup");
 const region = require("./config/index").config.region;
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: true }));
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
