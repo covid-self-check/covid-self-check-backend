@@ -1,6 +1,5 @@
 const { admin } = require("../init");
 
-// TODO: add credential
 const { config } = require("../config/index");
 
 const { google } = require("googleapis");
@@ -30,7 +29,7 @@ exports.backup = async (context) => {
   return firestoreClient.projects.databases.exportDocuments({
     name: `projects/${projectId}/databases/(default)`,
     requestBody: {
-      outputUriPrefix: `gs://${projectId}-firestore-backup/backups/${timestamp}`,
+      outputUriPrefix: `gs://${projectId}-firestore-backups/backups/${timestamp}`,
     },
   });
 };
