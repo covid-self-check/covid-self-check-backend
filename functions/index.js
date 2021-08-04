@@ -560,3 +560,13 @@ exports.backupFirestore = functions
   .region(region)
   .pubsub.schedule("every day 16:40")
   .timeZone("Asia/Bangkok");
+
+
+exports.getNumberOfPatients = functions.region(region).https.onCall(async () => {
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .get();
+
+  return success(snapshot.size);
+});
