@@ -506,9 +506,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
     const snapshot = await admin
       .firestore()
       .collection("patient")
-      .where("isRequestToCall", "==", true)
-      .where("isRequestToCallExported", "==", false)
-      .orderBy("lastUpdatedAt")
+      .limit(200)
       .get();
 
     await Promise.all(
@@ -532,45 +530,45 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
 
 exports.exportRequestToCall = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
-    const { value, error } = exportRequestToCallSchema.validate(data);
-    if (error) {
-      console.log(error.details);
-      return res.status(412).json(error.details);
-    }
-    const { volunteerSize } = value;
-    var patientList = [];
+    // const { value, error } = exportRequestToCallSchema.validate(data);
+    // if (error) {
+    //   console.log(error.details);
+    //   return res.status(412).json(error.details);
+    // }
+    // const { volunteerSize } = value;
+    // var patientList = [];
 
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("isRequestToCall", "==", true)
-      .where("isRequestToCallExported", "==", false)
-      .orderBy("lastUpdatedAt")
-      .get();
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("isRequestToCall", "==", true)
+    //   .where("isRequestToCallExported", "==", false)
+    //   .orderBy("lastUpdatedAt")
+    //   .get();
 
-    await Promise.all(
-      snapshot.docs.map((doc) => {
-        // WARNING SIDE EFFECT inside map
-        const docData = doc.data();
-        const dataResult = {
-          firstName: docData.firstName,
-          lastName: docData.firstName,
-          hasCalled: 0,
-          id: doc.id,
-          personalPhoneNo: docData.personalPhoneNo,
-        };
-        patientList.push(dataResult);
-        // end of side effects
+    // await Promise.all(
+    //   snapshot.docs.map((doc) => {
+    //     // WARNING SIDE EFFECT inside map
+    //     const docData = doc.data();
+    //     const dataResult = {
+    //       firstName: docData.firstName,
+    //       lastName: docData.firstName,
+    //       hasCalled: 0,
+    //       id: doc.id,
+    //       personalPhoneNo: docData.personalPhoneNo,
+    //     };
+    //     patientList.push(dataResult);
+    //     // end of side effects
 
-        const docRef = admin.firestore().collection("patient").doc(doc.id);
-        docRef.update({
-          isRequestToCallExported: true,
-        });
-      })
-    );
+    //     const docRef = admin.firestore().collection("patient").doc(doc.id);
+    //     docRef.update({
+    //       isRequestToCallExported: true,
+    //     });
+    //   })
+    // );
 
-    //generateZipFile(res, size, patientList);
-    return generateZipFileRoundRobin(volunteerSize, patientList);
+    // return generateZipFileRoundRobin(volunteerSize, patientList);
+    return success();
   })
 );
 
