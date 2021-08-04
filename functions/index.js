@@ -558,6 +558,5 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
  */
 exports.backupFirestore = functions
   .region(region)
-  .https// .pubsub.schedule("every 10 minutes")
-  // .timeZone("Asia/Bangkok")
-  .onCall(backup);
+  .pubsub.schedule("every day 16:40")
+  .timeZone("Asia/Bangkok");
