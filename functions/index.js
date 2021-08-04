@@ -36,6 +36,7 @@ const express = require("express");
 const cors = require("cors");
 const _ = require("lodash");
 const { backup } = require("./backup");
+const { generateZipFileRoundRobin } = require("./utils/zip");
 
 const region = require("./config/index").config.region;
 
@@ -388,55 +389,6 @@ const generateZipFile = (res, size, data) => {
         err,
       });
     });
-};
-
-/**
- * generate multiple csv file and send zip file back to client
- * @param {Express.Response} res
- * @param {number} size - number of volunteer
- * @param {data} data - snapshot from firebase (need to convert to array of obj)
- */
-const generateZipFileRoundRobin = async (size, data, fields) => {
-  //console.log("size is: ",size);
-  var arrs = new Array(size);
-
-  for (let i = 0; i < size; i++) {
-    arrs[i] = [];
-  }
-  for (let i = 0; i < data.length; i++) {
-    arrs[i % size].push(data[i]);
-  }
-  const zip = new JSZip();
-  //console.log(arrs);
-  arrs.forEach((arr, i) => {
-    const aoa = [];
-    arr.forEach((data) => {
-      aoa.push([
-        data.firstName,
-        data.firstName,
-        data.hasCalled,
-        data.id,
-        data.personalPhoneNo,
-      ]);
-    });
-
-    //const aoa = convertToAoA(arr);
-
-    // console.log("aoa: ",aoa);
-    const filename = `${i + 1}.csv`;
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
-    if (i === 0) {
-      var output_file_name = "out.csv";
-      var stream = XLSX.stream.to_csv(ws);
-      stream.pipe(fs.createWriteStream(output_file_name));
-    }
-    zip.file(filename, csv);
-  });
-  //console.log("arrs0",arrs[0]);
-
-  const content = await zip.generateAsync({ type: "base64" });
-  return { ok: true, title: "report.zip", content };
 };
 
 exports.fetchNotUpdatedPatients = functions

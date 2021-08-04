@@ -40,7 +40,7 @@ const generateZipFile = (res, size, data) => {
  * @param {number} size - number of volunteer
  * @param {data} data - snapshot from firebase (need to convert to array of obj)
  */
-const generateZipFileRoundRobin = async (size, data) => {
+exports.generateZipFileRoundRobin = async (size, data) => {
   var arrs = new Array(size);
   const header = [
     "ไอดีข้างใน",
