@@ -242,6 +242,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
+  const status = "We are the CHAMPION!!"
   sendPatientstatus(lineUserID,status,config.channelAccessToken)
   return success();
 });
