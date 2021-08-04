@@ -1,6 +1,5 @@
 const XLSX = require("xlsx");
 const JSZip = require("jszip");
-const fs = require("fs");
 
 /**
  * generate multiple csv file and send zip file back to client
@@ -76,11 +75,6 @@ exports.generateZipFileRoundRobin = async (size, data) => {
     const filename = `${i + 1}.csv`;
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
-    if (i === 0) {
-      var output_file_name = "out.csv";
-      var stream = XLSX.stream.to_csv(ws);
-      stream.pipe(fs.createWriteStream(output_file_name));
-    }
     zip.file(filename, csv);
   });
 
