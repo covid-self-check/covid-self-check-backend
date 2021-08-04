@@ -43,13 +43,7 @@ const generateZipFile = (res, size, data) => {
  */
 exports.generateZipFileRoundRobin = async (size, data) => {
   var arrs = new Array(size);
-  const header = [
-    "internal id",
-    "first name",
-    "last name",
-    "call status",
-    "tel",
-  ];
+  const header = ["internal id", "first name", "call status", "tel"];
 
   for (let i = 0; i < size; i++) {
     arrs[i] = [];
@@ -66,16 +60,15 @@ exports.generateZipFileRoundRobin = async (size, data) => {
       aoa.push([
         data.id,
         data.firstName,
-        data.lastName,
         data.hasCalled,
-        data.personalPhoneNo,
+        `="${data.personalPhoneNo}"`,
       ]);
     });
 
     const filename = `${i + 1}.csv`;
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
-    zip.file(filename, csv);
+    zip.file(filename, "\ufeff" + csv);
   });
 
   const content = await zip.generateAsync({ type: "base64" });
