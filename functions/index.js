@@ -243,7 +243,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     });
   }
   const status = "We are the CHAMPION!!";
-  sendPatientstatus(lineUserID, status, config.channelAccessToken);
+  // sendPatientstatus(lineUserID, status, config.channelAccessToken);
   return success();
 });
 
