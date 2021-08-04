@@ -15,11 +15,13 @@ const handleMessage = async (event, userObject, client) => {
             case 'ขอความช่วยเหลือ':
                 await client.replyMessage(replyToken, jsonController('help'))
                 break;
+            case 'สอนการใช้งาน':
+                await client.replyMessage(replyToken, jsonController('tutorial'))
+                break;
             default:
                 await client.replyMessage(replyToken,jsonController('defaultReply'))
                 break;
         }
-
     } catch (error) {
         console.log(error);
         await client.replyMessage(replyToken, { type: "text", text: "ERROR, please report admin !" });
