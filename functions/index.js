@@ -530,7 +530,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
     }
     const { volunteerSize } = value;
     //fetch 500 at a time to circumvent batch write limit
-    var limit = 250;
+    var limit = 500;
     var lastVisibleAt = 0;
     var patientList = [];
     
@@ -664,7 +664,7 @@ exports.testExportRequestToCall = functions.region(region).https.onRequest(
         const docRef = admin.firestore().collection("patient").doc(doc.id);
         batch.update(docRef, {
           isRequestToCall:true,
-          isRequestToCallExported: true,
+          isRequestToCallExported: false,
         });
       });
     
@@ -689,11 +689,11 @@ exports.testExportRequestToCall = functions.region(region).https.onRequest(
       snapshot.docs.forEach((doc) => {
         const docRef = admin.firestore().collection("patient").doc(doc.id);
         batch.update(docRef, {
-          isRequestToCall:false,
+          isRequestToCall:true,
           isRequestToCallExported: false,
         });
       });
-      // console.log(batch, 'batch')
+      console.log(batch, 'batch')
       await batch.commit();
     }
     console.log("patientlist is:",patientList.length);
