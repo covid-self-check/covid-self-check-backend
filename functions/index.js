@@ -24,14 +24,12 @@ const {
 const { success } = require("./response/success");
 const {
   patientReportHeader,
-  convertToAoA,
   convertToArray,
   sheetName,
 } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
-const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
 const _ = require("lodash");
@@ -503,11 +501,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
     const { volunteerSize } = value;
     const patientList = [];
 
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .limit(200)
-      .get();
+    const snapshot = await admin.firestore().collection("patient").get();
 
     await Promise.all(
       snapshot.docs.map((doc) => {
