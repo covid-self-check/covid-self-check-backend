@@ -248,7 +248,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
 app.get("/master", async (req, res) => {
   try {
     const { password } = req.query;
-    if (password !== "CpciLBG63jE") {
+    if (password !== "CpciLBG63jEJ") {
       throw new functions.https.HttpsError(
         "permission-denied",
         "ไม่มี permission"
