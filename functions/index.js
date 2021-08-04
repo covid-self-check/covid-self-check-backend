@@ -297,7 +297,7 @@ app.get("/master", async (req, res) => {
 
 app.get(
   "/master",
-  authenticateVolunteerRequest((async) => (req, res) => {
+  authenticateVolunteerRequest(async (req, res) => {
     try {
       const snapshot = await admin.firestore().collection("patient").get();
 
