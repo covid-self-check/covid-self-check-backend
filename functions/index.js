@@ -553,13 +553,15 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   await eventHandler(event, userObject, client);
 });
 
-/**
- * Backup to Cloud Bucket
- */
-exports.backupFirestore = functions
+exports.backupFirebase = functions
   .region(region)
-  .pubsub.schedule("every day 16:40")
+  .pubsub.schedule("every day 18:00")
   .timeZone("Asia/Bangkok");
+
+exports.getNumberOfPatients = functions
+  .region(region)
+  .https.onCall(async () => {
+    const snapshot = await admin.firestore().collection("patient").get();
 
 
 exports.getNumberOfPatients = functions.region(region).https.onRequest(async (req, res) => {
