@@ -12,7 +12,7 @@ const handleMessage = async (event, userObject, client) => {
             case 'สิ่งที่ควรรู้':
                 await client.replyMessage(replyToken, [jsonController('info1'), jsonController('info2'), jsonController('info3')])
                 break;
-            case 'ขอความช่วยเหลือ':
+            case 'ติดต่อฉุกเฉิน':
                 await client.replyMessage(replyToken, jsonController('help'))
                 break;
             case 'สอนการใช้งาน':
