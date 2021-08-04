@@ -2,7 +2,6 @@
   "projects": {
     "development": "backend-covid-7dfa5",
     "production": "comcovid-prod",
-    "staging": "comcovid-staging-4b21d",
-    "default": "backend-covid-7dfa5"
+    "staging": "comcovid-staging-4b21d"
   }
 }
