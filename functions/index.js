@@ -494,8 +494,10 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
     const { value, error } = exportRequestToCallSchema.validate(data);
     if (error) {
-      console.log(error.details);
-      return res.status(412).json(error.details);
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "ข้อมูลไม่ถูกต้อง"
+      );
     }
 
     const { volunteerSize } = value;
@@ -526,8 +528,10 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
     // const { value, error } = exportRequestToCallSchema.validate(data);
     // if (error) {
-    //   console.log(error.details);
-    //   return res.status(412).json(error.details);
+    // throw new functions.https.HttpsError(
+    //   "failed-precondition",
+    //   "ข้อมูลไม่ถูกต้อง"
+    // );
     // }
     // const { volunteerSize } = value;
     // var patientList = [];
