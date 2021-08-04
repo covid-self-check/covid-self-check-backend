@@ -40,7 +40,7 @@ const { backup } = require("./backup");
 const region = require("./config/index").config.region;
 
 const app = express();
-app.use(cors({ origin: true }));
+app.use(cors());
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -514,47 +514,49 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
 });
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
-  authenticateVolunteerRequest(async (req, res) => {
-    const { value, error } = exportRequestToCallSchema.validate(req.body);
-    if (error) {
-      console.log(error.details);
-      return res.status(412).json(error.details);
-    }
-    const { size } = value;
+  authenticateVolunteerRequest(
+    cors(req, res, async () => {
+      const { value, error } = exportRequestToCallSchema.validate(req.body);
+      if (error) {
+        console.log(error.details);
+        return res.status(412).json(error.details);
+      }
+      const { size } = value;
 
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("isRequestToCall", "==", true)
-      .where("isRequestToCallExported", "==", false)
-      .get();
+      const snapshot = await admin
+        .firestore()
+        .collection("patient")
+        .where("isRequestToCall", "==", true)
+        .where("isRequestToCallExported", "==", false)
+        .get();
 
-    const batch = admin.firestore().batch();
-    snapshot.docs.forEach((doc) => {
-      console.log(doc.id, "id");
-      const docRef = admin.firestore().collection("patient").doc(doc.id);
-      batch.update(docRef, {
-        isRequestToCallExported: true,
+      const batch = admin.firestore().batch();
+      snapshot.docs.forEach((doc) => {
+        console.log(doc.id, "id");
+        const docRef = admin.firestore().collection("patient").doc(doc.id);
+        batch.update(docRef, {
+          isRequestToCallExported: true,
+        });
       });
-    });
-    // console.log(batch, 'batch')
-    await batch.commit();
+      // console.log(batch, 'batch')
+      await batch.commit();
 
-    var patientList = [];
+      var patientList = [];
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      const dataResult = {
-        firstName: data.firstName,
-        lastName: data.firstName,
-        hasCalled: 0,
-        id: doc.id,
-        personalPhoneNo: data.personalPhoneNo,
-      };
-      patientList.push(dataResult);
-    });
-    generateZipFile(res, size, patientList);
-  })
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const dataResult = {
+          firstName: data.firstName,
+          lastName: data.firstName,
+          hasCalled: 0,
+          id: doc.id,
+          personalPhoneNo: data.personalPhoneNo,
+        };
+        patientList.push(dataResult);
+      });
+      generateZipFile(res, size, patientList);
+    })
+  )
 );
 
 exports.importFinishedRequestToCall = functions.region(region).https.onCall(
