@@ -242,6 +242,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
+  sendPatientstatus(lineUserID,status,config.channelAccessToken)
   return success();
 });
 
@@ -549,12 +550,11 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
     const userId = event.source.userId;
     const profile = client.getProfile(userId);
     const userObject = { userId: userId, profile: await profile };
-    // console.log(userObject);
+    console.log(userObject);
     // console.log(event)
     await eventHandler(event, userObject, client);
   } catch (err) {
-    console.log(err)
-    console.log("ERROR NAJA")
+    console.log("Not from line application.")
   }
 });
 

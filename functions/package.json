@@ -23,6 +23,7 @@
     "jszip": "^3.7.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
+    "querystring": "^0.2.1",
     "xlsx": "^0.17.0"
   },
   "devDependencies": {
