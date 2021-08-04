@@ -52,7 +52,14 @@ exports.authenticateVolunteerRequest = (func) => {
           .status(401)
           .json({ status: "error", message: "Not authorized" });
       }
-      return await func(req, res);
+      try {
+        return await func(req, res);
+      } catch (e) {
+        console.log(e)
+        return res
+          .status(500)
+          .json({ status: "error", message: "Unknown" });
+      }
     } catch (e) {
       return res
         .status(401)
