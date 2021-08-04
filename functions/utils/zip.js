@@ -67,7 +67,7 @@ exports.generateZipFileRoundRobin = async (size, data) => {
         data.id,
         data.firstName,
         data.hasCalled,
-        `'${data.personalPhoneNo}`,
+        `="${data.personalPhoneNo}"`,
       ]);
     });
 
