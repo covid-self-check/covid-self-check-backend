@@ -249,6 +249,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     });
   }
   const status = "We are the CHAMPION!!";
+
   try {
     sendPatientstatus(lineUserID, status, config.channelAccessToken);
   } catch (err) {
@@ -522,12 +523,6 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
           personalPhoneNo: docData.personalPhoneNo,
         };
         patientList.push(dataResult);
-        // end of side effects
-
-        const docRef = admin.firestore().collection("patient").doc(doc.id);
-        docRef.update({
-          isRequestToCallExported: true,
-        });
       })
     );
 
