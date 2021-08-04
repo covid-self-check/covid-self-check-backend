@@ -577,7 +577,7 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
   authenticateVolunteerRequest(async (req, res) => {
-    cors(req, res, async () => {
+    cors({ origin: true })(req, res, async () => {
       const { value, error } = exportRequestToCallSchema.validate(req.body);
       if (error) {
         console.log(error.details);
