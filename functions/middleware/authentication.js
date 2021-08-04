@@ -36,8 +36,10 @@ exports.authenticateVolunteerRequest = (func) => {
   return async (req, res) => {
     try {
       if (req.body.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+        console.log("in if");
         return await func(req, res);
       }
+     
       const tokenId = req.get("Authorization").split("Bearer ")[1];
       const decoded = await admin.auth().verifyIdToken(tokenId);
       const email = decoded.email || null;
@@ -61,6 +63,7 @@ exports.authenticateVolunteerRequest = (func) => {
           .json({ status: "error", message: "Unknown" });
       }
     } catch (e) {
+     console.log(e);
       return res
         .status(401)
         .json({ status: "error", message: "Not signed in" });

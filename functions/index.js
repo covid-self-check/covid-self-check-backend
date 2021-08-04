@@ -242,57 +242,59 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
+  const status = "We are the CHAMPION!!";
+  sendPatientstatus(lineUserID, status, config.channelAccessToken);
   return success();
 });
 
-app.get("/master", async (req, res) => {
-  try {
-    const { password } = req.query;
-    if (password !== "CpciLBG63jEJ") {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "ไม่มี permission"
-      );
-    }
-    const snapshot = await admin.firestore().collection("patient").get();
+// app.get("/master", async (req, res) => {
+//   try {
+//     const { password } = req.query;
+//     if (password !== "CpciLBG63jEJ") {
+//       throw new functions.https.HttpsError(
+//         "permission-denied",
+//         "ไม่มี permission"
+//       );
+//     }
+//     const snapshot = await admin.firestore().collection("patient").get();
 
-    const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
-    const result = [header];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
+//     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
+//     const result = [header];
+//     snapshot.forEach((doc) => {
+//       const data = doc.data();
 
-      result.push([
-        data.address,
-        data.district,
-        data.prefecture,
-        data.province,
-      ]);
-    });
-    const wb = XLSX.utils.book_new();
+//       result.push([
+//         data.address,
+//         data.district,
+//         data.prefecture,
+//         data.province,
+//       ]);
+//     });
+//     const wb = XLSX.utils.book_new();
 
-    const ws = XLSX.utils.aoa_to_sheet(result);
+//     const ws = XLSX.utils.aoa_to_sheet(result);
 
-    XLSX.utils.book_append_sheet(wb, ws, "รายงานที่อยู่ผู้ป่วย 4 สิงหาคม");
-    const filename = `report.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
+//     XLSX.utils.book_append_sheet(wb, ws, "รายงานที่อยู่ผู้ป่วย 4 สิงหาคม");
+//     const filename = `report.xlsx`;
+//     const opts = { bookType: "xlsx", type: "binary" };
 
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
+//     // it must be save to tmp directory because it run on firebase
+//     const pathToSave = path.join("/tmp", filename);
+//     XLSX.writeFile(wb, pathToSave, opts);
 
-    const stream = fs.createReadStream(pathToSave);
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    stream.pipe(res);
-  } catch (err) {
-    console.log(err);
-    return res.json({ success: false });
-  }
-});
+//     const stream = fs.createReadStream(pathToSave);
+//     // prepare http header
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+//     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+//     stream.pipe(res);
+//   } catch (err) {
+//     console.log(err);
+//     return res.json({ success: false });
+//   }
+// });
 
 app.get(
   "/",
@@ -371,6 +373,66 @@ const generateZipFile = (res, size, data) => {
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
     zip.file(filename, csv);
   });
+
+  zip
+    .generateAsync({ type: "base64" })
+    .then(function (content) {
+      res.json({
+        title: "report.zip",
+        content: content,
+      });
+    })
+    .catch((err) => {
+      res.json({
+        err,
+      });
+    });
+};
+
+/**
+ * generate multiple csv file and send zip file back to client
+ * @param {Express.Response} res
+ * @param {number} size - number of volunteer
+ * @param {data} data - snapshot from firebase (need to convert to array of obj)
+ */
+const generateZipFileRoundRobin = (res, size, data, fields) => {
+  //console.log("size is: ",size);
+  var arrs = new Array(size);
+
+  for (let i = 0; i < size; i++) {
+    arrs[i] = [];
+  }
+  for (let i = 0; i < data.length; i++) {
+    arrs[i % size].push(data[i]);
+  }
+  const zip = new JSZip();
+  //console.log(arrs);
+  arrs.forEach((arr, i) => {
+    const aoa = [];
+    arr.forEach((data) => {
+      aoa.push([
+        data.firstName,
+        data.firstName,
+        data.hasCalled,
+        data.id,
+        data.personalPhoneNo,
+      ]);
+    });
+
+    //const aoa = convertToAoA(arr);
+
+    // console.log("aoa: ",aoa);
+    const filename = `${i + 1}.csv`;
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
+    if (i === 0) {
+      var output_file_name = "out.csv";
+      var stream = XLSX.stream.to_csv(ws);
+      stream.pipe(fs.createWriteStream(output_file_name));
+    }
+    zip.file(filename, csv);
+  });
+  //console.log("arrs0",arrs[0]);
 
   zip
     .generateAsync({ type: "base64" })
@@ -601,14 +663,85 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
 );
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
-  const event = req.body.events[0];
-  const userId = event.source.userId;
-  const profile = client.getProfile(userId);
-  const userObject = { userId: userId, profile: await profile };
-  // console.log(userObject);
-  // console.log(event)
-  await eventHandler(event, userObject, client);
+  try {
+    const event = req.body.events[0];
+    const userId = event.source.userId;
+    const profile = client.getProfile(userId);
+    const userObject = { userId: userId, profile: await profile };
+    console.log(userObject);
+    // console.log(event)
+    await eventHandler(event, userObject, client);
+  } catch (err) {
+    console.log("Not from line application.");
+  }
 });
+
+// exports.testExportRequestToCall = functions.region(region).https.onRequest(
+//   authenticateVolunteerRequest(async (req, res) => {
+//     const { value, error } = exportRequestToCallSchema.validate(req.body);
+//     if (error) {
+//       console.log(error.details);
+//       return res.status(412).json(error.details);
+//     }
+//     const { volunteerSize } = value;
+//     var limit = 250;
+//     var lastVisible = 0;
+//     var i = 0;
+//     var patientList = [];
+//     while (true){
+//       console.log("250 round:",i);
+//       const snapshot = await admin
+//         .firestore()
+//         .collection("patient")
+//         .orderBy("lastUpdatedAt")
+//         .startAfter(lastVisible).limit(limit)
+//         .get();
+//       if(i>3){
+//         break;
+//       }
+//       lastVisible += snapshot.size-1;
+//       console.log(lastVisible);
+//       i++;
+//       const batch = admin.firestore().batch();
+//       snapshot.docs.forEach((doc) => {
+//       // console.log(doc.id, "id");
+//         const docRef = admin.firestore().collection("patient").doc(doc.id);
+//         batch.update(docRef, {
+//           isRequestToCall:true,
+//           isRequestToCallExported: false,
+//         });
+//       });
+
+//       // console.log(batch, 'batch')
+
+//       snapshot.forEach((doc) => {
+//         const data = doc.data();
+//         const dataResult = {
+//           firstName: data.firstName,
+//           lastName: data.firstName,
+//           hasCalled: 0,
+//           id: doc.id,
+//           personalPhoneNo: data.personalPhoneNo,
+//         };
+//         patientList.push(dataResult);
+//       });
+
+//       snapshot.docs.forEach((doc) => {
+//         const docRef = admin.firestore().collection("patient").doc(doc.id);
+//         batch.update(docRef, {
+//           isRequestToCall:true,
+//           isRequestToCallExported: false,
+//         });
+//       });
+//       //console.log(batch, 'batch')
+//       await batch.commit();
+//     }
+//     console.log("patientlist is:",patientList.length);
+//     //generateZipFile(res, size, patientList);
+//     generateZipFileRoundRobin(res, volunteerSize, patientList);
+
+//   })
+// );
 
 exports.backupFirestore = functions
   .region(region)
