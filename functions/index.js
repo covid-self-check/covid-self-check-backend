@@ -544,13 +544,18 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
 );
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
-  const event = req.body.events[0];
-  const userId = event.source.userId;
-  const profile = client.getProfile(userId);
-  const userObject = { userId: userId, profile: await profile };
-  // console.log(userObject);
-  // console.log(event)
-  await eventHandler(event, userObject, client);
+  try{
+    const event = req.body.events[0];
+    const userId = event.source.userId;
+    const profile = client.getProfile(userId);
+    const userObject = { userId: userId, profile: await profile };
+    // console.log(userObject);
+    // console.log(event)
+    await eventHandler(event, userObject, client);
+  } catch (err) {
+    console.log(err)
+    console.log("ERROR NAJA")
+  }
 });
 
 /**
