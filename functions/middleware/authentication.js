@@ -9,7 +9,11 @@ const functions = require("firebase-functions");
  */
 exports.authenticateVolunteer = (func) => {
   return async (data, context) => {
-    if (data.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+    if (
+      data.noAuth &&
+      functions.config().environment &&
+      functions.config().environment.isdevelopment
+    ) {
       return await func(data, context);
     }
     if (!context.auth)
@@ -35,7 +39,11 @@ exports.authenticateVolunteer = (func) => {
 exports.authenticateVolunteerRequest = (func) => {
   return require("cors")({ origin: true })(req, res, async () => {
     try {
-      if (req.body.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+      if (
+        req.body.noAuth &&
+        functions.config().environment &&
+        functions.config().environment.isdevelopment
+      ) {
         console.log("in if");
         return await func(req, res);
       }
@@ -57,10 +65,8 @@ exports.authenticateVolunteerRequest = (func) => {
       try {
         return await func(req, res);
       } catch (e) {
-        console.log(e)
-        return res
-          .status(500)
-          .json({ status: "error", message: "Unknown" });
+        console.log(e);
+        return res.status(500).json({ status: "error", message: "Unknown" });
       }
     } catch (e) {
       console.log(e);
@@ -68,7 +74,7 @@ exports.authenticateVolunteerRequest = (func) => {
         .status(401)
         .json({ status: "error", message: "Not signed in" });
     }
-  };
+  });
 };
 
 /**
@@ -77,7 +83,11 @@ exports.authenticateVolunteerRequest = (func) => {
  * @returns
  */
 exports.getProfile = async (data) => {
-  if (data.noAuth && functions.config().environment && functions.config().environment.isdevelopment) {
+  if (
+    data.noAuth &&
+    functions.config().environment &&
+    functions.config().environment.isdevelopment
+  ) {
     return { data: {}, error: false };
   }
   const { lineIDToken, lineUserID } = data;
