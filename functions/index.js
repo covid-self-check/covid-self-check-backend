@@ -236,6 +236,8 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
+  obj["status"] = 0;
+
   if (!followUp) {
     await snapshot.ref.set({ ...obj, followUp: [obj] });
   } else {
