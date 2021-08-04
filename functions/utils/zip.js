@@ -47,7 +47,6 @@ exports.generateZipFileRoundRobin = async (size, data) => {
   const header = [
     "internal id",
     "first name",
-    "last name",
     "call status",
     "tel",
   ];
@@ -67,9 +66,8 @@ exports.generateZipFileRoundRobin = async (size, data) => {
       aoa.push([
         data.id,
         data.firstName,
-        data.lastName,
         data.hasCalled,
-        data.personalPhoneNo,
+        `'${data.personalPhoneNo}`,
       ]);
     });
 
@@ -81,7 +79,7 @@ exports.generateZipFileRoundRobin = async (size, data) => {
       var stream = XLSX.stream.to_csv(ws);
       stream.pipe(fs.createWriteStream(output_file_name));
     }
-    zip.file(filename, csv);
+    zip.file(filename, "\ufeff" + csv);
   });
 
   const content = await zip.generateAsync({ type: "base64" });
