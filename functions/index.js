@@ -548,10 +548,10 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
         break;
       }
       lastVisibleAt += snapshot.size-1;
-      console.log(lastVisibleAt);
+      //console.log(lastVisibleAt);
       const batch = admin.firestore().batch();
       snapshot.docs.forEach((doc) => {
-        console.log(doc.id, "id");
+        //console.log(doc.id, "id");
         const docRef = admin.firestore().collection("patient").doc(doc.id);
         batch.update(docRef, {
           isRequestToCallExported: true,
