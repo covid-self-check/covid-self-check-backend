@@ -295,52 +295,6 @@ app.get("/master", async (req, res) => {
   }
 });
 
-app.get("/master", async (req, res) => {
-  try {
-    const snapshot = await admin.firestore().collection("patient").get();
-
-    const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
-    const result = [header];
-
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-
-      result.push([
-        data.address,
-        data.district,
-        data.prefecture,
-        data.province,
-      ]);
-    });
-
-    const wb = XLSX.utils.book_new();
-
-    const ws = XLSX.utils.aoa_to_sheet(result);
-
-    XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
-
-    const filename = `report.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
-
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-
-    XLSX.writeFile(wb, pathToSave, opts);
-
-    const stream = fs.createReadStream(pathToSave);
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-
-    stream.pipe(res);
-  } catch (err) {
-    return { ok: false, message: err.message };
-  }
-});
-
 app.get(
   "/",
   authenticateVolunteerRequest(async (req, res) => {
