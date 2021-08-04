@@ -245,44 +245,42 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-app.get("/", async (req, res) => {
+app.get("/master", async (req, res) => {
   try {
+    const { password } = req.query;
+    if (password !== "CpciLBG63jEJ") {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "ไม่มี permission"
+      );
+    }
     const snapshot = await admin.firestore().collection("patient").get();
 
-    const results = [
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-    ];
+    const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
+    const result = [header];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      const arr = convertToArray(data);
-      if (typeof data.status === "number") {
-        if (data.status > 0 && data.status < results.length) {
-          results[data.status].push(arr);
-        }
-      } else {
-        results[0].push(arr);
-      }
+
+      result.push([
+        data.address,
+        data.district,
+        data.prefecture,
+        data.province,
+      ]);
     });
     const wb = XLSX.utils.book_new();
-    // append result to sheet
-    for (let i = 0; i < results.length && i < sheetName.length; i++) {
-      const ws = XLSX.utils.aoa_to_sheet(results[i]);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
-    }
-    // write workbook file
+
+    const ws = XLSX.utils.aoa_to_sheet(result);
+
+    XLSX.utils.book_append_sheet(wb, ws, "รายงานที่อยู่ผู้ป่วย 4 สิงหาคม");
     const filename = `report.xlsx`;
     const opts = { bookType: "xlsx", type: "binary" };
 
     // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
+    // const pathToSave = path.join("/tmp", filename);
+    const pathToSave = filename;
     XLSX.writeFile(wb, pathToSave, opts);
-    // create read stream
+
     const stream = fs.createReadStream(pathToSave);
     // prepare http header
     res.setHeader(
@@ -290,12 +288,70 @@ app.get("/", async (req, res) => {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-
     stream.pipe(res);
   } catch (err) {
-    return { ok: false, message: err.message };
+    console.log(err);
+    return res.json({ success: false });
   }
 });
+
+app.get(
+  "/",
+  authenticateVolunteerRequest(async (req, res) => {
+    try {
+      const snapshot = await admin.firestore().collection("patient").get();
+
+      const results = [
+        [patientReportHeader],
+        [patientReportHeader],
+        [patientReportHeader],
+        [patientReportHeader],
+        [patientReportHeader],
+        [patientReportHeader],
+        [patientReportHeader],
+      ];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const arr = convertToArray(data);
+        if (typeof data.status === "number") {
+          if (data.status > 0 && data.status < results.length) {
+            results[data.status].push(arr);
+          }
+        } else {
+          results[0].push(arr);
+        }
+      });
+      const wb = XLSX.utils.book_new();
+      // append result to sheet
+      for (let i = 0; i < results.length && i < sheetName.length; i++) {
+        const ws = XLSX.utils.aoa_to_sheet(results[i]);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
+      }
+      // write workbook file
+      const filename = `report.xlsx`;
+      const opts = { bookType: "xlsx", type: "binary" };
+
+      // it must be save to tmp directory because it run on firebase
+      const pathToSave = path.join("/tmp", filename);
+      XLSX.writeFile(wb, pathToSave, opts);
+      // create read stream
+      const stream = fs.createReadStream(pathToSave);
+      // prepare http header
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
+
+      stream.pipe(res);
+    } catch (err) {
+      res.json({ success: false });
+    }
+  })
+);
 
 /**
  * generate multiple csv file and send zip file back to client
