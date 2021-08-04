@@ -338,7 +338,7 @@ const generateZipFile = (res, size, data, fields) => {
  * @param {data} data - snapshot from firebase (need to convert to array of obj)
  */
  const generateZipFileRoundRobin = (res, size, data, fields) => {
- console.log("size is: ",size);
+ //console.log("size is: ",size);
   var arrs = new Array(size);
  
     for(let i =0;i<size;i++){
@@ -376,7 +376,7 @@ const generateZipFile = (res, size, data, fields) => {
     }
     zip.file(filename, csv);
   });
-  console.log("arrs0",arrs[0]);
+  //console.log("arrs0",arrs[0]);
 
   zip
     .generateAsync({ type: "base64" })
@@ -535,7 +535,7 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
     var patientList = [];
     
     while (true){
-      console.log(lastVisibleAt,limit);
+      //console.log(lastVisibleAt,limit);
       const snapshot = await admin
       .firestore()
       .collection("patient")
@@ -547,8 +547,8 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
       if(snapshot.empty){
         break;
       }
-      lastVisible = snapshot.docs[snapshot.docs.length-1];
-
+      lastVisibleAt += snapshot.size-1;
+      console.log(lastVisibleAt);
       const batch = admin.firestore().batch();
       snapshot.docs.forEach((doc) => {
         console.log(doc.id, "id");
@@ -656,7 +656,8 @@ exports.testExportRequestToCall = functions.region(region).https.onRequest(
       if(i>3){
         break;
       }
-      lastVisible = snapshot.docs[snapshot.docs.length-1];
+      lastVisible += snapshot.size-1;
+      console.log(lastVisible);
       i++;
       const batch = admin.firestore().batch();
       snapshot.docs.forEach((doc) => {
@@ -693,7 +694,7 @@ exports.testExportRequestToCall = functions.region(region).https.onRequest(
           isRequestToCallExported: false,
         });
       });
-      console.log(batch, 'batch')
+      //console.log(batch, 'batch')
       await batch.commit();
     }
     console.log("patientlist is:",patientList.length);
