@@ -512,7 +512,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
         const dataResult = {
           firstName: docData.firstName,
           lastName: docData.firstName,
-          hasCalled: 0,
+          hasCalled: '',
           id: doc.id,
           personalPhoneNo: docData.personalPhoneNo,
         };
