@@ -553,7 +553,7 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   await eventHandler(event, userObject, client);
 });
 
-exports.backupFirebase = functions
+exports.backupFirestore = functions
   .region(region)
   .pubsub.schedule("every day 18:00")
   .timeZone("Asia/Bangkok")
