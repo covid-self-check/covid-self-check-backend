@@ -56,7 +56,7 @@ exports.authenticateVolunteerRequest = (func) => {
       }
       return await func(req, res);
     } catch (e) {
-     
+     console.log(e);
       return res
         .status(401)
         .json({ status: "error", message: "Not signed in" });

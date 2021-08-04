@@ -347,12 +347,22 @@ const generateZipFile = (res, size, data, fields) => {
     for(let i =0;i<data.length;i++){
      arrs[i%size].push(data[i]);
     }
-    console.log("7");
   const zip = new JSZip();
     console.log(arrs);
   arrs.forEach((arr, i) => {
-    //const aoa = convertToAoA(arr);
+
     const aoa = [];
+    arr.forEach((data) => {
+      aoa.push([
+         data.firstName,
+         data.firstName,
+         data.hasCalled,
+         data.id,
+         data.personalPhoneNo,
+      ])});
+    
+    //const aoa = convertToAoA(arr);
+    
     try{
       aoa.push([
        arr[0].firstName,
@@ -365,15 +375,12 @@ const generateZipFile = (res, size, data, fields) => {
     console.log("something went wrong");
   }
     
-    console.log("aoa: ",aoa);
+   // console.log("aoa: ",aoa);
     const filename = `${i + 1}.csv`;
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    //const ws = XLSX.utils.aoa_to_sheet(aoa);
-    console.log("zip");
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
     zip.file(filename, csv);
   });
-  console.log("8");
   zip
     .generateAsync({ type: "base64" })
     .then(function (content) {
@@ -518,21 +525,18 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
 
 exports.exportRequestToCall = functions.region(region).https.onRequest(
   authenticateVolunteerRequest(async (req, res) => {
-    console.log("1");
     const { value, error } = exportRequestToCallSchema.validate(req.body);
     if (error) {
       console.log(error.details);
       return res.status(412).json(error.details);
     }
     const { volunteerSize } = value;
-    console.log("2");
     const snapshot = await admin
       .firestore()
       .collection("patient")
       .where("isRequestToCall", "==", true)
       .where("isRequestToCallExported", "==", false)
       .get();
-    console.log("3");
     const batch = admin.firestore().batch();
     snapshot.docs.forEach((doc) => {
       console.log(doc.id, "id");
@@ -541,7 +545,6 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
         isRequestToCallExported: true,
       });
     });
-    console.log("4");
     // console.log(batch, 'batch')
     await batch.commit();
 
@@ -558,10 +561,8 @@ exports.exportRequestToCall = functions.region(region).https.onRequest(
       };
       patientList.push(dataResult);
     });
-    console.log("5");
     //generateZipFile(res, size, patientList);
     generateZipFileRoundRobin(res, volunteerSize, patientList);
-    console.log("6");
   })
 );
 
@@ -615,3 +616,64 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   // console.log(event)
   await eventHandler(event, userObject, client);
 });
+
+
+exports.testExportRequestToCall = functions.region(region).https.onRequest(
+  authenticateVolunteerRequest(async (req, res) => {
+    const { value, error } = exportRequestToCallSchema.validate(req.body);
+    if (error) {
+      console.log(error.details);
+      return res.status(412).json(error.details);
+    }
+    const { volunteerSize } = value;
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .limit(249)
+      .get();
+    const batch = admin.firestore().batch();
+    snapshot.docs.forEach((doc) => {
+     // console.log(doc.id, "id");
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      batch.update(docRef, {
+        isRequestToCall:true,
+        isRequestToCallExported: true,
+      });
+    });
+  
+    // console.log(batch, 'batch')
+    
+
+    var patientList = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const dataResult = {
+        firstName: data.firstName,
+        lastName: data.firstName,
+        hasCalled: 0,
+        id: doc.id,
+        personalPhoneNo: data.personalPhoneNo,
+      };
+      patientList.push(dataResult);
+    });
+
+    console.log("1");
+
+    snapshot.docs.forEach((doc) => {
+      console.log(doc.id, "id");
+      const docRef = admin.firestore().collection("patient").doc(doc.id);
+      batch.update(docRef, {
+        isRequestToCall:false,
+        isRequestToCallExported: false,
+      });
+    });
+    console.log("2");
+    // console.log(batch, 'batch')
+    await batch.commit();
+    //generateZipFile(res, size, patientList);
+    generateZipFileRoundRobin(res, volunteerSize, patientList);
+
+
+    
+  })
+);
