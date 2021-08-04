@@ -7,7 +7,6 @@ const {
   authenticateVolunteerRequest,
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
-const { region } = require("./config");
 const { eventHandler } = require("./handler/eventHandler");
 const line = require("@line/bot-sdk");
 const config = {
@@ -36,6 +35,9 @@ const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
 const _ = require("lodash");
+const { backup } = require("./backup");
+
+const region = require("./config/index").config.region;
 
 const app = express();
 app.use(cors());
@@ -301,7 +303,7 @@ app.get("/", async (req, res) => {
  * @param {number} size - number of volunteer
  * @param {data} data - snapshot from firebase (need to convert to array of obj)
  */
-const generateZipFile = (res, size, data, fields) => {
+const generateZipFile = (res, size, data) => {
   const arrs = _.chunk(data, size);
 
   const zip = new JSZip();
@@ -550,3 +552,16 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   // console.log(event)
   await eventHandler(event, userObject, client);
 });
+
+exports.backupFirebase = functions
+  .region(region)
+  .pubsub.schedule("every day 18:00")
+  .timeZone("Asia/Bangkok");
+
+exports.getNumberOfPatients = functions
+  .region(region)
+  .https.onRequest(async (req, res) => {
+    const snapshot = await admin.firestore().collection("patient").get();
+
+    return res.status(200).json(success(snapshot.size));
+  });
