@@ -236,9 +236,10 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   });
 
   if (!followUp) {
-    await snapshot.ref.set({ followUp: [obj] });
+    await snapshot.ref.set({ ...obj, followUp: [obj] });
   } else {
     await snapshot.ref.update({
+      ...obj,
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
