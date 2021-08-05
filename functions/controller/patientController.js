@@ -13,6 +13,44 @@ const { sendPatientstatus } = require("../linefunctions/linepushmessage");
 const { notifyToLine } = require("../linenotify");
 const { convertTimestampToStr } = require("../utils/date");
 
+const addTotalPatientCount = async () => {
+  const snapshot = await admin
+    .firestore()
+    .collection("userCount")
+    .doc("users")
+    .get();
+  await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
+};
+
+const decrementTotalPatientCount = async () => {
+  const snapshot = await admin
+    .firestore()
+    .collection("userCount")
+    .doc("users")
+    .get();
+  await snapshot.ref.update("count", admin.firestore.FieldValue.increment(-1));
+};
+
+const addTotalPatientCountByColor = async (status) => {
+  const snapshot = await admin
+    .firestore()
+    .collection("userCount")
+    .doc(status)
+    .get();
+
+  await snapshot.ref("count", admin.firestore.FieldValue.increment(1));
+};
+
+const decrementTotalPatientCountByColor = async (status) => {
+  const snapshot = await admin
+    .firestore()
+    .collection("userCount")
+    .doc(status)
+    .get();
+
+  await snapshot.ref("count", admin.firestore.FieldValue.increment(-1));
+};
+
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
 
@@ -67,18 +105,13 @@ exports.registerPatient = async (data, _context) => {
   }
 
   await snapshot.ref.create(obj);
-  await addTotalPatientCount();
+  try {
+    await addTotalPatientCount();
+  } catch (err) {
+    console.log(err);
+  }
 
   return success(`Registration with ID: ${lineUserID} added`);
-};
-
-addTotalPatientCount = async () => {
-  const snapshot = await admin
-    .firestore()
-    .collection("userCount")
-    .doc("users")
-    .get();
-  await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
 };
 
 exports.getProfile = async (data, _context) => {
@@ -161,17 +194,17 @@ exports.updateSymptom = async (data, _context) => {
     );
   }
 
-  if (snapshot.data().toAmed === 1) {
-    return success(`your information already handle by Amed`);
-  }
-
-  const snapshotData = snapshot.data();
   const {
     followUp,
     firstName,
     lastName,
+    toAmed,
     status: previousStatus,
-  } = snapshotData;
+  } = snapshot.data();
+
+  if (toAmed === 1) {
+    return success(`your information already handle by Amed`);
+  }
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
 
@@ -220,7 +253,16 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   try {
+    if (previousStatus !== null) {
+      await decrementTotalPatientCountByColor(previousStatus);
+    }
+
+    if (obj["toAmed"] === 1) {
+      await decrementTotalPatientCount();
+    }
+
     // await sendPatientstatus(lineUserID, inclusion_label, config.channelAccessToken);
+    await addTotalPatientCountByColor(inclusion_label);
   } catch (err) {
     console.log(err);
   }
