@@ -57,6 +57,7 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
     // console.log(event)
     await eventHandler(event, userObject, client);
   } catch (err) {
+    console.error(err)
     console.log("Not from line application.");
   }
 });
