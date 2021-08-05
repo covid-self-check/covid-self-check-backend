@@ -248,7 +248,6 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
-  console.log('patient status')
   const status = "We are the CHAMPION!!";
 
   try {
