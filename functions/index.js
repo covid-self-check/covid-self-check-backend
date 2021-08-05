@@ -20,6 +20,7 @@ const {
   getProfileSchema,
   importPatientIdSchema,
   exportRequestToCallSchema,
+  requestToRegisterSchema
 } = require("./schema");
 const { success } = require("./response/success");
 const {
@@ -57,7 +58,7 @@ exports.registerParticipant = functions
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -113,7 +114,7 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -155,7 +156,7 @@ exports.getFollowupHistory = functions
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -195,7 +196,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     // DEBUG
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -449,7 +450,7 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -495,7 +496,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
     const { value, error } = exportRequestToCallSchema.validate(data);
     if (error) {
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง"
       );
     }
@@ -529,7 +530,7 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
     // const { value, error } = exportRequestToCallSchema.validate(data);
     // if (error) {
     // throw new functions.https.HttpsError(
-    //   "failed-precondition",
+    //   "invalid-argument",
     //   "ข้อมูลไม่ถูกต้อง"
     // );
     // }
@@ -577,7 +578,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -704,4 +705,64 @@ exports.getNumberOfPatients = functions
     const snapshot = await admin.firestore().collection("patient").get();
 
     return res.status(200).json(success(snapshot.size));
+  });
+
+
+exports.requestToRegister = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const { value, error } = requestToRegisterSchema.validate(data);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+
+    const { lineUserID, lineIDToken, noAuth } = value;
+    const { data: lineProfile, error: authError } = await getProfile({
+      lineUserID,
+      lineIDToken,
+      noAuth,
+    });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        lineProfile.error_description
+      );
+    }
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(value.lineUserID)
+      .get();
+
+    if (snapshot.exists) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `ผู้ใช้ ${lineUserID} ลงทะเบียนในระบบแล้ว ไม่จำเป็นต้องขอรับความช่วยเหลือในการลงทะเบียน`
+      );
+    } else {
+
+      const requestRegisterSnapshot = await admin
+        .firestore()
+        .collection("requestToRegisterAssistance")
+        .doc(lineUserID)
+        .get();
+
+      if (requestRegisterSnapshot.exists) {
+        throw new functions.https.HttpsError(
+          "already-exists",
+          `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+        );
+      }
+      const obj = {
+        name: value.name
+        personalPhoneNo: value.personalPhoneNo
+      }
+      await snapshot.ref.create(obj);
+      return success()
+    }
   });
