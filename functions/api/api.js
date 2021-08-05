@@ -14,6 +14,17 @@ exports.statusList = {
     "R2": 6
 }
 
+exports.statusListReverse = {
+     0: "unknown",
+     1: "G1",
+     2: "G2",
+     3: "Y1",
+     4: "Y2",
+     5: "R1",
+     6: "R2",
+}
+
+
 exports.makeStatusAPIPayload = (data, lastFollowUp) => {
     const age = calculateAge(data.birthDate.toDate());
     const infected_discover_date = formatDateTimeAPI(data.createdDate);
