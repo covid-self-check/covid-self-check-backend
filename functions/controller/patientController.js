@@ -87,6 +87,7 @@ exports.registerPatient = async (data, _context) => {
   obj["lastUpdatedAt"] = createdTimestamp;
   obj["isRequestToCallExported"] = false;
   obj["isRequestToCall"] = false;
+  obj["isNurseExported"] = false;
   obj["toAmed"] = 0;
 
   const snapshot = await admin
