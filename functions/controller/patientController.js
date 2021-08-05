@@ -12,6 +12,7 @@ const { makeStatusAPIPayload, makeRequest, statusList } = require("../api/api");
 const { sendPatientstatus } = require("../linefunctions/linepushmessage");
 const { notifyToLine } = require("../linenotify");
 const { convertTimestampToStr } = require("../utils/date");
+const { config } = require('../config/index')
 
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
@@ -220,7 +221,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   try {
-    // await sendPatientstatus(lineUserID, inclusion_label, config.channelAccessToken);
+    await sendPatientstatus(lineUserID, inclusion_label, config.line.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
