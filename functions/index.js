@@ -37,8 +37,8 @@ const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
 const { notifyToLine } = require("./linenotify");
-
 const region = require("./config/index").config.region;
+const { convertTimestampToStr } = require("./utils/date");
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
 
@@ -142,7 +142,8 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   const { name, picture } = lineProfile;
   if (snapshot.exists) {
     const { followUp, ...patientData } = snapshot.data();
-    return { line: { name, picture }, patient: patientData };
+    const serializeData = convertTimestampToStr(patientData);
+    return { line: { name, picture }, patient: serializeData };
   } else {
     return { line: { name, picture }, patient: null };
   }
