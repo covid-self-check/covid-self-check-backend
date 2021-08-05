@@ -41,6 +41,7 @@ const region = require("./config/index").config.region;
 const { convertTimestampToStr } = require("./utils/date");
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
+const {makeStatusAPIPayload,makeRequest,statusList} = require("./api/api")
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -243,7 +244,14 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
-  obj["status"] = 0;
+  const formPayload = makeStatusAPIPayload(snapshot.data());
+  const {inclusion_label,inclusion_label_type,triage_score} = await makeRequest(formPayload);
+  console.log("status is:",inclusion_label);
+
+  obj["status"] = statusList[inclusion_label];
+  obj["status_label_type"] = inclusion_label_type;
+  obj["triage_score"] = triage_score;
+  
 
   if (!followUp) {
     await snapshot.ref.set({ ...obj, followUp: [obj] });
