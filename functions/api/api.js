@@ -92,7 +92,6 @@ exports.makeRequest = async (formPayload) => {
         return {
             inclusion_label: this.statusList.unknown,
             inclusion_label_type: 'at_least',
-            triage_score: 0,
         }
     }
 }
