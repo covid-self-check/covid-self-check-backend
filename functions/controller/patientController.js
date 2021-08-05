@@ -213,7 +213,6 @@ exports.updateSymptom = async (data, _context) => {
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
 
-
   const formPayload = makeStatusAPIPayload(snapshotData, obj)
   const { inclusion_label, inclusion_label_type, triage_score } =
     await makeRequest(formPayload)
