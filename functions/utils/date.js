@@ -1,4 +1,5 @@
 const moment = require("moment");
+const { admin } = require("../init");
 
 exports.convertTZ = (date, tzString) => {
   return new Date(
@@ -6,6 +7,18 @@ exports.convertTZ = (date, tzString) => {
       timeZone: tzString,
     })
   );
+};
+
+exports.convertTimestampToStr = (data) => {
+  const tmp = { ...data };
+  for (const key in data) {
+    if (data[key] instanceof admin.firestore.Timestamp) {
+      const date = this.convertTZ(data[key].toDate(), "Asia/Bangkok");
+      const dateStr = moment(date).format("DD-MM-YYYY hh:mm:ss");
+      tmp[key] = dateStr;
+    }
+  }
+  return tmp;
 };
 
 /**
