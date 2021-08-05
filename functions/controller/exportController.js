@@ -32,7 +32,6 @@ exports.exportR2R = async (data, context) => {
   );
   await Promise.all(
     snapshot.docs.map((doc) => {
-      console.log(doc.id);
       const docRef = admin
         .firestore()
         .collection("requestToRegisterAssistance")
@@ -86,12 +85,12 @@ exports.exportR2C = async (data, context) => {
       });
     })
   );
-  const headers = ["internal id", "first name", "call status", "tel"];
+  const header = ["internal id", "first name", "call status", "tel"];
 
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
-    headers,
+    header,
     (doc) => [doc.id, doc.firstName, doc.hasCalled, `="${doc.personalPhoneNo}"`]
   );
 };
