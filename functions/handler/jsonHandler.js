@@ -6,10 +6,13 @@ const symptomDiagnostic = require("../json/symptomDiagnostic.json");
 const info1 = require("../json/info1.json");
 const info2 = require("../json/info2.json");
 const info3 = require("../json/info3.json");
+const info4 = require("../json/info4.json");
+const info5 = require("../json/info3.json");
+const info6 = require("../json/info6.json");
 const defaultReply = require("../json/defaultReply.json");
 const tutorial1 = require("../json/tutorial1.json");
 const tutorial2 = require("../json/tutorial2.json");
 
-const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3, defaultReply, tutorial1, tutorial2 };
+const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3, info4, info5, info6, defaultReply, tutorial1, tutorial2 };
 
 module.exports = { jsonController: (json) => map[json] };
