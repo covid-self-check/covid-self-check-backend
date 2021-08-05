@@ -259,9 +259,9 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   } catch (err) {
     console.log(err);
   }
-  if (status === 'We are the CHAMPION!!') {
-    await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
-  }
+  // if (status === 'We are the CHAMPION!!') {
+  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
+  // }
   return success();
 });
 
