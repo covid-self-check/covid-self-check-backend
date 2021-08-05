@@ -1,9 +1,10 @@
 const { jsonController } = require('../jsonHandler')
+const { requestCall } = require('../../linefunctions/requestCallHandler')
 
 const handleMessage = async (event, userObject, client) => {
     const replyToken = await event.replyToken
     const message = await event.message.text
-    // console.log(message) 
+    // console.log(message)
     try {
         switch (message) {
             case 'ประเมินอาการ':
@@ -16,8 +17,7 @@ const handleMessage = async (event, userObject, client) => {
                 await client.replyMessage(replyToken, jsonController('help'))
                 break;
             case 'สอนการใช้งาน':
-                await client.replyMessage(replyToken, jsonController('tutorial'))
-                requestCall(client)
+                requestCall(userObject, client, replyToken)
                 break;
             default:
                 await client.replyMessage(replyToken,jsonController('defaultReply'))
