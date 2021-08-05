@@ -36,6 +36,7 @@ const cors = require("cors");
 const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
+const { notifyToLine } = require("./linenotify");
 
 const region = require("./config/index").config.region;
 
@@ -234,7 +235,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { followUp } = snapshot.data();
+  const { followUp, firstName, lastName } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
@@ -254,11 +255,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const status = "We are the CHAMPION!!";
 
   try {
-    sendPatientstatus(lineUserID, status, config.channelAccessToken);
+    // sendPatientstatus(lineUserID, status, config.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
-
+  if (status === 'We are the CHAMPION!!') {
+    await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
+  }
   return success();
 });
 
