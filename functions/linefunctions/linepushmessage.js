@@ -77,8 +77,7 @@ const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
     let condition = `\n\nอัปเดตโรคประจำตัว: ${patientCondition === '' ? '-' : patientCondition}`
     patientColor = getPatientTextColor(statusObj.status);
     let conclude = `\n\nผลลัพธ์:
-    - ระดับ: ${patientColor}
-    - ระดับอาการป่วย (เต็ม 100): ${statusObj.triage_score !== undefined ? statusObj.triage_score : '-'}`
+    - ระดับ: ${patientColor}`
     const messagePayload =
         [
             {
