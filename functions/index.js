@@ -138,9 +138,13 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
     .doc(value.lineUserID)
     .get();
 
-  const { followUp, ...patientData } = snapshot.data();
   const { name, picture } = lineProfile;
-  return { line: { name, picture }, patient: patientData };
+  if (!snapshot.exists) {
+    const { followUp, ...patientData } = snapshot.data();
+    return { line: { name, picture }, patient: patientData };
+  } else {
+    return { line: { name, picture }, patient: null };
+  }
 });
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
