@@ -1,41 +1,25 @@
-async function requestCall(data) {
-    const { value, error } = getProfileSchema.validate(data);
-    if (error) {
-        console.log(error.details);
-        throw new functions.https.HttpsError(
-            "failed-precondition",
-            "ข้อมูลไม่ถูกต้อง",
-            error.details
-        );
-    }
+const { admin } = require("../init");
+const { jsonController } = require('../handler/jsonHandler');
+const { success } = require("../response/success")
 
-    const { lineUserID, lineIDToken, noAuth } = value;
-    const { error: authError } = await getProfile({
-        lineUserID,
-        lineIDToken,
-        noAuth,
-    });
-
-    if (authError) {
-        throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
-    }
-
+const requestCall = async (userObject, client, replyToken) => {
     const snapshot = await admin
         .firestore()
         .collection("patient")
-        .doc(lineUserID)
+        .doc(userObject.userId)
         .get();
     if (!snapshot.exists) {
-        throw new functions.https.HttpsError(
-            "not-found",
-            `ไม่พบผู้ใช้ ${lineUserID}`
-        );
+        await client.replyMessage(replyToken, jsonController('tutorial2'))
+
+        return success()
     }
+
+    await client.replyMessage(replyToken, jsonController('tutorial1'))
 
     const { isRequestToCall } = snapshot.data();
 
     if (isRequestToCall) {
-        return success(`userID: ${lineUserID} has already requested to call`);
+        return success(`userID: ${userObject.userId} has already requested to call`);
     }
 
     await snapshot.ref.update({
@@ -44,3 +28,4 @@ async function requestCall(data) {
     });
     return success();
 }
+module.exports = { requestCall };
