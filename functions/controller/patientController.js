@@ -62,9 +62,16 @@ exports.registerPatient = async (data, _context) => {
   }
 
   await snapshot.ref.create(obj);
+  await addTotalPatientCount();
 
   return success(`Registration with ID: ${lineUserID} added`);
 };
+
+addTotalPatientCount = async ()=>{
+  const snapshot = await admin.firestore().collection("userCount").doc("users").get();
+  await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
+};
+
 
 exports.getProfile = async (data, _context) => {
   const { value, error } = getProfileSchema.validate(data);
