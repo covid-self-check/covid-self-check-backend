@@ -11,7 +11,7 @@ const handleMessage = async (event, userObject, client) => {
                 await client.replyMessage(replyToken, jsonController('symptomDiagnostic'))
                 break;
             case 'สิ่งที่ควรรู้':
-                await client.replyMessage(replyToken, [jsonController('info1'), jsonController('info2'), jsonController('info3')])
+                await client.replyMessage(replyToken, [jsonController('info1'), jsonController('info2'), jsonController('info3'), jsonController('info4'), jsonController('info5'), jsonController('info6')])
                 break;
             case 'ติดต่อฉุกเฉิน':
                 await client.replyMessage(replyToken, jsonController('help'))
