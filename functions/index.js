@@ -231,7 +231,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { followUp, firstName } = snapshot.data();
+  const { followUp, firstName, lastName } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
@@ -257,7 +257,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     console.log(err);
   }
   if (status === 'We are the CHAMPION!!') {
-    await notifyToLine(`ผู้ป่วย ${firstName} มีการเปลี่ยนแปลงอาการ`)
+    await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการเป็นสี${status}`)
   }
   return success();
 });
