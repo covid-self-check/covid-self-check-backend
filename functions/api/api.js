@@ -1,8 +1,8 @@
 const axios = require("axios");
 const { calculateAge,formatDateTimeAPI } = require("../utils/date");
-
+const functions = require("firebase-functions");
 const URL = 'https://pedsanam.ydm.family/pedsanam/label_score';
-const AUTHORIZATION = '6f7a633733a4699b374355a744606b61';
+const AUTHORIZATION = functions.config().api.authorization;
 
 exports.statusList = {
     "unknown":0,
