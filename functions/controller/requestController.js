@@ -31,6 +31,12 @@ exports.requestToCall = async (data, _context) => {
     .doc(lineUserID)
     .get();
   if (!snapshot.exists) {
+    if (snapshot.data().toAmed === 1) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "your information is already handle by Amed"
+      );
+    }
     throw new functions.https.HttpsError(
       "not-found",
       `ไม่พบผู้ใช้ ${lineUserID}`
@@ -100,7 +106,7 @@ exports.requestToRegister = async (data, _context) => {
     const obj = {
       name: value.name,
       personalPhoneNo: value.personalPhoneNo,
-      isR2RExported: true,
+      isR2RExported: false,
     };
     await requestRegisterSnapshot.ref.create(obj);
     return success();
