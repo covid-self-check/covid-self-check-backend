@@ -94,9 +94,14 @@ exports.backupFirestore = functions
 exports.getNumberOfPatients = functions
 .region(region)
 .https.onRequest(async (req, res) => {
-  //const snapshot = await admin.firestore().collection("patient").get();
+  const snapshot = await admin.firestore().collection("patient").get();
 
-  //return res.status(200).json(success(snapshot.size));
+  return res.status(200).json(success(snapshot.size));
+});
+
+exports.getNumberOfPatientsV2 = functions
+.region(region)
+.https.onRequest(async (req, res) => {
   const snapshot = await admin.firestore().collection("userCount").document("users").get();
   return res.status(200).json(success(snapshot[0].data().count));
 });
