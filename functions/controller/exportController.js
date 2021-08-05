@@ -53,7 +53,7 @@ exports.exportR2R = async (data, context) => {
   return result;
 };
 
-exports.exportR2C = async (data, context) => {
+exports.exportR2C = async (data, _context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -69,7 +69,6 @@ exports.exportR2C = async (data, context) => {
     .collection("patient")
     .where("isRequestToCall", "==", true)
     .where("isRequestToCallExported", "==", false)
-    .where("toAmed", "==", 0)
     .orderBy("lastUpdatedAt")
     .get();
 
