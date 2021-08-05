@@ -513,7 +513,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
         const dataResult = {
           firstName: docData.firstName,
           lastName: docData.firstName,
-          hasCalled: '',
+          hasCalled: "",
           id: doc.id,
           personalPhoneNo: docData.personalPhoneNo,
         };
@@ -521,7 +521,19 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
       })
     );
 
-    return generateZipFileRoundRobin(volunteerSize, patientList);
+    const headers = ["internal id", "first name", "call status", "tel"];
+
+    return generateZipFileRoundRobin(
+      volunteerSize,
+      patientList,
+      headers,
+      (doc) => [
+        doc.id,
+        doc.firstName,
+        doc.hasCalled,
+        `="${doc.personalPhoneNo}"`,
+      ]
+    );
   })
 );
 
@@ -566,7 +578,17 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
     //   })
     // );
 
-    // return generateZipFileRoundRobin(volunteerSize, patientList);
+    // return generateZipFileRoundRobin(
+    //   volunteerSize,
+    //   patientList,
+    //   headers,
+    //   (doc) => [
+    //     doc.id,
+    //     doc.firstName,
+    //     doc.hasCalled,
+    //     `="${doc.personalPhoneNo}"`,
+    //   ]
+    // );
     return success();
   })
 );
@@ -661,8 +683,6 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 //           isRequestToCallExported: false,
 //         });
 //       });
-
-//       // console.log(batch, 'batch')
 
 //       snapshot.forEach((doc) => {
 //         const data = doc.data();
