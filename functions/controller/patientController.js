@@ -97,7 +97,10 @@ exports.registerPatient = async (data, _context) => {
 
   if (snapshot.exists) {
     if (snapshot.data().toAmed === 1) {
-      return success(`your information already handle by Amed`);
+      throw new functions.https.HttpsError(
+        "aborted",
+        "your information is already handle by Amed"
+      );
     }
     throw new functions.https.HttpsError(
       "already-exists",
@@ -204,7 +207,10 @@ exports.updateSymptom = async (data, _context) => {
   } = snapshot.data();
 
   if (toAmed === 1) {
-    return success(`your information already handle by Amed`);
+    throw new functions.https.HttpsError(
+      "aborted",
+      "your information is already handle by Amed"
+    );
   }
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient

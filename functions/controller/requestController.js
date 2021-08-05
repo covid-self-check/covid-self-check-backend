@@ -32,7 +32,10 @@ exports.requestToCall = async (data, _context) => {
     .get();
   if (!snapshot.exists) {
     if (snapshot.data().toAmed === 1) {
-      success(`your information already handle by Amed`);
+      throw new functions.https.HttpsError(
+        "aborted",
+        "your information is already handle by Amed"
+      );
     }
     throw new functions.https.HttpsError(
       "not-found",
