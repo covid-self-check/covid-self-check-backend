@@ -1,6 +1,5 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
 const functions = require("firebase-functions");
-const { convertTZ } = require("./utils");
 const {
   authenticateVolunteer,
   getProfile,
@@ -14,34 +13,20 @@ const config = {
   channelSecret: functions.config().line.channel_secret,
 };
 const client = new line.Client(config);
-const {
-  historySchema,
-  registerSchema,
-  getProfileSchema,
-  importPatientIdSchema,
-  exportRequestToCallSchema,
-  requestToRegisterSchema,
-} = require("./schema");
+const { getProfileSchema, exportRequestToCallSchema } = require("./schema");
 const { success } = require("./response/success");
-const {
-  patientReportHeader,
-  convertToArray,
-  sheetName,
-} = require("./utils/status");
-const XLSX = require("xlsx");
-const fs = require("fs");
-const path = require("path");
 const express = require("express");
 const cors = require("cors");
-const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
-const { notifyToLine } = require("./linenotify");
 const region = require("./config/index").config.region;
-const { convertTimestampToStr } = require("./utils/date");
 
-const { sendPatientstatus } = require("./linefunctions/linepushmessage");
-const { exportController, patientController } = require("./controller");
+const {
+  exportController,
+  patientController,
+  requestController,
+  importController,
+} = require("./controller");
 const { makeStatusAPIPayload, makeRequest, statusList } = require("./api/api");
 
 const app = express();
@@ -53,54 +38,70 @@ initializeApp();
 // Take the text parameter passed to this HTTP endpoint and insert it into
 // Firestore under the path /messages/:documentId/original
 
+app.get("/master", exportController.exportMasterAddress);
+
+app.get(
+  "/",
+  authenticateVolunteerRequest(exportController.exportPatientForNurse)
+);
+
 exports.registerParticipant = functions
   .region(region)
   .https.onCall(patientController.registerPatient);
 
-exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
-  const { value, error } = getProfileSchema.validate(data);
-  if (error) {
-    console.log(error.details);
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "ข้อมูลไม่ถูกต้อง",
-      error.details
-    );
-  }
+exports.getProfile = functions
+  .region(region)
+  .https.onCall(patientController.getProfile);
 
-  const { lineUserID, lineIDToken, noAuth } = value;
-  const { data: lineProfile, error: authError } = await getProfile({
-    lineUserID,
-    lineIDToken,
-    noAuth,
-  });
-  if (authError) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      lineProfile.error_description
-    );
-  }
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .doc(value.lineUserID)
-    .get();
+exports.exportRequestToRegister = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2R));
 
-  const { name, picture } = lineProfile;
-  if (snapshot.exists) {
-    const { followUp, ...patientData } = snapshot.data();
-    const serializeData = convertTimestampToStr(patientData);
-    return { line: { name, picture }, patient: serializeData };
-  } else {
-    return { line: { name, picture }, patient: null };
-  }
-});
+exports.exportRequestToCall = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2C));
+
+exports.importFinishedRequestToCall = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(importController.importFinishR2C));
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
     return { result: `Content for authorized user` };
   })
 );
+
+exports.backupFirestore = functions
+  .region(region)
+  .pubsub.schedule("every day 18:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(backup);
+
+exports.getNumberOfPatients = functions
+  .region(region)
+  .https.onRequest(async (req, res) => {
+    const snapshot = await admin.firestore().collection("patient").get();
+
+    return res.status(200).json(success(snapshot.size));
+  });
+
+exports.requestToRegister = functions
+  .region(region)
+  .https.onCall(requestController.requestToRegister);
+
+exports.check = functions.region(region).https.onRequest(async (req, res) => {
+  return res.sendStatus(200);
+});
+
+exports.requestToCall = functions
+  .region(region)
+  .https.onCall(requestController.requestToCall);
+
+exports.updateSymptom = functions
+  .region(region)
+  .https.onCall(patientController.updateSymptom);
+
+exports.createReport = functions.region(region).https.onRequest(app);
 
 exports.getFollowupHistory = functions
   .region(region)
@@ -142,191 +143,6 @@ exports.getFollowupHistory = functions
     }
     return success(snapshot.data().followUp);
   });
-
-exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
-  const { value, error } = historySchema.validate(data);
-  if (error) {
-    // DEBUG
-    console.log(error.details);
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "ข้อมูลไม่ถูกต้อง",
-      error.details
-    );
-  }
-
-  const { lineUserID, lineIDToken, noAuth, ...obj } = value;
-  const { error: authError, data: errorData } = await getProfile({
-    lineUserID,
-    lineIDToken,
-    noAuth,
-  });
-  if (authError) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      errorData.error_description
-    );
-  }
-
-  const createdDate = convertTZ(new Date(), "Asia/Bangkok");
-  obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
-
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .doc(lineUserID)
-    .get();
-  if (!snapshot.exists) {
-    throw new functions.https.HttpsError(
-      "not-found",
-      `ไม่พบผู้ใช้ ${lineUserID}`
-    );
-  }
-
-  const { followUp, firstName, lastName } = snapshot.data();
-  //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
-  //update lastUpdatedAt field on patient
-  await snapshot.ref.update({
-    lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
-  });
-
-  const formPayload = makeStatusAPIPayload(snapshot.data());
-  const { inclusion_label, inclusion_label_type, triage_score } =
-    await makeRequest(formPayload);
-  console.log("status is:", inclusion_label);
-
-  obj["status"] = statusList[inclusion_label];
-  obj["status_label_type"] = inclusion_label_type;
-  obj["triage_score"] = triage_score;
-
-  if (!followUp) {
-    await snapshot.ref.set({ ...obj, followUp: [obj] });
-  } else {
-    await snapshot.ref.update({
-      ...obj,
-      followUp: admin.firestore.FieldValue.arrayUnion(obj),
-    });
-  }
-  const status = "We are the CHAMPION!!";
-
-  try {
-    // sendPatientstatus(lineUserID, status, config.channelAccessToken);
-  } catch (err) {
-    console.log(err);
-  }
-  // if (status === 'We are the CHAMPION!!') {
-  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
-  // }
-  return success();
-});
-
-// app.get("/master", async (req, res) => {
-//   try {
-//     const { password } = req.query;
-//     if (password !== "CpciLBG63jEJ") {
-//       throw new functions.https.HttpsError(
-//         "permission-denied",
-//         "ไม่มี permission"
-//       );
-//     }
-//     const snapshot = await admin.firestore().collection("patient").get();
-
-//     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
-//     const result = [header];
-//     snapshot.forEach((doc) => {
-//       const data = doc.data();
-
-//       result.push([
-//         data.address,
-//         data.district,
-//         data.prefecture,
-//         data.province,
-//       ]);
-//     });
-//     const wb = XLSX.utils.book_new();
-
-//     const ws = XLSX.utils.aoa_to_sheet(result);
-
-//     XLSX.utils.book_append_sheet(wb, ws, "รายงานที่อยู่ผู้ป่วย 4 สิงหาคม");
-//     const filename = `report.xlsx`;
-//     const opts = { bookType: "xlsx", type: "binary" };
-
-//     // it must be save to tmp directory because it run on firebase
-//     const pathToSave = path.join("/tmp", filename);
-//     XLSX.writeFile(wb, pathToSave, opts);
-
-//     const stream = fs.createReadStream(pathToSave);
-//     // prepare http header
-//     res.setHeader(
-//       "Content-Type",
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//     );
-//     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-//     stream.pipe(res);
-//   } catch (err) {
-//     console.log(err);
-//     return res.json({ success: false });
-//   }
-// });
-
-app.get(
-  "/",
-  authenticateVolunteerRequest(async (req, res) => {
-    try {
-      const snapshot = await admin.firestore().collection("patient").get();
-
-      const results = [
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-        [patientReportHeader],
-      ];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const arr = convertToArray(data);
-        if (typeof data.status === "number") {
-          if (data.status > 0 && data.status < results.length) {
-            results[data.status].push(arr);
-          }
-        } else {
-          results[0].push(arr);
-        }
-      });
-      const wb = XLSX.utils.book_new();
-      // append result to sheet
-      for (let i = 0; i < results.length && i < sheetName.length; i++) {
-        const ws = XLSX.utils.aoa_to_sheet(results[i]);
-        XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
-      }
-      // write workbook file
-      const filename = `report.xlsx`;
-      const opts = { bookType: "xlsx", type: "binary" };
-
-      // it must be save to tmp directory because it run on firebase
-      const pathToSave = path.join("/tmp", filename);
-      XLSX.writeFile(wb, pathToSave, opts);
-      // create read stream
-      const stream = fs.createReadStream(pathToSave);
-      // prepare http header
-      res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${filename}"`
-      );
-
-      stream.pipe(res);
-    } catch (err) {
-      res.json({ success: false });
-    }
-  })
-);
-
 exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
@@ -345,8 +161,6 @@ exports.fetchNotUpdatedPatients = functions
     // return success(notUpdatedList);
     return success();
   });
-
-exports.createReport = functions.region(region).https.onRequest(app);
 
 exports.fetchYellowPatients = functions
   .region(region)
@@ -403,56 +217,6 @@ exports.fetchRedPatients = functions
     return success();
   });
 
-exports.check = functions.region(region).https.onRequest(async (req, res) => {
-  return res.sendStatus(200);
-});
-
-exports.requestToCall = functions.region(region).https.onCall(async (data) => {
-  const { value, error } = getProfileSchema.validate(data);
-  if (error) {
-    console.log(error.details);
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "ข้อมูลไม่ถูกต้อง",
-      error.details
-    );
-  }
-
-  const { lineUserID, lineIDToken, noAuth } = value;
-  const { error: authError } = await getProfile({
-    lineUserID,
-    lineIDToken,
-    noAuth,
-  });
-  if (authError) {
-    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
-  }
-
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .doc(lineUserID)
-    .get();
-  if (!snapshot.exists) {
-    throw new functions.https.HttpsError(
-      "not-found",
-      `ไม่พบผู้ใช้ ${lineUserID}`
-    );
-  }
-
-  const { isRequestToCall } = snapshot.data();
-
-  if (isRequestToCall) {
-    return success(`userID: ${lineUserID} has already requested to call`);
-  }
-
-  await snapshot.ref.update({
-    isRequestToCall: true,
-    isRequestToCallExported: false,
-  });
-  return success();
-});
-
 exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
     const { value, error } = exportRequestToCallSchema.validate(data);
@@ -499,54 +263,6 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   })
 );
 
-exports.exportRequestToRegister = functions
-  .region(region)
-  .https.onCall(authenticateVolunteer(exportController.exportR2R));
-
-exports.exportRequestToCall = functions
-  .region(region)
-  .https.onCall(authenticateVolunteer(exportController.exportR2C));
-
-exports.importFinishedRequestToCall = functions.region(region).https.onCall(
-  authenticateVolunteer(async (data) => {
-    const { value, error } = importPatientIdSchema.validate(data);
-
-    if (error) {
-      console.log(error.details);
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
-    }
-    const { ids } = value;
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("isRequestToCall", "==", true)
-      .where("isRequestToCallExported", "==", true)
-      .get();
-
-    const batch = admin.firestore().batch();
-    snapshot.docs.forEach((doc) => {
-      const hasCalled = ids.includes(doc.id);
-      const docRef = admin.firestore().collection("patient").doc(doc.id);
-      if (hasCalled) {
-        batch.update(docRef, {
-          isRequestToCall: false,
-          isRequestToCallExported: false,
-        });
-      } else {
-        batch.update(docRef, {
-          isRequestToCallExported: false,
-        });
-      }
-    });
-
-    await batch.commit();
-    return success();
-  })
-);
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
   try {
@@ -626,75 +342,3 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 
 //   })
 // );
-
-exports.backupFirestore = functions
-  .region(region)
-  .pubsub.schedule("every day 18:00")
-  .timeZone("Asia/Bangkok")
-  .onRun(backup);
-
-exports.getNumberOfPatients = functions
-  .region(region)
-  .https.onRequest(async (req, res) => {
-    const snapshot = await admin.firestore().collection("patient").get();
-
-    return res.status(200).json(success(snapshot.size));
-  });
-
-exports.requestToRegister = functions
-  .region(region)
-  .https.onCall(async (data) => {
-    const { value, error } = requestToRegisterSchema.validate(data);
-    if (error) {
-      console.log(error.details);
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
-    }
-
-    const { lineUserID, lineIDToken, noAuth } = value;
-    const { data: lineProfile, error: authError } = await getProfile({
-      lineUserID,
-      lineIDToken,
-      noAuth,
-    });
-    if (authError) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        lineProfile.error_description
-      );
-    }
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(value.lineUserID)
-      .get();
-
-    if (snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        `ผู้ใช้ ${lineUserID} ลงทะเบียนในระบบแล้ว ไม่จำเป็นต้องขอรับความช่วยเหลือในการลงทะเบียน`
-      );
-    } else {
-      const requestRegisterSnapshot = await admin
-        .firestore()
-        .collection("requestToRegisterAssistance")
-        .doc(lineUserID)
-        .get();
-
-      if (requestRegisterSnapshot.exists) {
-        throw new functions.https.HttpsError(
-          "already-exists",
-          `มีข้อมูลผู้ใช้ ${lineUserID} ในรายชื่อการโทรแล้ว`
-        );
-      }
-      const obj = {
-        name: value.name,
-        personalPhoneNo: value.personalPhoneNo,
-      };
-      await requestRegisterSnapshot.ref.create(obj);
-      return success();
-    }
-  });
