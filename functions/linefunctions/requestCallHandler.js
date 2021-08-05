@@ -1,4 +1,4 @@
-async function requestCall(data) {
+const requestCall = async (data) => {
     const { value, error } = getProfileSchema.validate(data);
     if (error) {
         console.log(error.details);
