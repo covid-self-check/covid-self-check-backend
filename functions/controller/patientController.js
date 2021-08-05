@@ -70,7 +70,7 @@ const decrementTotalPatientCountByColor = async (status) => {
         .doc(status)
         .get()
 
-    if (!snapshot.exists) {
+    if (snapshot.exists) {
         await snapshot.ref.update(
             'count',
             admin.firestore.FieldValue.increment(-1)
@@ -281,10 +281,24 @@ exports.updateSymptom = async (data, _context) => {
         })
     }
 
-    if (needNotification) {
-        await notifyToLine(
-            `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
+    try {
+        if (needNotification) {
+            await notifyToLine(
+                `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
+            )
+        }
+    } catch (err) {
+        console.log(err)
+    }
+
+    try {
+        await sendPatientstatus(
+            lineUserID,
+            inclusion_label,
+            config.line.channelAccessToken
         )
+    } catch (err) {
+        console.log(err)
     }
 
     try {
@@ -293,17 +307,20 @@ exports.updateSymptom = async (data, _context) => {
                 statusListReverse[previousStatus]
             )
         }
+    } catch (err) {
+        console.log(err)
+    }
 
+    try {
         if (obj['toAmed'] === 1) {
             await decrementTotalPatientCount()
         }
+    } catch (err) {
+        console.log(err)
+    }
 
+    try {
         await addTotalPatientCountByColor(inclusion_label)
-        await sendPatientstatus(
-            lineUserID,
-            inclusion_label,
-            config.line.channelAccessToken
-        )
     } catch (err) {
         console.log(err)
     }
