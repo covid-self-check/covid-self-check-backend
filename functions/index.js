@@ -41,7 +41,7 @@ const { notifyToLine } = require("./linenotify");
 const region = require("./config/index").config.region;
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
-const { exportController } = require("./controller");
+const { exportController, patientController } = require("./controller");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -54,62 +54,7 @@ initializeApp();
 
 exports.registerParticipant = functions
   .region(region)
-  .https.onCall(async (data, context) => {
-    const { value, error } = registerSchema.validate(data);
-
-    if (error) {
-      console.log(error.details);
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
-    }
-
-    const { lineUserID, lineIDToken, noAuth, ...obj } = value;
-    const { error: authError } = await getProfile({
-      lineUserID,
-      lineIDToken,
-      noAuth,
-    });
-    if (authError) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "ไม่ได้รับอนุญาต"
-      );
-    }
-
-    var needFollowUp = true;
-    // TODO : fix schema
-    obj["gotFavipiravir"] = obj["gotFavipiravia"];
-    delete obj["gotFavipiravia"];
-    obj["status"] = 0;
-    obj["needFollowUp"] = needFollowUp;
-    obj["followUp"] = [];
-    const createdDate = convertTZ(new Date(), "Asia/Bangkok");
-    const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
-    obj["createdDate"] = createdTimestamp;
-    obj["lastUpdatedAt"] = createdTimestamp;
-    obj["isRequestToCallExported"] = false;
-    obj["isRequestToCall"] = false;
-
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineUserID)
-      .get();
-
-    if (snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "already-exists",
-        "มีข้อมูลผู้ใช้ในระบบแล้ว"
-      );
-    }
-
-    await snapshot.ref.create(obj);
-
-    return success(`Registration with ID: ${lineUserID} added`);
-  });
+  .https.onCall(patientController.registerPatient);
 
 exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   const { value, error } = getProfileSchema.validate(data);
