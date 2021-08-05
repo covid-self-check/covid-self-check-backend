@@ -41,7 +41,8 @@ const region = require("./config/index").config.region;
 const { convertTimestampToStr } = require("./utils/date");
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
-const {makeStatusAPIPayload,makeRequest,statusList} = require("./api/api")
+const { exportController, patientController } = require("./controller");
+const { makeStatusAPIPayload, makeRequest, statusList } = require("./api/api");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -54,62 +55,7 @@ initializeApp();
 
 exports.registerParticipant = functions
   .region(region)
-  .https.onCall(async (data, context) => {
-    const { value, error } = registerSchema.validate(data);
-
-    if (error) {
-      console.log(error.details);
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
-    }
-
-    const { lineUserID, lineIDToken, noAuth, ...obj } = value;
-    const { error: authError } = await getProfile({
-      lineUserID,
-      lineIDToken,
-      noAuth,
-    });
-    if (authError) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "ไม่ได้รับอนุญาต"
-      );
-    }
-
-    var needFollowUp = true;
-    // TODO : fix schema
-    obj["gotFavipiravir"] = obj["gotFavipiravia"];
-    delete obj["gotFavipiravia"];
-    obj["status"] = 0;
-    obj["needFollowUp"] = needFollowUp;
-    obj["followUp"] = [];
-    const createdDate = convertTZ(new Date(), "Asia/Bangkok");
-    const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
-    obj["createdDate"] = createdTimestamp;
-    obj["lastUpdatedAt"] = createdTimestamp;
-    obj["isRequestToCallExported"] = false;
-    obj["isRequestToCall"] = false;
-
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineUserID)
-      .get();
-
-    if (snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "already-exists",
-        "มีข้อมูลผู้ใช้ในระบบแล้ว"
-      );
-    }
-
-    await snapshot.ref.create(obj);
-
-    return success(`Registration with ID: ${lineUserID} added`);
-  });
+  .https.onCall(patientController.registerPatient);
 
 exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   const { value, error } = getProfileSchema.validate(data);
@@ -245,13 +191,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   });
 
   const formPayload = makeStatusAPIPayload(snapshot.data());
-  const {inclusion_label,inclusion_label_type,triage_score} = await makeRequest(formPayload);
-  console.log("status is:",inclusion_label);
+  const { inclusion_label, inclusion_label_type, triage_score } =
+    await makeRequest(formPayload);
+  console.log("status is:", inclusion_label);
 
   obj["status"] = statusList[inclusion_label];
   obj["status_label_type"] = inclusion_label_type;
   obj["triage_score"] = triage_score;
-  
 
   if (!followUp) {
     await snapshot.ref.set({ ...obj, followUp: [obj] });
@@ -553,61 +499,13 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   })
 );
 
-exports.exportRequestToCall = functions.region(region).https.onCall(
-  authenticateVolunteer(async (data, context) => {
-    // const { value, error } = exportRequestToCallSchema.validate(data);
-    // if (error) {
-    // throw new functions.https.HttpsError(
-    //   "invalid-argument",
-    //   "ข้อมูลไม่ถูกต้อง"
-    // );
-    // }
-    // const { volunteerSize } = value;
-    // var patientList = [];
+exports.exportRequestToRegister = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2R));
 
-    // const snapshot = await admin
-    //   .firestore()
-    //   .collection("patient")
-    //   .where("isRequestToCall", "==", true)
-    //   .where("isRequestToCallExported", "==", false)
-    //   .orderBy("lastUpdatedAt")
-    //   .get();
-
-    // await Promise.all(
-    //   snapshot.docs.map((doc) => {
-    //     // WARNING SIDE EFFECT inside map
-    //     const docData = doc.data();
-    //     const dataResult = {
-    //       firstName: docData.firstName,
-    //       lastName: docData.firstName,
-    //       hasCalled: 0,
-    //       id: doc.id,
-    //       personalPhoneNo: docData.personalPhoneNo,
-    //     };
-    //     patientList.push(dataResult);
-    //     // end of side effects
-
-    //     const docRef = admin.firestore().collection("patient").doc(doc.id);
-    //     docRef.update({
-    //       isRequestToCallExported: true,
-    //     });
-    //   })
-    // );
-
-    // return generateZipFileRoundRobin(
-    //   volunteerSize,
-    //   patientList,
-    //   headers,
-    //   (doc) => [
-    //     doc.id,
-    //     doc.firstName,
-    //     doc.hasCalled,
-    //     `="${doc.personalPhoneNo}"`,
-    //   ]
-    // );
-    return success();
-  })
-);
+exports.exportRequestToCall = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2C));
 
 exports.importFinishedRequestToCall = functions.region(region).https.onCall(
   authenticateVolunteer(async (data) => {
