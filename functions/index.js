@@ -794,6 +794,7 @@ exports.requestToRegister = functions
       const obj = {
         name: value.name,
         personalPhoneNo: value.personalPhoneNo,
+        isRequestToCallRegister: true,
       };
       await requestRegisterSnapshot.ref.create(obj);
       return success();
