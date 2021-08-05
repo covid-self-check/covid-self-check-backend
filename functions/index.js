@@ -37,11 +37,12 @@ const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
 const { notifyToLine } = require("./linenotify");
-
 const region = require("./config/index").config.region;
+const { convertTimestampToStr } = require("./utils/date");
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
 const { exportController, patientController } = require("./controller");
+const { makeStatusAPIPayload, makeRequest, statusList } = require("./api/api");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -88,7 +89,8 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   const { name, picture } = lineProfile;
   if (snapshot.exists) {
     const { followUp, ...patientData } = snapshot.data();
-    return { line: { name, picture }, patient: patientData };
+    const serializeData = convertTimestampToStr(patientData);
+    return { line: { name, picture }, patient: serializeData };
   } else {
     return { line: { name, picture }, patient: null };
   }
@@ -188,7 +190,14 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
-  obj["status"] = 0;
+  const formPayload = makeStatusAPIPayload(snapshot.data());
+  const { inclusion_label, inclusion_label_type, triage_score } =
+    await makeRequest(formPayload);
+  console.log("status is:", inclusion_label);
+
+  obj["status"] = statusList[inclusion_label];
+  obj["status_label_type"] = inclusion_label_type;
+  obj["triage_score"] = triage_score;
 
   if (!followUp) {
     await snapshot.ref.set({ ...obj, followUp: [obj] });
