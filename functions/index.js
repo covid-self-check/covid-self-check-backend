@@ -37,11 +37,10 @@ const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
 const { notifyToLine } = require("./linenotify");
-const moment = require("moment");
 const region = require("./config/index").config.region;
+const { convertTimestampToStr } = require("./utils/date");
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
-const { firebase } = require("googleapis/build/src/apis/firebase");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -143,15 +142,8 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   const { name, picture } = lineProfile;
   if (snapshot.exists) {
     const { followUp, ...patientData } = snapshot.data();
-    for (const key in patientData) {
-      if (patientData[key] instanceof admin.firestore.Timestamp) {
-        const date = convertTZ(patientData[key].toDate(), "Asia/Bangkok");
-        const dateStr = moment(date).format("DD-MM-YYYY hh:mm:ss");
-        patientData[key] = dateStr;
-      }
-    }
-
-    return { line: { name, picture }, patient: patientData };
+    const serializeData = convertTimestampToStr(patientData);
+    return { line: { name, picture }, patient: serializeData };
   } else {
     return { line: { name, picture }, patient: null };
   }
