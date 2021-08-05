@@ -39,6 +39,7 @@ const { generateZipFileRoundRobin } = require("./utils/zip");
 const region = require("./config/index").config.region;
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
+const { exportController } = require("./controller");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -536,61 +537,13 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   })
 );
 
-exports.exportRequestToCall = functions.region(region).https.onCall(
-  authenticateVolunteer(async (data, context) => {
-    // const { value, error } = exportRequestToCallSchema.validate(data);
-    // if (error) {
-    // throw new functions.https.HttpsError(
-    //   "failed-precondition",
-    //   "ข้อมูลไม่ถูกต้อง"
-    // );
-    // }
-    // const { volunteerSize } = value;
-    // var patientList = [];
+exports.exportRequestToRegister = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2R));
 
-    // const snapshot = await admin
-    //   .firestore()
-    //   .collection("patient")
-    //   .where("isRequestToCall", "==", true)
-    //   .where("isRequestToCallExported", "==", false)
-    //   .orderBy("lastUpdatedAt")
-    //   .get();
-
-    // await Promise.all(
-    //   snapshot.docs.map((doc) => {
-    //     // WARNING SIDE EFFECT inside map
-    //     const docData = doc.data();
-    //     const dataResult = {
-    //       firstName: docData.firstName,
-    //       lastName: docData.firstName,
-    //       hasCalled: 0,
-    //       id: doc.id,
-    //       personalPhoneNo: docData.personalPhoneNo,
-    //     };
-    //     patientList.push(dataResult);
-    //     // end of side effects
-
-    //     const docRef = admin.firestore().collection("patient").doc(doc.id);
-    //     docRef.update({
-    //       isRequestToCallExported: true,
-    //     });
-    //   })
-    // );
-
-    // return generateZipFileRoundRobin(
-    //   volunteerSize,
-    //   patientList,
-    //   headers,
-    //   (doc) => [
-    //     doc.id,
-    //     doc.firstName,
-    //     doc.hasCalled,
-    //     `="${doc.personalPhoneNo}"`,
-    //   ]
-    // );
-    return success();
-  })
-);
+exports.exportRequestToCall = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2C));
 
 exports.importFinishedRequestToCall = functions.region(region).https.onCall(
   authenticateVolunteer(async (data) => {
