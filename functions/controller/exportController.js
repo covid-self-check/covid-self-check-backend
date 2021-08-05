@@ -7,6 +7,7 @@ const { generateZipFileRoundRobin } = require("../utils/zip");
 const { exportRequestToCallSchema } = require("../schema");
 const { statusList } = require("../api/api");
 const { patientReportHeader, sheetName } = require("../utils/status");
+const { calculateAge, convertTZ } = require("../utils/date");
 
 exports.exportR2R = async (data, context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
@@ -22,7 +23,7 @@ exports.exportR2R = async (data, context) => {
   const snapshot = await admin
     .firestore()
     .collection("requestToRegisterAssistance")
-    .where("isRequestToCallRegister", "==", true)
+    .where("isR2RExported", "==", false)
     .get();
 
   snapshot.docs.forEach((doc) => {
@@ -44,7 +45,7 @@ exports.exportR2R = async (data, context) => {
         .doc(doc.id);
 
       return docRef.update({
-        isRequestToCallRegister: true,
+        isR2RExported: true,
       });
     })
   );
@@ -159,6 +160,8 @@ exports.exportPatientForNurse = async (req, res) => {
       .where("isNurseExported", "==", false)
       .get();
 
+    console.log("size", snapshot.size);
+
     const INCLUDE_STATUS = [
       statusList["G2"],
       statusList["Y1"],
@@ -167,27 +170,28 @@ exports.exportPatientForNurse = async (req, res) => {
       statusList["R2"],
     ];
 
+    console.log("include status : ", INCLUDE_STATUS);
+
     const results = new Array(INCLUDE_STATUS.length);
 
     for (let i = 0; i < results.length; i++) {
-      results[i] = [...patientReportHeader];
+      results[i] = [[...patientReportHeader]];
     }
+
     const updatedDocId = [];
 
     snapshot.docs.forEach((doc) => {
-
       const data = doc.data();
-      // exclude unknown and G1
-      const status = data.status - 2;
       if (typeof data.status !== "number") {
-        continue;
+        return;
       }
-      if (status < 0 && status >= results.length) {
-        continue;
+      // exclude unknown and G1
+      if (!INCLUDE_STATUS.includes(data.status)) {
+        return;
       }
 
       updatedDocId.push(doc.id);
-     
+
       const arr = [
         data.personalID,
         data.firstName,
@@ -203,10 +207,10 @@ exports.exportPatientForNurse = async (req, res) => {
         data.district,
         data.prefecture,
         data.province,
-        statusList[data.status],
+        data.status,
       ];
-
-      results[data.status].push(arr);
+      const status = data.status - 2;
+      results[status].push(arr);
     });
 
     const wb = XLSX.utils.book_new();
@@ -236,14 +240,14 @@ exports.exportPatientForNurse = async (req, res) => {
     stream.pipe(res);
 
     await Promise.all([
-      updatedDocId.map(id => {
+      updatedDocId.map((id) => {
         const docRef = admin.firestore().collection("patient").doc(id);
 
         return docRef.update({
-          isNurseExported : true
-        })
-      })
-    ])
+          isNurseExported: true,
+        });
+      }),
+    ]);
   } catch (err) {
     console.log(err);
     res.json({ success: false });

@@ -182,6 +182,9 @@ exports.updateSymptom = async (data, _context) => {
   obj["status_label_type"] = inclusion_label_type;
   obj["triage_score"] = triage_score;
   obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(createdDate);
+
+  const followUpObj = { ...obj };
+
   obj["isNurseExported"] = false;
 
   const ALERT_STATUS = [
@@ -200,11 +203,11 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   if (!followUp) {
-    await snapshot.ref.set({ ...obj, followUp: [obj] });
+    await snapshot.ref.set({ ...obj, followUp: [followUpObj] });
   } else {
     await snapshot.ref.update({
       ...obj,
-      followUp: admin.firestore.FieldValue.arrayUnion(obj),
+      followUp: admin.firestore.FieldValue.arrayUnion(followUpObj),
     });
   }
 
