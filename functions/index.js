@@ -262,7 +262,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   }
 
   try {
-    await sendPatientstatus(lineUserID, inclusion_label, config.channelAccessToken);
+    // await sendPatientstatus(lineUserID, inclusion_label, config.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
