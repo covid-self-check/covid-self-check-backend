@@ -69,7 +69,6 @@ exports.exportR2C = async (data, context) => {
     .collection("patient")
     .where("isRequestToCall", "==", true)
     .where("isRequestToCallExported", "==", false)
-    .where("toAmed", "==", 0)
     .orderBy("lastUpdatedAt")
     .get();
 
