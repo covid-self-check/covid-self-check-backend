@@ -221,7 +221,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   try {
-    await sendPatientstatus(lineUserID, inclusion_label, config.line.channelAccessToken);
+    await sendPatientstatus(lineUserID, obj, config.line.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
