@@ -36,6 +36,7 @@ const cors = require("cors");
 const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
+const { notifyToLine } = require("./linenotify");
 
 const region = require("./config/index").config.region;
 
@@ -139,7 +140,7 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
     .get();
 
   const { name, picture } = lineProfile;
-  if (!snapshot.exists) {
+  if (snapshot.exists) {
     const { followUp, ...patientData } = snapshot.data();
     return { line: { name, picture }, patient: patientData };
   } else {
@@ -234,7 +235,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { followUp } = snapshot.data();
+  const { followUp, firstName, lastName } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
@@ -254,11 +255,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const status = "We are the CHAMPION!!";
 
   try {
-    sendPatientstatus(lineUserID, status, config.channelAccessToken);
+    // sendPatientstatus(lineUserID, status, config.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
-
+  // if (status === 'We are the CHAMPION!!') {
+  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
+  // }
   return success();
 });
 
@@ -777,7 +780,7 @@ exports.requestToRegister = functions
       if (requestRegisterSnapshot.exists) {
         throw new functions.https.HttpsError(
           "already-exists",
-          `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+          `มีข้อมูลผู้ใช้ ${lineUserID} ในรายชื่อการโทรแล้ว`
         );
       }
       const obj = {
