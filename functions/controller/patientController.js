@@ -1,6 +1,9 @@
 const functions = require("firebase-functions");
 const { registerSchema } = require("../schema");
+const { admin } = require("../init");
 const { getProfile } = require("../middleware/authentication");
+const { convertTZ } = require("../utils");
+const { success } = require("../response/success");
 
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
