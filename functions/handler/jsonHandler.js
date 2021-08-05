@@ -13,6 +13,6 @@ const defaultReply = require("../json/defaultReply.json");
 const tutorial1 = require("../json/tutorial1.json");
 const tutorial2 = require("../json/tutorial2.json");
 
-const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3, info4, info5, info6, defaultReply, tutorial1, tutorial2, requestCall };
+const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3, info4, info5, info6, defaultReply, tutorial1, tutorial2 };
 
 module.exports = { jsonController: (json) => map[json] };
