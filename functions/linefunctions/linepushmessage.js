@@ -87,19 +87,19 @@ const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
             },
             {
                 "type": "text",
-                "text": "คุณได้ถูกย้ายไปให้หมอดูแลแล้ว"
+                "text": "ทางเราได้ประเมินอาการของคุณตามเกณฑ์ทางการแพทย์แล้ว เพื่อให้คุณได้รับการดูแลจากบุคลากรทางการแพทย์อย่าทันท่วงที เราจะนำข้อมูลของคุณไปแจ้งให้ทีมแพทย์ทราบ เพื่อดำเนินการต่อไป โดยทีมแพทย์จะติดต่อคุณกลับโดยเร็ว"
             },
             {
                 "type": "text",
-                "text": "Message3 ของข้อความสีแดง"
+                "text": "เพื่อให้คุณได้รับการดูแลจากบุคลากรทางการแพทย์อย่าทันท่วงที โปรดติดต่อสายด่วนสถาบันการแพทย์ฉุกเฉิน 1669 หรือสายด่วนหาเตียง 1668 หรือ สปสช. 1330\nโดยเราจะนำข้อมูลของคุณไปแจ้งให้ทีมแพทย์ทราบเช่นกัน เพื่อดำเนินการต่อไป โดยทีมแพทย์จะติดต่อคุณกลับโดยเร็ว"
             }
         ]
     let resultMessagePayload = [];
     switch (statusObj.status) {
         case statusList["G1"]:
-        case statusList["G2"]:
             resultMessagePayload = messagePayload.slice(0, 1)
             break;
+        case statusList["G2"]:
         case statusList["Y1"]:
         case statusList["Y2"]:
             resultMessagePayload = messagePayload.slice(0, 2)
