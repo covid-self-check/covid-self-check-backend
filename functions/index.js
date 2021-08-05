@@ -20,7 +20,7 @@ const {
   getProfileSchema,
   importPatientIdSchema,
   exportRequestToCallSchema,
-  requestToRegisterSchema
+  requestToRegisterSchema,
 } = require("./schema");
 const { success } = require("./response/success");
 const {
@@ -100,7 +100,7 @@ exports.registerParticipant = functions
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
-        `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+        "มีข้อมูลผู้ใช้ในระบบแล้ว"
       );
     }
 
@@ -727,7 +727,6 @@ exports.getNumberOfPatients = functions
     return res.status(200).json(success(snapshot.size));
   });
 
-
 exports.requestToRegister = functions
   .region(region)
   .https.onCall(async (data) => {
@@ -779,9 +778,9 @@ exports.requestToRegister = functions
       }
       const obj = {
         name: value.name,
-        personalPhoneNo: value.personalPhoneNo
-      }
+        personalPhoneNo: value.personalPhoneNo,
+      };
       await requestRegisterSnapshot.ref.create(obj);
-      return success()
+      return success();
     }
   });
