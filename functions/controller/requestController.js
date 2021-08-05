@@ -33,7 +33,7 @@ exports.requestToCall = async (data, _context) => {
   if (!snapshot.exists) {
     if (snapshot.data().toAmed === 1) {
       throw new functions.https.HttpsError(
-        "aborted",
+        "failed-precondition",
         "your information is already handle by Amed"
       );
     }

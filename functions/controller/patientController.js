@@ -98,7 +98,7 @@ exports.registerPatient = async (data, _context) => {
   if (snapshot.exists) {
     if (snapshot.data().toAmed === 1) {
       throw new functions.https.HttpsError(
-        "aborted",
+        "failed-precondition",
         "your information is already handle by Amed"
       );
     }
@@ -208,7 +208,7 @@ exports.updateSymptom = async (data, _context) => {
 
   if (toAmed === 1) {
     throw new functions.https.HttpsError(
-      "aborted",
+      "failed-precondition",
       "your information is already handle by Amed"
     );
   }
