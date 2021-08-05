@@ -211,6 +211,8 @@ exports.updateSymptom = async (data, _context) => {
     }
 
     const createdDate = new Date()
+    const createdTimeStamp = admin.firestore.Timestamp.fromDate(createdDate)
+    obj.createdDate = createdTimeStamp
 
     const snapshot = await admin
         .firestore()
@@ -250,7 +252,7 @@ exports.updateSymptom = async (data, _context) => {
     obj['status'] = status
     obj['status_label_type'] = inclusion_label_type
     obj['triage_score'] = triage_score
-    obj['lastUpdatedAt'] = admin.firestore.Timestamp.fromDate(createdDate)
+    obj['lastUpdatedAt'] = createdTimeStamp
 
     const followUpObj = { ...obj }
 
