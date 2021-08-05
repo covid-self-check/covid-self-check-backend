@@ -41,7 +41,7 @@ const { notifyToLine } = require("./linenotify");
 const region = require("./config/index").config.region;
 
 const { sendPatientstatus } = require("./linefunctions/linepushmessage");
-const {makeStatusAPIPayload,makeRequest,statusList} = require("./api/api")
+const { makeStatusAPIPayload, makeRequest, statusList } = require("./api/api")
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -236,7 +236,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { followUp, firstName, lastName } = snapshot.data();
+  const { followUp, firstName, lastName, status: previousStatus } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
@@ -244,13 +244,12 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   });
 
   const formPayload = makeStatusAPIPayload(snapshot.data());
-  const {inclusion_label,inclusion_label_type,triage_score} = await makeRequest(formPayload);
-  console.log("status is:",inclusion_label);
+  const { inclusion_label, inclusion_label_type, triage_score } = await makeRequest(formPayload);
 
-  obj["status"] = statusList[inclusion_label];
+  const status = statusList[inclusion_label]
+  obj["status"] = status;
   obj["status_label_type"] = inclusion_label_type;
   obj["triage_score"] = triage_score;
-  
 
   if (!followUp) {
     await snapshot.ref.set({ ...obj, followUp: [obj] });
@@ -260,16 +259,16 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
       followUp: admin.firestore.FieldValue.arrayUnion(obj),
     });
   }
-  const status = "We are the CHAMPION!!";
 
   try {
     // sendPatientstatus(lineUserID, status, config.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
-  // if (status === 'We are the CHAMPION!!') {
-  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
-  // }
+  const ALERT_STATUS = [statusList['Y1'], statusList['Y2'], statusList['R1'], statusList['R2']]
+  if (status !== previousStatus && ALERT_STATUS.includes(status)) {
+    await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
+  }
   return success();
 });
 
