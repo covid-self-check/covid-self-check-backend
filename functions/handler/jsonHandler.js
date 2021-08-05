@@ -11,6 +11,6 @@ const tutorial1 = require("../json/tutorial1.json");
 const tutorial2 = require("../json/tutorial2.json");
 const requestCall = require("../linefunctions/requestCallHandler");
 
-const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3, defaultReply, tutorial, requestCall };
+const map = { greeting, welcomepos1, welcomepos2, help, symptomDiagnostic, info1, info2, info3, defaultReply, tutorial1, tutorial2, requestCall };
 
 module.exports = { jsonController: (json) => map[json] };
