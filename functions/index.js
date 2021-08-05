@@ -745,7 +745,6 @@ exports.requestToRegister = functions
         `ผู้ใช้ ${lineUserID} ลงทะเบียนในระบบแล้ว ไม่จำเป็นต้องขอรับความช่วยเหลือในการลงทะเบียน`
       );
     } else {
-
       const requestRegisterSnapshot = await admin
         .firestore()
         .collection("requestToRegisterAssistance")
@@ -759,10 +758,10 @@ exports.requestToRegister = functions
         );
       }
       const obj = {
-        name: value.name
+        name: value.name,
         personalPhoneNo: value.personalPhoneNo
       }
-      await snapshot.ref.create(obj);
+      await requestRegisterSnapshot.ref.create(obj);
       return success()
     }
   });
