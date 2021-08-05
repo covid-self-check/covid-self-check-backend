@@ -211,6 +211,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   const createdDate = convertTZ(new Date(), 'Asia/Bangkok')
+  console.log(new Date(), createdDate)
   obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate)
 
   const snapshot = await admin
@@ -272,11 +273,13 @@ exports.updateSymptom = async (data, _context) => {
     obj['toAmed'] = 0
   }
 
+  const objWithOutCreatedDate = { ...obj, createdDate }
+
   if (!followUp) {
-    await snapshot.ref.set({ ...obj, followUp: [followUpObj] })
+    await snapshot.ref.set({ ...objWithOutCreatedDate, followUp: [followUpObj] })
   } else {
     await snapshot.ref.update({
-      ...obj,
+      ...objWithOutCreatedDate,
       followUp: admin.firestore.FieldValue.arrayUnion(followUpObj),
     })
   }
@@ -294,7 +297,7 @@ exports.updateSymptom = async (data, _context) => {
   try {
     await sendPatientstatus(
       lineUserID,
-      obj,
+      objWithOutCreatedDate,
       config.line.channelAccessToken
     )
   } catch (err) {
@@ -312,7 +315,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   try {
-    if (obj['toAmed'] === 1) {
+    if (objWithOutCreatedDate['toAmed'] === 1) {
       await decrementTotalPatientCount()
     }
   } catch (err) {
