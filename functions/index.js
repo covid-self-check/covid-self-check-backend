@@ -236,14 +236,15 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { followUp, firstName, lastName, status: previousStatus } = snapshot.data();
+  const snapshotData = snapshot.data();
+  const { followUp, firstName, lastName, status: previousStatus } = snapshotData;
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
-  const formPayload = makeStatusAPIPayload(snapshot.data());
+  const formPayload = makeStatusAPIPayload(snapshotData, obj);
   const { inclusion_label, inclusion_label_type, triage_score } = await makeRequest(formPayload);
 
   const status = statusList[inclusion_label]
@@ -261,7 +262,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   }
 
   try {
-    // sendPatientstatus(lineUserID, status, config.channelAccessToken);
+    await sendPatientstatus(lineUserID, inclusion_label, config.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
