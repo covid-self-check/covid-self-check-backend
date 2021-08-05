@@ -11,6 +11,7 @@ const { success } = require("../response/success");
 const { makeStatusAPIPayload, makeRequest, statusList } = require("../api/api");
 const { sendPatientstatus } = require("../linefunctions/linepushmessage");
 const { notifyToLine } = require("../linenotify");
+const { convertTimestampToStr } = require("../utils/date");
 
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
@@ -67,7 +68,7 @@ exports.registerPatient = async (data, _context) => {
   return success(`Registration with ID: ${lineUserID} added`);
 };
 
-addTotalPatientCount = async ()=>{
+addTotalPatientCount = async () => {
   const snapshot = await admin.firestore().collection("userCount").doc("users").get();
   await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
 };
