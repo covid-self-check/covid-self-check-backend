@@ -140,7 +140,7 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
     .get();
 
   const { name, picture } = lineProfile;
-  if (!snapshot.exists) {
+  if (snapshot.exists) {
     const { followUp, ...patientData } = snapshot.data();
     return { line: { name, picture }, patient: patientData };
   } else {
