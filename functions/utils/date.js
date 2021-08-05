@@ -13,7 +13,9 @@ exports.convertTimestampToStr = (data) => {
   const tmp = { ...data };
   for (const key in data) {
     if (data[key] instanceof admin.firestore.Timestamp) {
+      console.log(key,' before convert: ', data[key].toDate())
       const date = this.convertTZ(data[key].toDate(), "Asia/Bangkok");
+      console.log(key,' after convert: ', date)
       const dateStr = moment(date).format("DD-MM-YYYY hh:mm:ss");
       tmp[key] = dateStr;
     }
