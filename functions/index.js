@@ -27,7 +27,6 @@ const {
   requestController,
   importController,
 } = require("./controller");
-const { makeStatusAPIPayload, makeRequest, statusList } = require("./api/api");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -44,6 +43,21 @@ app.get(
   "/",
   authenticateVolunteerRequest(exportController.exportPatientForNurse)
 );
+
+exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
+  res.sendStatus(200);
+  try {
+    const event = req.body.events[0];
+    const userId = event.source.userId;
+    const profile = client.getProfile(userId);
+    const userObject = { userId: userId, profile: await profile };
+    console.log(userObject);
+    // console.log(event)
+    await eventHandler(event, userObject, client);
+  } catch (err) {
+    console.log("Not from line application.");
+  }
+});
 
 exports.registerParticipant = functions
   .region(region)
@@ -103,6 +117,7 @@ exports.updateSymptom = functions
 
 exports.createReport = functions.region(region).https.onRequest(app);
 
+// ******************************* unused ******************************************
 exports.getFollowupHistory = functions
   .region(region)
   .https.onCall(async (data, context) => {
@@ -262,21 +277,6 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
     );
   })
 );
-
-exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
-  res.sendStatus(200);
-  try {
-    const event = req.body.events[0];
-    const userId = event.source.userId;
-    const profile = client.getProfile(userId);
-    const userObject = { userId: userId, profile: await profile };
-    console.log(userObject);
-    // console.log(event)
-    await eventHandler(event, userObject, client);
-  } catch (err) {
-    console.log("Not from line application.");
-  }
-});
 
 // exports.testExportRequestToCall = functions.region(region).https.onRequest(
 //   authenticateVolunteerRequest(async (req, res) => {
