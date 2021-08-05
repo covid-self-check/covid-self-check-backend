@@ -17,7 +17,7 @@ const handleMessage = async (event, userObject, client) => {
                 await client.replyMessage(replyToken, jsonController('help'))
                 break;
             case 'สอนการใช้งาน':
-                requestCall(userObject, client, replyToken)
+                await requestCall(userObject, client, replyToken)
                 break;
             default:
                 await client.replyMessage(replyToken,jsonController('defaultReply'))
