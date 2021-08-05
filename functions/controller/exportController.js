@@ -86,6 +86,7 @@ exports.exportR2C = async (data, context) => {
       });
     })
   );
+  const headers = ["internal id", "first name", "call status", "tel"];
 
   return generateZipFileRoundRobin(
     volunteerSize,
