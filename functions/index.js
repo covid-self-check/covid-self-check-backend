@@ -20,18 +20,17 @@ const {
   getProfileSchema,
   importPatientIdSchema,
   exportRequestToCallSchema,
+  requestToRegisterSchema,
 } = require("./schema");
 const { success } = require("./response/success");
 const {
   patientReportHeader,
-  convertToAoA,
   convertToArray,
   sheetName,
 } = require("./utils/status");
 const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
-const JSZip = require("jszip");
 const express = require("express");
 const cors = require("cors");
 const _ = require("lodash");
@@ -59,7 +58,7 @@ exports.registerParticipant = functions
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -101,7 +100,7 @@ exports.registerParticipant = functions
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
-        `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+        "มีข้อมูลผู้ใช้ในระบบแล้ว"
       );
     }
 
@@ -115,7 +114,7 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -157,7 +156,7 @@ exports.getFollowupHistory = functions
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -197,7 +196,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     // DEBUG
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -249,7 +248,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     });
   }
   const status = "We are the CHAMPION!!";
-  sendPatientstatus(lineUserID, status, config.channelAccessToken);
+
+  try {
+    sendPatientstatus(lineUserID, status, config.channelAccessToken);
+  } catch (err) {
+    console.log(err);
+  }
+
   return success();
 });
 
@@ -360,41 +365,6 @@ app.get(
   })
 );
 
-/**
- * generate multiple csv file and send zip file back to client
- * @param {Express.Response} res
- * @param {number} size - number of volunteer
- * @param {data} data - snapshot from firebase (need to convert to array of obj)
- */
-const generateZipFile = (res, size, data) => {
-  const arrs = _.chunk(data, size);
-
-  const zip = new JSZip();
-
-  arrs.forEach((arr, i) => {
-    const aoa = convertToAoA(arr);
-    const filename = `${i + 1}.csv`;
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-    const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
-    zip.file(filename, csv);
-  });
-
-  zip
-    .generateAsync({ type: "base64" })
-    .then(function (content) {
-      res.json({
-        title: "report.zip",
-        content: content,
-      });
-    })
-    .catch((err) => {
-      res.json({
-        err,
-      });
-    });
-};
-
 exports.fetchNotUpdatedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
@@ -480,7 +450,7 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -521,23 +491,20 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   return success();
 });
 
-exports.exportRequestToCall = functions.region(region).https.onCall(
+exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
     const { value, error } = exportRequestToCallSchema.validate(data);
     if (error) {
-      console.log(error.details);
-      return res.status(412).json(error.details);
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "ข้อมูลไม่ถูกต้อง"
+      );
     }
-    const { volunteerSize } = value;
-    var patientList = [];
 
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .where("isRequestToCall", "==", true)
-      .where("isRequestToCallExported", "==", false)
-      .orderBy("lastUpdatedAt")
-      .get();
+    const { volunteerSize } = value;
+    const patientList = [];
+
+    const snapshot = await admin.firestore().collection("patient").get();
 
     await Promise.all(
       snapshot.docs.map((doc) => {
@@ -546,22 +513,83 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
         const dataResult = {
           firstName: docData.firstName,
           lastName: docData.firstName,
-          hasCalled: 0,
+          hasCalled: "",
           id: doc.id,
           personalPhoneNo: docData.personalPhoneNo,
         };
         patientList.push(dataResult);
-        // end of side effects
-
-        const docRef = admin.firestore().collection("patient").doc(doc.id);
-        docRef.update({
-          isRequestToCallExported: true,
-        });
       })
     );
 
-    //generateZipFile(res, size, patientList);
-    return generateZipFileRoundRobin(volunteerSize, patientList);
+    const headers = ["internal id", "first name", "call status", "tel"];
+
+    return generateZipFileRoundRobin(
+      volunteerSize,
+      patientList,
+      headers,
+      (doc) => [
+        doc.id,
+        doc.firstName,
+        doc.hasCalled,
+        `="${doc.personalPhoneNo}"`,
+      ]
+    );
+  })
+);
+
+exports.exportRequestToCall = functions.region(region).https.onCall(
+  authenticateVolunteer(async (data, context) => {
+    // const { value, error } = exportRequestToCallSchema.validate(data);
+    // if (error) {
+    // throw new functions.https.HttpsError(
+    //   "invalid-argument",
+    //   "ข้อมูลไม่ถูกต้อง"
+    // );
+    // }
+    // const { volunteerSize } = value;
+    // var patientList = [];
+
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("isRequestToCall", "==", true)
+    //   .where("isRequestToCallExported", "==", false)
+    //   .orderBy("lastUpdatedAt")
+    //   .get();
+
+    // await Promise.all(
+    //   snapshot.docs.map((doc) => {
+    //     // WARNING SIDE EFFECT inside map
+    //     const docData = doc.data();
+    //     const dataResult = {
+    //       firstName: docData.firstName,
+    //       lastName: docData.firstName,
+    //       hasCalled: 0,
+    //       id: doc.id,
+    //       personalPhoneNo: docData.personalPhoneNo,
+    //     };
+    //     patientList.push(dataResult);
+    //     // end of side effects
+
+    //     const docRef = admin.firestore().collection("patient").doc(doc.id);
+    //     docRef.update({
+    //       isRequestToCallExported: true,
+    //     });
+    //   })
+    // );
+
+    // return generateZipFileRoundRobin(
+    //   volunteerSize,
+    //   patientList,
+    //   headers,
+    //   (doc) => [
+    //     doc.id,
+    //     doc.firstName,
+    //     doc.hasCalled,
+    //     `="${doc.personalPhoneNo}"`,
+    //   ]
+    // );
+    return success();
   })
 );
 
@@ -572,7 +600,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -656,8 +684,6 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 //         });
 //       });
 
-//       // console.log(batch, 'batch')
-
 //       snapshot.forEach((doc) => {
 //         const data = doc.data();
 //         const dataResult = {
@@ -699,4 +725,62 @@ exports.getNumberOfPatients = functions
     const snapshot = await admin.firestore().collection("patient").get();
 
     return res.status(200).json(success(snapshot.size));
+  });
+
+exports.requestToRegister = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const { value, error } = requestToRegisterSchema.validate(data);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+
+    const { lineUserID, lineIDToken, noAuth } = value;
+    const { data: lineProfile, error: authError } = await getProfile({
+      lineUserID,
+      lineIDToken,
+      noAuth,
+    });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        lineProfile.error_description
+      );
+    }
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(value.lineUserID)
+      .get();
+
+    if (snapshot.exists) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `ผู้ใช้ ${lineUserID} ลงทะเบียนในระบบแล้ว ไม่จำเป็นต้องขอรับความช่วยเหลือในการลงทะเบียน`
+      );
+    } else {
+      const requestRegisterSnapshot = await admin
+        .firestore()
+        .collection("requestToRegisterAssistance")
+        .doc(lineUserID)
+        .get();
+
+      if (requestRegisterSnapshot.exists) {
+        throw new functions.https.HttpsError(
+          "already-exists",
+          `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+        );
+      }
+      const obj = {
+        name: value.name,
+        personalPhoneNo: value.personalPhoneNo,
+      };
+      await requestRegisterSnapshot.ref.create(obj);
+      return success();
+    }
   });

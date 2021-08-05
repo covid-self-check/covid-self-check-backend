@@ -16,9 +16,9 @@ module.exports = Joi.object({
   //height
   //weight
   //infected discover date
-  sp_o2: Joi.number().required(),
-  sp_o2_ra: Joi.number().required(),
-  sp_o2_after_eih: Joi.number().required(),
+  sp_o2: Joi.number().default(0),
+  sp_o2_ra: Joi.number().default(0),
+  sp_o2_after_eih: Joi.number().default(0),
   eih_result: Joi.string()
     .allow("positive", "negative", "neutral", "unknown")
     .required(),
