@@ -109,6 +109,7 @@ exports.getProfile = async (data, _context) => {
 exports.updateSymptom = async (data, _context) => {
   const { value, error } = historySchema.validate(data);
   if (error) {
+    // DEBUG
     console.log(error.details);
     throw new functions.https.HttpsError(
       "invalid-argument",
@@ -145,19 +146,25 @@ exports.updateSymptom = async (data, _context) => {
     );
   }
 
-  const { followUp, firstName, lastName } = snapshot.data();
+  const snapshotData = snapshot.data();
+  const {
+    followUp,
+    firstName,
+    lastName,
+    status: previousStatus,
+  } = snapshotData;
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
     lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
   });
 
-  const formPayload = makeStatusAPIPayload(snapshot.data());
+  const formPayload = makeStatusAPIPayload(snapshotData, obj);
   const { inclusion_label, inclusion_label_type, triage_score } =
     await makeRequest(formPayload);
-  console.log("status is:", inclusion_label);
 
-  obj["status"] = statusList[inclusion_label];
+  const status = statusList[inclusion_label];
+  obj["status"] = status;
   obj["status_label_type"] = inclusion_label_type;
   obj["triage_score"] = triage_score;
 
@@ -170,13 +177,21 @@ exports.updateSymptom = async (data, _context) => {
     });
   }
 
-  // try {
-  //   sendPatientstatus(lineUserID, status, config.channelAccessToken);
-  // } catch (err) {
-  //   console.log(err);
-  // }
-  // if (status === 'We are the CHAMPION!!') {
-  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
-  // }
+  try {
+    // await sendPatientstatus(lineUserID, inclusion_label, config.channelAccessToken);
+  } catch (err) {
+    console.log(err);
+  }
+  const ALERT_STATUS = [
+    statusList["Y1"],
+    statusList["Y2"],
+    statusList["R1"],
+    statusList["R2"],
+  ];
+  if (status !== previousStatus && ALERT_STATUS.includes(status)) {
+    await notifyToLine(
+      `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
+    );
+  }
   return success();
 };
