@@ -5,6 +5,9 @@ const functions = require("firebase-functions");
 const { admin } = require("../init");
 const { generateZipFileRoundRobin } = require("../utils/zip");
 const { exportRequestToCallSchema } = require("../schema");
+const { statusList } = require("../api/api");
+const { patientReportHeader, sheetName } = require("../utils/status");
+const { calculateAge, convertTZ } = require("../utils/date");
 
 exports.exportR2R = async (data, context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
@@ -20,7 +23,7 @@ exports.exportR2R = async (data, context) => {
   const snapshot = await admin
     .firestore()
     .collection("requestToRegisterAssistance")
-    .where("isRequestToCallRegister", "==", true)
+    .where("isR2RExported", "==", false)
     .get();
 
   snapshot.docs.forEach((doc) => {
@@ -42,7 +45,7 @@ exports.exportR2R = async (data, context) => {
         .doc(doc.id);
 
       return docRef.update({
-        isRequestToCallRegister: true,
+        isR2RExported: true,
       });
     })
   );
@@ -66,6 +69,7 @@ exports.exportR2C = async (data, context) => {
     .collection("patient")
     .where("isRequestToCall", "==", true)
     .where("isRequestToCallExported", "==", false)
+    .where("toAmed", "==", 0)
     .orderBy("lastUpdatedAt")
     .get();
 
@@ -150,31 +154,70 @@ exports.exportMasterAddress = async (req, res) => {
 
 exports.exportPatientForNurse = async (req, res) => {
   try {
-    const snapshot = await admin.firestore().collection("patient").get();
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .where("isNurseExported", "==", false)
+      .get();
 
-    const results = [
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
-      [patientReportHeader],
+    console.log("size", snapshot.size);
+
+    const INCLUDE_STATUS = [
+      statusList["G2"],
+      statusList["Y1"],
+      statusList["Y2"],
+      statusList["R1"],
+      statusList["R2"],
     ];
-    snapshot.forEach((doc) => {
+
+    console.log("include status : ", INCLUDE_STATUS);
+
+    const results = new Array(INCLUDE_STATUS.length);
+
+    for (let i = 0; i < results.length; i++) {
+      results[i] = [[...patientReportHeader]];
+    }
+
+    const updatedDocId = [];
+
+    snapshot.docs.forEach((doc) => {
       const data = doc.data();
-      const arr = convertToArray(data);
-      if (typeof data.status === "number") {
-        if (data.status > 0 && data.status < results.length) {
-          results[data.status].push(arr);
-        }
-      } else {
-        results[0].push(arr);
+      if (typeof data.status !== "number") {
+        return;
       }
+      // exclude unknown and G1
+      if (!INCLUDE_STATUS.includes(data.status)) {
+        return;
+      }
+
+      updatedDocId.push(doc.id);
+
+      const arr = [
+        data.personalID,
+        data.firstName,
+        data.lastName,
+        data.personalPhoneNo,
+        data.emergencyPhoneNo,
+        calculateAge(data.birthDate.toDate()),
+        data.weight,
+        data.height,
+        data.gender,
+        convertTZ(data.lastUpdatedAt.toDate()),
+        data.address,
+        data.district,
+        data.prefecture,
+        data.province,
+        data.status,
+      ];
+      const status = data.status - 2;
+      results[status].push(arr);
     });
+
     const wb = XLSX.utils.book_new();
     // append result to sheet
     for (let i = 0; i < results.length && i < sheetName.length; i++) {
+      // not export unknown or g1
+
       const ws = XLSX.utils.aoa_to_sheet(results[i]);
       XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
     }
@@ -195,7 +238,18 @@ exports.exportPatientForNurse = async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     stream.pipe(res);
+
+    await Promise.all([
+      updatedDocId.map((id) => {
+        const docRef = admin.firestore().collection("patient").doc(id);
+
+        return docRef.update({
+          isNurseExported: true,
+        });
+      }),
+    ]);
   } catch (err) {
+    console.log(err);
     res.json({ success: false });
   }
 };

@@ -39,10 +39,12 @@ initializeApp();
 
 app.get("/master", exportController.exportMasterAddress);
 
-app.get(
-  "/",
-  authenticateVolunteerRequest(exportController.exportPatientForNurse)
-);
+// app.get(
+//   "/",
+//   authenticateVolunteerRequest(exportController.exportPatientForNurse)
+// );
+
+app.get("/", exportController.exportPatientForNurse);
 
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
@@ -92,19 +94,23 @@ exports.backupFirestore = functions
   .onRun(backup);
 
 exports.getNumberOfPatients = functions
-.region(region)
-.https.onRequest(async (req, res) => {
-  const snapshot = await admin.firestore().collection("patient").get();
+  .region(region)
+  .https.onRequest(async (req, res) => {
+    const snapshot = await admin.firestore().collection("patient").get();
 
-  return res.status(200).json(success(snapshot.size));
-});
+    return res.status(200).json(success(snapshot.size));
+  });
 
 exports.getNumberOfPatientsV2 = functions
-.region(region)
-.https.onRequest(async (req, res) => {
-  const snapshot = await admin.firestore().collection("userCount").document("users").get();
-  return res.status(200).json(success(snapshot[0].data().count));
-});
+  .region(region)
+  .https.onRequest(async (req, res) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("userCount")
+      .document("users")
+      .get();
+    return res.status(200).json(success(snapshot[0].data().count));
+  });
 
 exports.requestToRegister = functions
   .region(region)

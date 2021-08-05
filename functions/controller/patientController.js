@@ -48,6 +48,7 @@ exports.registerPatient = async (data, _context) => {
   obj["lastUpdatedAt"] = createdTimestamp;
   obj["isRequestToCallExported"] = false;
   obj["isRequestToCall"] = false;
+  obj["toAmed"] = 0;
 
   const snapshot = await admin
     .firestore()
@@ -56,6 +57,9 @@ exports.registerPatient = async (data, _context) => {
     .get();
 
   if (snapshot.exists) {
+    if (snapshot.data().toAmed === 1) {
+      return success(`your information already handle by Amed`);
+    }
     throw new functions.https.HttpsError(
       "already-exists",
       "มีข้อมูลผู้ใช้ในระบบแล้ว"
@@ -69,10 +73,13 @@ exports.registerPatient = async (data, _context) => {
 };
 
 addTotalPatientCount = async () => {
-  const snapshot = await admin.firestore().collection("userCount").doc("users").get();
+  const snapshot = await admin
+    .firestore()
+    .collection("userCount")
+    .doc("users")
+    .get();
   await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
 };
-
 
 exports.getProfile = async (data, _context) => {
   const { value, error } = getProfileSchema.validate(data);
@@ -154,6 +161,10 @@ exports.updateSymptom = async (data, _context) => {
     );
   }
 
+  if (snapshot.data().toAmed === 1) {
+    return success(`your information already handle by Amed`);
+  }
+
   const snapshotData = snapshot.data();
   const {
     followUp,
@@ -163,9 +174,6 @@ exports.updateSymptom = async (data, _context) => {
   } = snapshotData;
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
-  await snapshot.ref.update({
-    lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
-  });
 
   const formPayload = makeStatusAPIPayload(snapshotData, obj);
   const { inclusion_label, inclusion_label_type, triage_score } =
@@ -175,14 +183,40 @@ exports.updateSymptom = async (data, _context) => {
   obj["status"] = status;
   obj["status_label_type"] = inclusion_label_type;
   obj["triage_score"] = triage_score;
+  obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(createdDate);
+
+  const followUpObj = { ...obj };
+
+  obj["isNurseExported"] = false;
+
+  const ALERT_STATUS = [
+    statusList["Y1"],
+    statusList["Y2"],
+    statusList["R1"],
+    statusList["R2"],
+  ];
+
+  let needNotification = false;
+  if (status !== previousStatus && ALERT_STATUS.includes(status)) {
+    obj["toAmed"] = 1;
+    needNotification = true;
+  } else {
+    obj["toAmed"] = 0;
+  }
 
   if (!followUp) {
-    await snapshot.ref.set({ ...obj, followUp: [obj] });
+    await snapshot.ref.set({ ...obj, followUp: [followUpObj] });
   } else {
     await snapshot.ref.update({
       ...obj,
-      followUp: admin.firestore.FieldValue.arrayUnion(obj),
+      followUp: admin.firestore.FieldValue.arrayUnion(followUpObj),
     });
+  }
+
+  if (needNotification) {
+    await notifyToLine(
+      `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
+    );
   }
 
   try {
@@ -190,16 +224,6 @@ exports.updateSymptom = async (data, _context) => {
   } catch (err) {
     console.log(err);
   }
-  const ALERT_STATUS = [
-    statusList["Y1"],
-    statusList["Y2"],
-    statusList["R1"],
-    statusList["R2"],
-  ];
-  if (status !== previousStatus && ALERT_STATUS.includes(status)) {
-    await notifyToLine(
-      `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
-    );
-  }
-  return success();
+
+  return success({ status: inclusion_label });
 };

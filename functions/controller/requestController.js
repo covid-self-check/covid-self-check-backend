@@ -100,6 +100,7 @@ exports.requestToRegister = async (data, _context) => {
     const obj = {
       name: value.name,
       personalPhoneNo: value.personalPhoneNo,
+      isR2RExported: true,
     };
     await requestRegisterSnapshot.ref.create(obj);
     return success();
