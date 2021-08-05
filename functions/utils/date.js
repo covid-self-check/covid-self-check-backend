@@ -29,6 +29,9 @@ exports.convertTimestampToStr = (data) => {
 exports.formatDateTime = (date) => {
   return moment(date).format("MM-DD-YYYY hh:mm:ss");
 };
+exports.formatDateTimeAPI = (date) => {
+  return moment(date).format("YYYY-MM-DD");
+};
 
 /**
  *
