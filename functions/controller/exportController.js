@@ -16,6 +16,7 @@ exports.exportR2R = async (data, context) => {
   const snapshot = await admin
     .firestore()
     .collection("requestToRegisterAssistance")
+    .where("isRequestToCallRegister", "==", false)
     .get();
 
   snapshot.docs.forEach((doc) => {
@@ -29,14 +30,17 @@ exports.exportR2R = async (data, context) => {
     header,
     (doc) => [doc.name, doc.personalPhoneNo]
   );
-
   await Promise.all(
-    snapshot.docs.forEach((doc) => {
+    snapshot.docs.map((doc) => {
+      console.log(doc.id);
       const docRef = admin
         .firestore()
         .collection("requestToRegisterAssistance")
         .doc(doc.id);
-      docRef.delete();
+
+      return docRef.update({
+        isRequestToCallRegister: true,
+      });
     })
   );
 
