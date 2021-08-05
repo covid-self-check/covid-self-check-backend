@@ -754,7 +754,7 @@ exports.requestToRegister = functions
       if (requestRegisterSnapshot.exists) {
         throw new functions.https.HttpsError(
           "already-exists",
-          `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+          `มีข้อมูลผู้ใช้ ${lineUserID} ในรายชื่อการโทรแล้ว`
         );
       }
       const obj = {
