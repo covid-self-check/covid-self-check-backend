@@ -20,6 +20,7 @@ const {
   getProfileSchema,
   importPatientIdSchema,
   exportRequestToCallSchema,
+  requestToRegisterSchema,
 } = require("./schema");
 const { success } = require("./response/success");
 const {
@@ -35,6 +36,7 @@ const cors = require("cors");
 const _ = require("lodash");
 const { backup } = require("./backup");
 const { generateZipFileRoundRobin } = require("./utils/zip");
+const { notifyToLine } = require("./linenotify");
 
 const region = require("./config/index").config.region;
 
@@ -57,7 +59,7 @@ exports.registerParticipant = functions
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -99,7 +101,7 @@ exports.registerParticipant = functions
     if (snapshot.exists) {
       throw new functions.https.HttpsError(
         "already-exists",
-        `มีข้อมูลผู้ใช้ ${lineUserID} ในระบบแล้ว`
+        "มีข้อมูลผู้ใช้ในระบบแล้ว"
       );
     }
 
@@ -113,7 +115,7 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -137,9 +139,13 @@ exports.getProfile = functions.region(region).https.onCall(async (data, _) => {
     .doc(value.lineUserID)
     .get();
 
-  const { followUp, ...patientData } = snapshot.data();
   const { name, picture } = lineProfile;
-  return { line: { name, picture }, patient: patientData };
+  if (snapshot.exists) {
+    const { followUp, ...patientData } = snapshot.data();
+    return { line: { name, picture }, patient: patientData };
+  } else {
+    return { line: { name, picture }, patient: null };
+  }
 });
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
@@ -155,7 +161,7 @@ exports.getFollowupHistory = functions
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -195,7 +201,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     // DEBUG
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -229,7 +235,7 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
     );
   }
 
-  const { followUp } = snapshot.data();
+  const { followUp, firstName, lastName } = snapshot.data();
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
   await snapshot.ref.update({
@@ -249,11 +255,13 @@ exports.updateSymptom = functions.region(region).https.onCall(async (data) => {
   const status = "We are the CHAMPION!!";
 
   try {
-    sendPatientstatus(lineUserID, status, config.channelAccessToken);
+    // sendPatientstatus(lineUserID, status, config.channelAccessToken);
   } catch (err) {
     console.log(err);
   }
-
+  // if (status === 'We are the CHAMPION!!') {
+  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
+  // }
   return success();
 });
 
@@ -449,7 +457,7 @@ exports.requestToCall = functions.region(region).https.onCall(async (data) => {
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
-      "failed-precondition",
+      "invalid-argument",
       "ข้อมูลไม่ถูกต้อง",
       error.details
     );
@@ -495,7 +503,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
     const { value, error } = exportRequestToCallSchema.validate(data);
     if (error) {
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง"
       );
     }
@@ -512,7 +520,7 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
         const dataResult = {
           firstName: docData.firstName,
           lastName: docData.firstName,
-          hasCalled: '',
+          hasCalled: "",
           id: doc.id,
           personalPhoneNo: docData.personalPhoneNo,
         };
@@ -520,7 +528,19 @@ exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
       })
     );
 
-    return generateZipFileRoundRobin(volunteerSize, patientList);
+    const headers = ["internal id", "first name", "call status", "tel"];
+
+    return generateZipFileRoundRobin(
+      volunteerSize,
+      patientList,
+      headers,
+      (doc) => [
+        doc.id,
+        doc.firstName,
+        doc.hasCalled,
+        `="${doc.personalPhoneNo}"`,
+      ]
+    );
   })
 );
 
@@ -529,7 +549,7 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
     // const { value, error } = exportRequestToCallSchema.validate(data);
     // if (error) {
     // throw new functions.https.HttpsError(
-    //   "failed-precondition",
+    //   "invalid-argument",
     //   "ข้อมูลไม่ถูกต้อง"
     // );
     // }
@@ -565,7 +585,17 @@ exports.exportRequestToCall = functions.region(region).https.onCall(
     //   })
     // );
 
-    // return generateZipFileRoundRobin(volunteerSize, patientList);
+    // return generateZipFileRoundRobin(
+    //   volunteerSize,
+    //   patientList,
+    //   headers,
+    //   (doc) => [
+    //     doc.id,
+    //     doc.firstName,
+    //     doc.hasCalled,
+    //     `="${doc.personalPhoneNo}"`,
+    //   ]
+    // );
     return success();
   })
 );
@@ -577,7 +607,7 @@ exports.importFinishedRequestToCall = functions.region(region).https.onCall(
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(
-        "failed-precondition",
+        "invalid-argument",
         "ข้อมูลไม่ถูกต้อง",
         error.details
       );
@@ -661,8 +691,6 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
 //         });
 //       });
 
-//       // console.log(batch, 'batch')
-
 //       snapshot.forEach((doc) => {
 //         const data = doc.data();
 //         const dataResult = {
@@ -704,4 +732,62 @@ exports.getNumberOfPatients = functions
     const snapshot = await admin.firestore().collection("patient").get();
 
     return res.status(200).json(success(snapshot.size));
+  });
+
+exports.requestToRegister = functions
+  .region(region)
+  .https.onCall(async (data) => {
+    const { value, error } = requestToRegisterSchema.validate(data);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+
+    const { lineUserID, lineIDToken, noAuth } = value;
+    const { data: lineProfile, error: authError } = await getProfile({
+      lineUserID,
+      lineIDToken,
+      noAuth,
+    });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        lineProfile.error_description
+      );
+    }
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(value.lineUserID)
+      .get();
+
+    if (snapshot.exists) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `ผู้ใช้ ${lineUserID} ลงทะเบียนในระบบแล้ว ไม่จำเป็นต้องขอรับความช่วยเหลือในการลงทะเบียน`
+      );
+    } else {
+      const requestRegisterSnapshot = await admin
+        .firestore()
+        .collection("requestToRegisterAssistance")
+        .doc(lineUserID)
+        .get();
+
+      if (requestRegisterSnapshot.exists) {
+        throw new functions.https.HttpsError(
+          "already-exists",
+          `มีข้อมูลผู้ใช้ ${lineUserID} ในรายชื่อการโทรแล้ว`
+        );
+      }
+      const obj = {
+        name: value.name,
+        personalPhoneNo: value.personalPhoneNo,
+      };
+      await requestRegisterSnapshot.ref.create(obj);
+      return success();
+    }
   });
