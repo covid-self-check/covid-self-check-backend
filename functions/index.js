@@ -39,10 +39,12 @@ initializeApp();
 
 app.get("/master", exportController.exportMasterAddress);
 
-app.get(
-  "/",
-  authenticateVolunteerRequest(exportController.exportPatientForNurse)
-);
+// app.get(
+//   "/",
+//   authenticateVolunteerRequest(exportController.exportPatientForNurse)
+// );
+
+app.get("/", exportController.exportPatientForNurse);
 
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);

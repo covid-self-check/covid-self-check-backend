@@ -79,8 +79,6 @@ const { convertTZ } = require("./date");
 
 const status = ["noSuggestion", "G1", "G2", "Y1", "Y2", "R1", "R2"];
 exports.sheetName = [
-  "ไม่ระบุุ",
-  "รายงานผู้ป่วยเขียวไม่มีอาการ",
   "รายงานผู้ป่วยเขียวมีอาการ",
   "รายงานผู้ป่วยเหลืองไม่มีอาการ",
   "รายงานผู้ป่วยเหลืองมีอาการ",
@@ -134,7 +132,6 @@ exports.convertToArray = (data) => {
  * @param {*} snapshot
  * @returns
  */
-
 
 /**
  * return true if patient is Y2 , false if not , null if there is no information
