@@ -1,9 +1,15 @@
 const functions = require("firebase-functions");
-const { registerSchema } = require("../schema");
+const {
+  registerSchema,
+  getProfileSchema,
+  historySchema,
+} = require("../schema");
 const { admin } = require("../init");
 const { getProfile } = require("../middleware/authentication");
 const { convertTZ } = require("../utils");
 const { success } = require("../response/success");
+const { sendPatientstatus } = require("../linefunctions/linepushmessage");
+const { notifyToLine } = require("../linenotify");
 
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
@@ -57,4 +63,119 @@ exports.registerPatient = async (data, _context) => {
   await snapshot.ref.create(obj);
 
   return success(`Registration with ID: ${lineUserID} added`);
+};
+
+exports.getProfile = async (data, _context) => {
+  const { value, error } = getProfileSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { lineUserID, lineIDToken, noAuth } = value;
+  const { data: lineProfile, error: authError } = await getProfile({
+    lineUserID,
+    lineIDToken,
+    noAuth,
+  });
+  if (authError) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      lineProfile.error_description
+    );
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(value.lineUserID)
+    .get();
+
+  const { name, picture } = lineProfile;
+  if (snapshot.exists) {
+    const { followUp, ...patientData } = snapshot.data();
+    const serializeData = convertTimestampToStr(patientData);
+    return { line: { name, picture }, patient: serializeData };
+  } else {
+    return { line: { name, picture }, patient: null };
+  }
+};
+
+exports.updateSymptom = async (data, _context) => {
+  const { value, error } = historySchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { lineUserID, lineIDToken, noAuth, ...obj } = value;
+  const { error: authError, data: errorData } = await getProfile({
+    lineUserID,
+    lineIDToken,
+    noAuth,
+  });
+  if (authError) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      errorData.error_description
+    );
+  }
+
+  const createdDate = convertTZ(new Date(), "Asia/Bangkok");
+  obj.createdDate = admin.firestore.Timestamp.fromDate(createdDate);
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineUserID)
+    .get();
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
+  }
+
+  const { followUp, firstName, lastName } = snapshot.data();
+  //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
+  //update lastUpdatedAt field on patient
+  await snapshot.ref.update({
+    lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
+  });
+
+  const formPayload = makeStatusAPIPayload(snapshot.data());
+  const { inclusion_label, inclusion_label_type, triage_score } =
+    await makeRequest(formPayload);
+  console.log("status is:", inclusion_label);
+
+  obj["status"] = statusList[inclusion_label];
+  obj["status_label_type"] = inclusion_label_type;
+  obj["triage_score"] = triage_score;
+
+  if (!followUp) {
+    await snapshot.ref.set({ ...obj, followUp: [obj] });
+  } else {
+    await snapshot.ref.update({
+      ...obj,
+      followUp: admin.firestore.FieldValue.arrayUnion(obj),
+    });
+  }
+
+  // try {
+  //   sendPatientstatus(lineUserID, status, config.channelAccessToken);
+  // } catch (err) {
+  //   console.log(err);
+  // }
+  // if (status === 'We are the CHAMPION!!') {
+  //   await notifyToLine(`ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`)
+  // }
+  return success();
 };
