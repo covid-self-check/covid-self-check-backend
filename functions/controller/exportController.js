@@ -181,13 +181,13 @@ exports.exportPatientForNurse = async (req, res) => {
 
     snapshot.docs.forEach((doc) => {
       const data = doc.data();
-      if (typeof data.status !== "number") {
-        return;
-      }
-      // exclude unknown and G1
-      if (!INCLUDE_STATUS.includes(data.status)) {
-        return;
-      }
+      // if (typeof data.status !== "number") {
+      //   return;
+      // }
+      // // exclude unknown and G1
+      // if (!INCLUDE_STATUS.includes(data.status)) {
+      //   return;
+      // }
 
       updatedDocId.push(doc.id);
 
@@ -208,7 +208,8 @@ exports.exportPatientForNurse = async (req, res) => {
         data.province,
         data.status,
       ];
-      const status = data.status - 2;
+      // const status = data.status - 2;
+      const status = Math.floor(Math.random() * 5);
       results[status].push(arr);
     });
 
