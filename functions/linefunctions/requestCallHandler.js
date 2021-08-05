@@ -26,10 +26,19 @@ async function requestCall(data) {
         .doc(lineUserID)
         .get();
     if (!snapshot.exists) {
-        throw new functions.https.HttpsError(
-            "not-found",
-            `ไม่พบผู้ใช้ ${lineUserID}`
-        );
+        liff.init()
+
+        liff.openWindow({
+            url: "https://csc-staging.vercel.app/requestHelp",
+            external: false
+        });
+
+        return success();
+
+        // throw new functions.https.HttpsError(
+        //     "not-found",
+        //     `ไม่พบผู้ใช้ ${lineUserID}`
+        // );
     }
 
     const { isRequestToCall } = snapshot.data();
@@ -44,3 +53,4 @@ async function requestCall(data) {
     });
     return success();
 }
+module.exports = { requestCall };
