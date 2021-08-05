@@ -14,10 +14,7 @@ exports.statusList = {
     "R2": 6
 }
 
-exports.makeStatusAPIPayload = (data) => {
-    const { followUp } = data;
-    const lastFollowUp = followUp[followUp.length - 1];
-
+exports.makeStatusAPIPayload = (data, lastFollowUp) => {
     const age = calculateAge(data.birthDate.toDate());
     const infected_discover_date = formatDateTimeAPI(data.createdDate);
     var payload = {
