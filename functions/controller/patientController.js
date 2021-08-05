@@ -11,7 +11,6 @@ const { success } = require("../response/success");
 const { makeStatusAPIPayload, makeRequest, statusList } = require("../api/api");
 const { sendPatientstatus } = require("../linefunctions/linepushmessage");
 const { notifyToLine } = require("../linenotify");
-
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
 
@@ -183,6 +182,7 @@ exports.updateSymptom = async (data, _context) => {
   obj["status_label_type"] = inclusion_label_type;
   obj["triage_score"] = triage_score;
   obj["lastUpdatedAt"] = admin.firestore.Timestamp.fromDate(createdDate);
+  obj["isNurseExported"] = false;
 
   const ALERT_STATUS = [
     statusList["Y1"],
@@ -195,6 +195,8 @@ exports.updateSymptom = async (data, _context) => {
   if (status !== previousStatus && ALERT_STATUS.includes(status)) {
     obj["toAmed"] = 1;
     needNotification = true;
+  } else {
+    obj["toAmed"] = 0;
   }
 
   if (!followUp) {
