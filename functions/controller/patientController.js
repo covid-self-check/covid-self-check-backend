@@ -4,7 +4,7 @@ const { admin } = require('../init')
 const { getProfile } = require('../middleware/authentication')
 const { convertTZ } = require('../utils')
 const { success } = require('../response/success')
-const { makeStatusAPIPayload, makeRequest, statusList } = require('../api/api')
+const { makeStatusAPIPayload, makeRequest, statusList, statusListReverse } = require('../api/api')
 const { sendPatientstatus } = require('../linefunctions/linepushmessage')
 const { notifyToLine } = require('../linenotify')
 const { convertTimestampToStr } = require('../utils/date')
@@ -35,7 +35,7 @@ const addTotalPatientCountByColor = async (status) => {
     .doc(status)
     .get()
 
-  await snapshot.ref('count', admin.firestore.FieldValue.increment(1))
+  await snapshot.ref.update('count', admin.firestore.FieldValue.increment(1))
 }
 
 const decrementTotalPatientCountByColor = async (status) => {
@@ -45,7 +45,7 @@ const decrementTotalPatientCountByColor = async (status) => {
     .doc(status)
     .get()
 
-  await snapshot.ref('count', admin.firestore.FieldValue.increment(-1))
+  await snapshot.ref.update('count', admin.firestore.FieldValue.increment(-1))
 }
 
 exports.registerPatient = async (data, _context) => {
@@ -195,13 +195,14 @@ exports.updateSymptom = async (data, _context) => {
     )
   }
 
+  const snapshotData = snapshot.data()
   const {
     followUp,
     firstName,
     lastName,
     toAmed,
     status: previousStatus,
-  } = snapshot.data()
+  } = snapshotData
 
   if (toAmed === 1) {
     throw new functions.https.HttpsError(
@@ -258,7 +259,7 @@ exports.updateSymptom = async (data, _context) => {
 
   try {
     if (previousStatus !== null) {
-      await decrementTotalPatientCountByColor(previousStatus)
+      await decrementTotalPatientCountByColor(statusListReverse[previousStatus])
     }
 
     if (obj['toAmed'] === 1) {
