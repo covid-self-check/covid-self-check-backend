@@ -31,6 +31,9 @@ exports.requestToCall = async (data, _context) => {
     .doc(lineUserID)
     .get();
   if (!snapshot.exists) {
+    if (snapshot.data().toAmed === 1) {
+      success(`your information already handle by Amed`);
+    }
     throw new functions.https.HttpsError(
       "not-found",
       `ไม่พบผู้ใช้ ${lineUserID}`
