@@ -11,7 +11,7 @@
     "logs": "firebase functions:log",
     "prepare": "cd .. && husky install functions/.husky",
     "precommit": "lint-staged",
-    "test": "yarn jest --watch",
+    "test": "yarn jest --watch --verbose",
     "test:ci": "yarn jest --collectCoverage"
   },
   "dependencies": {
@@ -33,6 +33,7 @@
     "eslint": "^5.12.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-promise": "^4.0.1",
+    "faker": "^5.5.3",
     "husky": "^7.0.0",
     "jest": "^27.0.6",
     "lint-staged": "^11.1.1",
