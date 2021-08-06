@@ -7,6 +7,7 @@ describe("convertTZ", () => {
     // console.log(now.toString());
     // console.log(now.toISOString());
     console.log(now.toString(), result.toString());
+    console.log(now.toISOString(), result.toISOString());
     // console.log(result.toISOString());
     expect(result.getDate()).toEqual(now.getDate());
     expect(result.getHours()).toEqual(now.getHours());
