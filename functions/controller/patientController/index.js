@@ -18,7 +18,7 @@ const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils/date");
 const { config } = require("../../config/index");
-const { setPatientStatus } = require("./utils");
+const { setPatientStatus, snapshotExists, addCreatedDate } = require("./utils");
 
 const addTotalPatientCount = async () => {
   const snapshot = await admin
@@ -102,25 +102,16 @@ exports.registerPatient = async (data, _context) => {
   const createdDate = new Date();
   setPatientStatus(createdDate);
 
+  //need db connection
   const snapshot = await admin
     .firestore()
     .collection("patient")
     .doc(lineUserID)
     .get();
 
-  if (snapshot.exists) {
-    if (snapshot.data().toAmed === 1) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "your information is already handle by Amed"
-      );
-    }
-    throw new functions.https.HttpsError(
-      "already-exists",
-      "มีข้อมูลผู้ใช้ในระบบแล้ว"
-    );
-  }
+  snapshotExists(snapshot);
 
+  //need db connection
   await snapshot.ref.create(obj);
   try {
     await addTotalPatientCount();
@@ -197,8 +188,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   const createdDate = new Date();
-  const createdTimeStamp = admin.firestore.Timestamp.fromDate(createdDate);
-  obj.createdDate = createdTimeStamp;
+  addCreatedDate(obj, createdDate);
 
   const snapshot = await admin
     .firestore()

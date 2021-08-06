@@ -1,4 +1,5 @@
 const { admin } = require("../../init");
+const functions = require("firebase-functions");
 
 exports.setPatientStatus = (obj, createdDate) => {
   const needFollowUp = true;
@@ -12,4 +13,24 @@ exports.setPatientStatus = (obj, createdDate) => {
   obj["isRequestToCall"] = false;
   obj["isNurseExported"] = false;
   obj["toAmed"] = 0;
+};
+
+exports.snapshotExists = (snapshot) => {
+  if (snapshot.exists) {
+    if (snapshot.data().toAmed === 1) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "your information is already handle by Amed"
+      );
+    }
+    throw new functions.https.HttpsError(
+      "already-exists",
+      "มีข้อมูลผู้ใช้ในระบบแล้ว"
+    );
+  }
+};
+
+exports.addCreatedDate = (obj, date) => {
+  const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
+  obj.createdDate = createdTimeStamp;
 };
