@@ -1,26 +1,14 @@
 const { convertTZ } = require("./date");
 
 describe("convertTZ", () => {
-  const timeZone = process.env.TZ;
-
-  beforeEach(() => {
-    process.env.TZ = "Asia/Bangkok";
-  });
-
-  afterEach(() => {
-    process.env.TZ = timeZone;
-  });
+  const x = new Date();
+  const offset = -x.getTimezoneOffset() / 60;
 
   it("should convert same timezone correctly", () => {
     const now = new Date("2021-08-06T14:54:08+07:00");
     const result = convertTZ(now, "Asia/Bangkok");
-    // console.log(now.toString());
-    // console.log(now.toISOString());
-    console.log(now.toString(), result.toString());
-    console.log(now.toISOString(), result.toISOString());
-    // console.log(result.toISOString());
     expect(result.getDate()).toEqual(now.getDate());
-    expect(result.getHours()).toEqual(now.getHours());
+    expect(result.getHours() - 7 + offset).toEqual(now.getHours());
   });
 
   it("should convert different timezone correctly", () => {
@@ -41,6 +29,6 @@ describe("convertTZ", () => {
   it("should convert different string timezone correctly", () => {
     const result = convertTZ("2021-08-06T01:54:08+07:00", "Africa/Accra");
     expect(result.getDate()).toEqual(5);
-    expect(result.getHours()).toEqual(18);
+    expect(result.getHours() - 7 + offset).toEqual(18);
   });
 });
