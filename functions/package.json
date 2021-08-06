@@ -12,7 +12,7 @@
     "prepare": "cd .. && husky install functions/.husky",
     "precommit": "lint-staged",
     "test": "yarn jest --watch",
-    "test:ci": "yarn jest"
+    "test:ci": "yarn jest --collectCoverage"
   },
   "dependencies": {
     "@line/bot-sdk": "^7.3.0",
