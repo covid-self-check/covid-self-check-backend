@@ -1,296 +1,296 @@
 // The Cloud Functions for Firebase SDK to create Cloud Functions and setup triggers.
-const functions = require('firebase-functions')
+const functions = require("firebase-functions");
 const {
-    authenticateVolunteer,
-    getProfile,
-    authenticateVolunteerRequest,
-} = require('./middleware/authentication')
-const { admin, initializeApp } = require('./init')
-const { eventHandler } = require('./handler/eventHandler')
-const line = require('@line/bot-sdk')
+  authenticateVolunteer,
+  getProfile,
+  authenticateVolunteerRequest,
+} = require("./middleware/authentication");
+const { admin, initializeApp } = require("./init");
+const { eventHandler } = require("./handler/eventHandler");
+const line = require("@line/bot-sdk");
 const config = {
-    channelAccessToken: functions.config().line.channel_token,
-    channelSecret: functions.config().line.channel_secret,
-}
-const client = new line.Client(config)
-const { getProfileSchema, exportRequestToCallSchema } = require('./schema')
-const { success } = require('./response/success')
-const express = require('express')
-const cors = require('cors')
-const { backup } = require('./backup')
-const { generateZipFileRoundRobin } = require('./utils/zip')
-const region = require('./config/index').config.region
+  channelAccessToken: functions.config().line.channel_token,
+  channelSecret: functions.config().line.channel_secret,
+};
+const client = new line.Client(config);
+const { getProfileSchema, exportRequestToCallSchema } = require("./schema");
+const { success } = require("./response/success");
+const express = require("express");
+const cors = require("cors");
+const { backup } = require("./backup");
+const { generateZipFileRoundRobin } = require("./utils/zip");
+const region = require("./config/index").config.region;
 
 const {
-    exportController,
-    patientController,
-    requestController,
-    importController,
-} = require('./controller')
+  exportController,
+  patientController,
+  requestController,
+  importController,
+} = require("./controller");
 
-const app = express()
-app.use(cors({ origin: true }))
+const app = express();
+app.use(cors({ origin: true }));
 
 // The Firebase Admin SDK to access Firestore.
-initializeApp()
+initializeApp();
 
 // Take the text parameter passed to this HTTP endpoint and insert it into
 // Firestore under the path /messages/:documentId/original
 
-app.get('/master', exportController.exportMasterAddress)
+app.get("/master", exportController.exportMasterAddress);
 
 app.get(
-    '/',
-    authenticateVolunteerRequest(exportController.exportPatientForNurse)
-)
+  "/",
+  authenticateVolunteerRequest(exportController.exportPatientForNurse)
+);
 
 // app.get("/", exportController.exportPatientForNurse);
 
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
-    res.sendStatus(200)
-    try {
-        const event = req.body.events[0]
-        const userId = event.source.userId
-        const profile = client.getProfile(userId)
-        const userObject = { userId: userId, profile: await profile }
-        console.log(userObject)
-        // console.log(event)
-        await eventHandler(event, userObject, client)
-    } catch (err) {
-        console.error(err)
-        console.log('Not from line application.')
-    }
-})
+  res.sendStatus(200);
+  try {
+    const event = req.body.events[0];
+    const userId = event.source.userId;
+    const profile = client.getProfile(userId);
+    const userObject = { userId: userId, profile: await profile };
+    console.log(userObject);
+    // console.log(event)
+    await eventHandler(event, userObject, client);
+  } catch (err) {
+    console.error(err);
+    console.log("Not from line application.");
+  }
+});
 
 exports.registerParticipant = functions
-    .region(region)
-    .https.onCall(patientController.registerPatient)
+  .region(region)
+  .https.onCall(patientController.registerPatient);
 
 exports.getProfile = functions
-    .region(region)
-    .https.onCall(patientController.getProfile)
+  .region(region)
+  .https.onCall(patientController.getProfile);
 
 exports.exportRequestToRegister = functions
-    .region(region)
-    .https.onCall(authenticateVolunteer(exportController.exportR2R))
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2R));
 
 exports.exportRequestToCall = functions
-    .region(region)
-    .https.onCall(authenticateVolunteer(exportController.exportR2C))
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.exportR2C));
 
 exports.importFinishedRequestToCall = functions
-    .region(region)
-    .https.onCall(authenticateVolunteer(importController.importFinishR2C))
+  .region(region)
+  .https.onCall(authenticateVolunteer(importController.importFinishR2C));
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
-    authenticateVolunteer(async (data, context) => {
-        return { result: `Content for authorized user` }
-    })
-)
+  authenticateVolunteer(async (data, context) => {
+    return { result: `Content for authorized user` };
+  })
+);
 
 exports.backupFirestore = functions
-    .region(region)
-    .pubsub.schedule('every day 18:00')
-    .timeZone('Asia/Bangkok')
-    .onRun(backup)
+  .region(region)
+  .pubsub.schedule("every day 18:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(backup);
 
 exports.getNumberOfPatients = functions
-    .region(region)
-    .https.onRequest(async (req, res) => {
-        const snapshot = await admin.firestore().collection('patient').get()
+  .region(region)
+  .https.onRequest(async (req, res) => {
+    const snapshot = await admin.firestore().collection("patient").get();
 
-        return res.status(200).json(success(snapshot.size))
-    })
+    return res.status(200).json(success(snapshot.size));
+  });
 
 exports.getNumberOfPatientsV2 = functions
-    .region(region)
-    .https.onRequest(async (req, res) => {
-        const snapshot = await admin
-            .firestore()
-            .collection('userCount')
-            .document('users')
-            .get()
-        return res.status(200).json(success(snapshot[0].data().count))
-    })
+  .region(region)
+  .https.onRequest(async (req, res) => {
+    const snapshot = await admin
+      .firestore()
+      .collection("userCount")
+      .document("users")
+      .get();
+    return res.status(200).json(success(snapshot[0].data().count));
+  });
 
 exports.requestToRegister = functions
-    .region(region)
-    .https.onCall(requestController.requestToRegister)
+  .region(region)
+  .https.onCall(requestController.requestToRegister);
 
 exports.check = functions.region(region).https.onRequest(async (req, res) => {
-    return res.sendStatus(200)
-})
+  return res.sendStatus(200);
+});
 
 exports.requestToCall = functions
-    .region(region)
-    .https.onCall(requestController.requestToCall)
+  .region(region)
+  .https.onCall(requestController.requestToCall);
 
 exports.updateSymptom = functions
-    .region(region)
-    .https.onCall(patientController.updateSymptom)
+  .region(region)
+  .https.onCall(patientController.updateSymptom);
 
-exports.createReport = functions.region(region).https.onRequest(app)
+exports.createReport = functions.region(region).https.onRequest(app);
 
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
-    .region(region)
-    .https.onCall(async (data, context) => {
-        const { value, error } = getProfileSchema.validate(data)
-        if (error) {
-            console.log(error.details)
-            throw new functions.https.HttpsError(
-                'invalid-argument',
-                'ข้อมูลไม่ถูกต้อง',
-                error.details
-            )
-        }
-        const { lineUserID, lineIDToken, noAuth } = value
-        const { data: errorData, error: authError } = await getProfile({
-            lineUserID,
-            lineIDToken,
-            noAuth,
-        })
-        if (authError) {
-            throw new functions.https.HttpsError(
-                'unauthenticated',
-                errorData.error_description
-            )
-        }
+  .region(region)
+  .https.onCall(async (data, context) => {
+    const { value, error } = getProfileSchema.validate(data);
+    if (error) {
+      console.log(error.details);
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "ข้อมูลไม่ถูกต้อง",
+        error.details
+      );
+    }
+    const { lineUserID, lineIDToken, noAuth } = value;
+    const { data: errorData, error: authError } = await getProfile({
+      lineUserID,
+      lineIDToken,
+      noAuth,
+    });
+    if (authError) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        errorData.error_description
+      );
+    }
 
-        // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-        const snapshot = await admin
-            .firestore()
-            .collection('patient')
-            .doc(lineUserID)
-            .get()
+    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
+    const snapshot = await admin
+      .firestore()
+      .collection("patient")
+      .doc(lineUserID)
+      .get();
 
-        if (!snapshot.exists) {
-            throw new functions.https.HttpsError(
-                'not-found',
-                `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
-            )
-        }
-        return success(snapshot.data().followUp)
-    })
+    if (!snapshot.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
+      );
+    }
+    return success(snapshot.data().followUp);
+  });
 exports.fetchNotUpdatedPatients = functions
-    .region(region)
-    .https.onCall(async (data) => {
-        // const snapshot = await admin.firestore().collection("patient").get();
-        // var notUpdatedList = [];
-        // const currentDate = convertTZ(new Date(), "Asia/Bangkok");
-        // snapshot.forEach((doc) => {
-        //   const patient = doc.data();
+  .region(region)
+  .https.onCall(async (data) => {
+    // const snapshot = await admin.firestore().collection("patient").get();
+    // var notUpdatedList = [];
+    // const currentDate = convertTZ(new Date(), "Asia/Bangkok");
+    // snapshot.forEach((doc) => {
+    //   const patient = doc.data();
 
-        //   const lastUpdatedDate = patient.lastUpdatedAt.toDate();
-        //   var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
-        //   if (hours >= 36) {
-        //     notUpdatedList.push(patient);
-        //   }
-        // });
-        // return success(notUpdatedList);
-        return success()
-    })
+    //   const lastUpdatedDate = patient.lastUpdatedAt.toDate();
+    //   var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    //   if (hours >= 36) {
+    //     notUpdatedList.push(patient);
+    //   }
+    // });
+    // return success(notUpdatedList);
+    return success();
+  });
 
 exports.fetchYellowPatients = functions
-    .region(region)
-    .https.onCall(async () => {
-        // const snapshot = await admin
-        //   .firestore()
-        //   .collection("patient")
-        //   .where("status", "==", "เหลือง")
-        //   .get();
+  .region(region)
+  .https.onCall(async () => {
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("status", "==", "เหลือง")
+    //   .get();
 
-        // var patientList = [];
+    // var patientList = [];
 
-        // snapshot.forEach((doc) => {
-        //   const data = doc.data();
-        //   patientList.push(data);
-        // });
-        // return success(patientList);
-        return success()
-    })
+    // snapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   patientList.push(data);
+    // });
+    // return success(patientList);
+    return success();
+  });
 
 exports.fetchGreenPatients = functions
-    .region(region)
-    .https.onCall(async (data) => {
-        // const snapshot = await admin
-        //   .firestore()
-        //   .collection("patient")
-        //   .where("status", "==", "เขียว")
-        //   .get();
+  .region(region)
+  .https.onCall(async (data) => {
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("status", "==", "เขียว")
+    //   .get();
 
-        // var patientList = [];
+    // var patientList = [];
 
-        // snapshot.forEach((doc) => {
-        //   const data = doc.data();
-        //   patientList.push(data);
-        // });
-        // return success(patientList);
-        return success()
-    })
+    // snapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   patientList.push(data);
+    // });
+    // return success(patientList);
+    return success();
+  });
 exports.fetchRedPatients = functions
-    .region(region)
-    .https.onCall(async (data) => {
-        // const snapshot = await admin
-        //   .firestore()
-        //   .collection("patient")
-        //   .where("status", "==", "แดง")
-        //   .get();
+  .region(region)
+  .https.onCall(async (data) => {
+    // const snapshot = await admin
+    //   .firestore()
+    //   .collection("patient")
+    //   .where("status", "==", "แดง")
+    //   .get();
 
-        // var patientList = [];
-        // snapshot.forEach((doc) => {
-        //   const data = doc.data();
-        //   patientList.push(data);
-        // });
-        // return success(patientList);
-        return success()
-    })
+    // var patientList = [];
+    // snapshot.forEach((doc) => {
+    //   const data = doc.data();
+    //   patientList.push(data);
+    // });
+    // return success(patientList);
+    return success();
+  });
 
 exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
-    authenticateVolunteer(async (data, context) => {
-        const { value, error } = exportRequestToCallSchema.validate(data)
-        if (error) {
-            throw new functions.https.HttpsError(
-                'invalid-argument',
-                'ข้อมูลไม่ถูกต้อง'
-            )
-        }
+  authenticateVolunteer(async (data, context) => {
+    const { value, error } = exportRequestToCallSchema.validate(data);
+    if (error) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "ข้อมูลไม่ถูกต้อง"
+      );
+    }
 
-        const { volunteerSize } = value
-        const patientList = []
+    const { volunteerSize } = value;
+    const patientList = [];
 
-        const snapshot = await admin.firestore().collection('patient').get()
+    const snapshot = await admin.firestore().collection("patient").get();
 
-        await Promise.all(
-            snapshot.docs.map((doc) => {
-                // WARNING SIDE EFFECT inside map
-                const docData = doc.data()
-                const dataResult = {
-                    firstName: docData.firstName,
-                    lastName: docData.firstName,
-                    hasCalled: '',
-                    id: doc.id,
-                    personalPhoneNo: docData.personalPhoneNo,
-                }
-                patientList.push(dataResult)
-            })
-        )
+    await Promise.all(
+      snapshot.docs.map((doc) => {
+        // WARNING SIDE EFFECT inside map
+        const docData = doc.data();
+        const dataResult = {
+          firstName: docData.firstName,
+          lastName: docData.firstName,
+          hasCalled: "",
+          id: doc.id,
+          personalPhoneNo: docData.personalPhoneNo,
+        };
+        patientList.push(dataResult);
+      })
+    );
 
-        const headers = ['internal id', 'first name', 'call status', 'tel']
+    const headers = ["internal id", "first name", "call status", "tel"];
 
-        return generateZipFileRoundRobin(
-            volunteerSize,
-            patientList,
-            headers,
-            (doc) => [
-                doc.id,
-                doc.firstName,
-                doc.hasCalled,
-                `="${doc.personalPhoneNo}"`,
-            ]
-        )
-    })
-)
+    return generateZipFileRoundRobin(
+      volunteerSize,
+      patientList,
+      headers,
+      (doc) => [
+        doc.id,
+        doc.firstName,
+        doc.hasCalled,
+        `="${doc.personalPhoneNo}"`,
+      ]
+    );
+  })
+);
 
 // exports.testExportRequestToCall = functions.region(region).https.onRequest(
 //   authenticateVolunteerRequest(async (req, res) => {

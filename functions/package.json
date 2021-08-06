@@ -4,12 +4,15 @@
   "scripts": {
     "lint": "eslint .",
     "serve": "firebase serve --only functions",
-    "test": "firebase emulators:start --only functions",
+    "emulator": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "prepare": "cd .. && husky install functions/.husky"
+    "prepare": "cd .. && husky install functions/.husky",
+    "precommit": "lint-staged",
+    "test": "yarn jest --watch",
+    "test:ci": "yarn jest --collectCoverage"
   },
   "dependencies": {
     "@line/bot-sdk": "^7.3.0",
@@ -30,7 +33,8 @@
     "eslint": "^5.12.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-promise": "^4.0.1",
-    "husky": "^7.0.1",
+    "husky": "^7.0.0",
+    "jest": "^27.0.6",
     "lint-staged": "^11.1.1",
     "prettier": "^2.3.2"
   },
