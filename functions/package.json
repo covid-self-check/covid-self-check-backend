@@ -9,7 +9,8 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "prepare": "cd .. && husky install functions/.husky"
+    "prepare": "cd .. && husky install functions/.husky",
+    "precommit": "lint-staged"
   },
   "dependencies": {
     "@line/bot-sdk": "^7.3.0",
@@ -30,7 +31,7 @@
     "eslint": "^5.12.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-promise": "^4.0.1",
-    "husky": "^7.0.1",
+    "husky": "^7.0.0",
     "lint-staged": "^11.1.1",
     "prettier": "^2.3.2"
   },
