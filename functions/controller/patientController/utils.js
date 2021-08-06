@@ -35,21 +35,21 @@ exports.updateSymptomAddCreatedDate = (obj, date) => {
   obj.createdDate = createdTimeStamp;
 };
 
+exports.updateSymptomCheckUser = (snapshot, lineUserID) => {
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
+  }
+};
+
 exports.updateSymptomCheckAmed = (snapshotData) => {
   const { toAmed } = snapshotData;
   if (toAmed === 1) {
     throw new functions.https.HttpsError(
       "failed-precondition",
       "your information is already handle by Amed"
-    );
-  }
-};
-
-exports.updateSymptomCheckUser = (snapshot, lineUserID) => {
-  if (!snapshot.exists) {
-    throw new functions.https.HttpsError(
-      "not-found",
-      `ไม่พบผู้ใช้ ${lineUserID}`
     );
   }
 };
