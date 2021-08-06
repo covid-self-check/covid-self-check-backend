@@ -1,4 +1,4 @@
 {
-    "type" : "text",
-    "text" : "ระบบเรายังไม่มีข้อมูลเบอร์ของท่าน\nท่านสามารถเข้าไปกรอกเบอร์ของท่านได้ที่\nhttps://csc-staging.vercel.app/requestHelp"
+  "type": "text",
+  "text": "ระบบเรายังไม่มีข้อมูลเบอร์ของท่าน\nท่านสามารถเข้าไปกรอกเบอร์ของท่านได้ที่\nhttps://covid-self-check.vercel.app/requestHelp"
 }
