@@ -1,7 +1,7 @@
 const { convertTimestampToStr } = require("../utils/date");
 const axios = require("axios");
 const baseURL = "https://api.line.me/v2/bot/message/push";
-const { statusListReversem, statusList } = require("../api/api");
+const { statusListReversem, statusList } = require("../api");
 
 const symptomMapper = {
   sym1_severe_cough: "มีอาการไอต่อเนื่อง",
