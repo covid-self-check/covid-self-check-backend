@@ -31,8 +31,7 @@ exports.snapshotExists = (snapshot) => {
 };
 
 exports.updateSymptomAddCreatedDate = (obj, date) => {
-  const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
-  obj.createdDate = createdTimeStamp;
+  obj.createdDate = date;
 };
 
 exports.updateSymptomCheckUser = (snapshot, lineUserID) => {
@@ -51,5 +50,26 @@ exports.updateSymptomCheckAmed = (snapshotData) => {
       "failed-precondition",
       "your information is already handle by Amed"
     );
+  }
+};
+
+exports.updateSymptomUpdateStatus = (
+  obj,
+  status,
+  inclusion_label_type,
+  triage_score,
+  createdTimeStamp
+) => {
+  obj["status"] = status;
+  obj["status_label_type"] = inclusion_label_type;
+  obj["triage_score"] = triage_score;
+  obj["lastUpdatedAt"] = createdTimeStamp;
+};
+
+exports.setAmedStatus = (obj, status, previousStatus, TO_AMED_STATUS) => {
+  if (status !== previousStatus && TO_AMED_STATUS.includes(status)) {
+    obj["toAmed"] = 1;
+  } else {
+    obj["toAmed"] = 0;
   }
 };

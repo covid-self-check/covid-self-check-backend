@@ -24,6 +24,8 @@ const {
   updateSymptomAddCreatedDate,
   updateSymptomCheckUser,
   updateSymptomCheckAmed,
+  updateSymptomUpdateStatus,
+  setAmedStatus,
 } = require("./utils");
 
 const addTotalPatientCount = async () => {
@@ -193,8 +195,9 @@ exports.updateSymptom = async (data, _context) => {
     );
   }
 
-  const createdDate = new Date();
-  updateSymptomAddCreatedDate(obj, date);
+  const date = new Date();
+  const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
+  updateSymptomAddCreatedDate(obj, createdTimeStamp);
 
   //need db connection
   const snapshot = await admin
@@ -223,15 +226,16 @@ exports.updateSymptom = async (data, _context) => {
     await makeRequest(formPayload);
 
   const status = statusList[inclusion_label];
-  obj["status"] = status;
-  obj["status_label_type"] = inclusion_label_type;
-  obj["triage_score"] = triage_score;
-  obj["lastUpdatedAt"] = createdTimeStamp;
+  updateSymptomUpdateStatus(
+    obj,
+    status,
+    inclusion_label_type,
+    triage_score,
+    createdTimeStamp
+  );
 
   const followUpObj = { ...obj };
-
   obj["isNurseExported"] = false;
-
   const TO_AMED_STATUS = [
     statusList["G2"],
     statusList["Y1"],
@@ -247,13 +251,9 @@ exports.updateSymptom = async (data, _context) => {
     statusList["R2"],
   ];
 
-  if (status !== previousStatus && TO_AMED_STATUS.includes(status)) {
-    obj["toAmed"] = 1;
-  } else {
-    obj["toAmed"] = 0;
-  }
+  setAmedStatus(obj, status, previousStatus, TO_AMED_STATUS);
 
-  const objWithOutCreatedDate = { ...obj, createdDate };
+  const { createdDate, ...objWithOutCreatedDate } = obj;
 
   if (!followUp) {
     await snapshot.ref.set({
