@@ -1,36 +1,66 @@
 const XLSX = require("xlsx");
 const JSZip = require("jszip");
 
-/**
- * generate multiple csv file and send zip file back to client
- * @param {number} size - number of volunteer
- * @param {data} data - snapshot from firebase (need to convert to array of obj)
- * @param {string[]} headers - array of headers
- * @param {() => any[]} serializer - function that return element of each row
- */
-exports.generateZipFileRoundRobin = async (size, data, headers, serializer) => {
-  const arrs = new Array(size);
+exports.makeAoA = (size) => {
+  const aoa = new Array(size);
 
   for (let i = 0; i < size; i++) {
-    arrs[i] = [];
+    aoa[i] = [];
   }
+
+  return aoa;
+};
+
+/**
+ * fill AOA with data
+ * @param {any[][]} aoa
+ * @param {any[]} data
+ */
+exports.fillWith = (aoa, data) => {
+  const size = aoa.length;
 
   for (let i = 0; i < data.length; i++) {
-    arrs[i % size].push(data[i]);
+    aoa[i % size].push(data[i]);
   }
+};
 
-  const zip = new JSZip();
-  arrs.forEach((arr, i) => {
-    const aoa = [[...headers]];
+/**
+ * prepare zip file
+ * @param {JSZip} zip
+ * @param {any[][]} aoa
+ * @param {string[]} headers
+ * @param {() => any[]} formatter
+ * @returns
+ */
+exports.prepareZipFile = (zip, aoa, headers, formatter) => {
+  aoa.forEach((arr, i) => {
+    const result = [[...headers]];
     arr.forEach((el) => {
-      aoa.push(serializer(el));
+      result.push(formatter(el));
     });
 
     const filename = `${i + 1}.csv`;
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const ws = XLSX.utils.aoa_to_sheet(result);
     const csv = XLSX.utils.sheet_to_csv(ws, { RS: "\n" });
     zip.file(filename, "\ufeff" + csv);
   });
+};
+
+/**
+ * generate multiple csv file and send zip file back to client
+ * @param {number} size - number of volunteer
+ * @param {any[]} data - snapshot from firebase (need to convert to array of obj)
+ * @param {string[]} headers - array of headers
+ * @param {() => any[]} formatter - function that return element of each row
+ */
+exports.generateZipFileRoundRobin = async (size, data, headers, formatter) => {
+  const aoa = this.makeAoA(size);
+
+  this.fillWith(aoa, data);
+
+  const zip = new JSZip();
+
+  this.prepareZipFile(zip, aoa, headers, formatter);
 
   const content = await zip.generateAsync({ type: "base64" });
   return { ok: true, title: "report.zip", content };
