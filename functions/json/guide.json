@@ -1,6 +1,6 @@
 {
   "type": "template",
-  "altText": "this is a image carousel template",
+  "altText": "คู่มือการใช้งาน",
   "template": {
     "type": "image_carousel",
     "columns": [
