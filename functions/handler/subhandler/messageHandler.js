@@ -28,11 +28,17 @@ const handleMessage = async (event, userObject, client) => {
       case "สอนการใช้งาน":
         await client.replyMessage(replyToken, [
           jsonController("guide"),
-          jsonController("r2cQuestion"),
+          //jsonController("r2cQuestion"),
         ]);
         break;
-      case "ติดต่ออาสาสมัคร":
-        await requestCall(userObject, client, replyToken);
+      // case "ติดต่ออาสาสมัคร":
+      //   await requestCall(userObject, client, replyToken);
+      //   break;
+      case "ลงทะเบียน":
+        await client.replyMessage(
+          replyToken,
+          jsonController("closeRegistration")
+        );
         break;
       default:
         await client.replyMessage(replyToken, jsonController("defaultReply"));
