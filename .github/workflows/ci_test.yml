@@ -1,0 +1,28 @@
+name: Run test on pull request
+
+# Run this workflow every time a new commit pushed to your repository
+on:
+  pull_request:
+    branches: [staging, development, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./functions
+
+    strategy:
+      matrix:
+        node-version: [15.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: install libraries
+        run: yarn install --frozen-lockfile
+        working-directory: ${{env.working-directory}}
+      - name: test
+        run: yarn test:ci
