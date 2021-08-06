@@ -6,7 +6,7 @@ describe("convertTZ", () => {
     const now = moment
       .tz("May 12th 2014 8AM", "MMM Do YYYY hA", "Asia/Bangkok")
       .toDate();
-    console.log(now, "now");
+    console.log(now.toString(), "now");
     const result = convertTZ(now, "Asia/Bangkok");
     expect(result.getDate()).toEqual(now.getDate());
     expect(result.getHours()).toEqual(now.getHours());
