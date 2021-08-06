@@ -108,7 +108,7 @@ exports.registerPatient = async (data, _context) => {
   }
 
   const createdDate = new Date();
-  setPatientStatus(createdDate);
+  setPatientStatus(obj, createdDate);
 
   //need db connection
   const snapshot = await admin
