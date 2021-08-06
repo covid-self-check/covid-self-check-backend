@@ -108,9 +108,12 @@ describe("makeStatusAPIPayload", () => {
     const payload = makeStatusAPIPayload(data, lastFollowUp);
     expect(calculateAgeMockFn).toBeCalledWith(data.birthDate.toDate());
     expect(formatDateTimeAPIMockFn).toBeCalledWith(data.createdDate);
-    expect(payload).toEqual(
-      "age=40&gender=male&height=180&weight=20&infected_discover_date=Sat%20Jan%2001%202000%2007%3A00%3A00%20GMT%2B0700&sp_o2=0.9&sp_o2_ra=0.9&sp_o2_after_eih=0.9&eih_result=neutral&sym1_severe_cough=0&sym1_chest_tightness=0&sym1_poor_appetite=0&sym1_fatigue=0&sym1_persistent_fever=0&rf_copd_chronic_lung_disease=0&rf_ckd_stage_3_to_4=0&rf_chronic_heart_disease=0&rf_cva=0&rf_t2dm=0&rf_cirrhosis=0&rf_immunocompromise=0&sym2_tired_body_ache=0&sym2_cough=0&sym2_fever=0&sym2_liquid_stool=0&sym2_cannot_smell=0&sym2_rash=0&sym2_red_eye=0&fac_diabetes=0&fac_dyslipidemia=0&fac_hypertension=0&fac_esrd=0&fac_cancer=0&fac_tuberculosis=0&fac_hiv=0&fac_asthma=0&fac_pregnancy=0&fac_bed_ridden_status=0&fac_uri_symptoms=0&fac_diarrhea=0&fac_dyspnea=0&fac_gi_symptoms=0"
-    );
+    expect(
+      payload ===
+        "age=40&gender=male&height=180&weight=20&infected_discover_date=Sat%20Jan%2001%202000%2007%3A00%3A00%20GMT%2B0700&sp_o2=0.9&sp_o2_ra=0.9&sp_o2_after_eih=0.9&eih_result=neutral&sym1_severe_cough=0&sym1_chest_tightness=0&sym1_poor_appetite=0&sym1_fatigue=0&sym1_persistent_fever=0&rf_copd_chronic_lung_disease=0&rf_ckd_stage_3_to_4=0&rf_chronic_heart_disease=0&rf_cva=0&rf_t2dm=0&rf_cirrhosis=0&rf_immunocompromise=0&sym2_tired_body_ache=0&sym2_cough=0&sym2_fever=0&sym2_liquid_stool=0&sym2_cannot_smell=0&sym2_rash=0&sym2_red_eye=0&fac_diabetes=0&fac_dyslipidemia=0&fac_hypertension=0&fac_esrd=0&fac_cancer=0&fac_tuberculosis=0&fac_hiv=0&fac_asthma=0&fac_pregnancy=0&fac_bed_ridden_status=0&fac_uri_symptoms=0&fac_diarrhea=0&fac_dyspnea=0&fac_gi_symptoms=0" ||
+        payload ===
+          "age=40&gender=male&height=180&weight=20&infected_discover_date=Sat%20Jan%2001%202000%2000%3A00%3A00%20GMT%2B0000&sp_o2=0.9&sp_o2_ra=0.9&sp_o2_after_eih=0.9&eih_result=neutral&sym1_severe_cough=0&sym1_chest_tightness=0&sym1_poor_appetite=0&sym1_fatigue=0&sym1_persistent_fever=0&rf_copd_chronic_lung_disease=0&rf_ckd_stage_3_to_4=0&rf_chronic_heart_disease=0&rf_cva=0&rf_t2dm=0&rf_cirrhosis=0&rf_immunocompromise=0&sym2_tired_body_ache=0&sym2_cough=0&sym2_fever=0&sym2_liquid_stool=0&sym2_cannot_smell=0&sym2_rash=0&sym2_red_eye=0&fac_diabetes=0&fac_dyslipidemia=0&fac_hypertension=0&fac_esrd=0&fac_cancer=0&fac_tuberculosis=0&fac_hiv=0&fac_asthma=0&fac_pregnancy=0&fac_bed_ridden_status=0&fac_uri_symptoms=0&fac_diarrhea=0&fac_dyspnea=0&fac_gi_symptoms=0"
+    ).toBe(true);
   });
 });
 
