@@ -37,10 +37,5 @@
   "lint-staged": {
     "*.{js,json,yml}": "prettier --write",
     "*.js": "eslint --fix"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "cd functions && yarn lint-staged"
-    }
   }
 }
