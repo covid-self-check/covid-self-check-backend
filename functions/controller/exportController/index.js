@@ -2,12 +2,12 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const functions = require("firebase-functions");
-const { admin } = require("../init");
-const { generateZipFileRoundRobin } = require("../utils/zip");
-const { exportRequestToCallSchema } = require("../schema");
-const { statusList } = require("../api/api");
-const { patientReportHeader, sheetName } = require("../utils/status");
-const { calculateAge, convertTZ } = require("../utils/date");
+const { admin } = require("../../init");
+const { generateZipFileRoundRobin } = require("../../utils/zip");
+const { exportRequestToCallSchema } = require("../../schema");
+const { statusList } = require("../../api");
+const { patientReportHeader, sheetName } = require("../../utils/status");
+const { calculateAge, convertTZ } = require("../../utils/date");
 
 exports.exportR2R = async (data, context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
