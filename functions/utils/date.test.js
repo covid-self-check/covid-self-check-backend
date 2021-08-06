@@ -2,7 +2,7 @@ const { convertTZ } = require("./date");
 
 describe("convertTZ", () => {
   it("should convert same timezone correctly", () => {
-    const now = new Date("2021-08-06T07:54:08");
+    const now = new Date("2021-08-06T07:54:08+07:00");
     const result = convertTZ(now, "Asia/Bangkok");
     console.log(now.toString());
     console.log(now.toISOString());
@@ -13,7 +13,7 @@ describe("convertTZ", () => {
   });
 
   it("should convert different timezone correctly", () => {
-    const now = new Date("2021-08-06T01:54:08");
+    const now = new Date("2021-08-06T01:54:08+07:00");
     const result = convertTZ(now, "Africa/Accra");
     expect(result.getDate()).toEqual(5);
     expect(result.getHours()).toEqual(18);
