@@ -9,6 +9,18 @@ const {
 } = require("./utils");
 const { admin } = require("../../init");
 const functions = require("firebase-functions");
+const DATE = new Date();
+const mockToDateFn = jest.fn();
+mockToDateFn.mockReturnValue(DATE);
+jest.doMock("../../init", () => ({
+  admin: {
+    firestore: {
+      Timestamp: {
+        fromDate: mockToDateFn,
+      },
+    },
+  },
+}));
 
 describe("setPatientStatus", () => {
   it("should setPatientStatus correctly", () => {
