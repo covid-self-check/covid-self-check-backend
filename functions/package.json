@@ -30,12 +30,17 @@
     "eslint": "^5.12.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-promise": "^4.0.1",
-    "husky": "^7.0.1",
+    "husky": "^7.0.0",
     "lint-staged": "^11.1.1",
     "prettier": "^2.3.2"
   },
   "lint-staged": {
     "*.{js,json,yml}": "prettier --write",
     "*.js": "eslint --fix"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "cd functions && yarn lint-staged"
+    }
   }
 }
