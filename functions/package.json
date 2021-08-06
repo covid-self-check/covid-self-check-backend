@@ -9,7 +9,8 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "prepare": "cd .. && husky install functions/.husky"
+    "prepare": "cd .. && husky install functions/.husky",
+    "precommit": "lint-staged"
   },
   "dependencies": {
     "@line/bot-sdk": "^7.3.0",
