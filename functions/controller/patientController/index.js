@@ -196,8 +196,8 @@ exports.updateSymptom = async (data, _context) => {
     );
   }
 
-  const createdDate = new Date();
-  const createdTimeStamp = admin.firestore.Timestamp.fromDate(createdDate);
+  const date = new Date();
+  const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
   obj.createdDate = createdTimeStamp;
 
   const snapshot = await admin
@@ -265,7 +265,7 @@ exports.updateSymptom = async (data, _context) => {
     obj["toAmed"] = 0;
   }
 
-  const objWithOutCreatedDate = { ...obj, createdDate };
+  const { createdDate, ...objWithOutCreatedDate } = obj;
 
   if (!followUp) {
     await snapshot.ref.set({
