@@ -1,4 +1,9 @@
-const { setPatientStatus, snapshotExists, addCreatedDate } = require("./utils");
+const {
+  setPatientStatus,
+  snapshotExists,
+  updateSymptomAddCreatedDate,
+  updateSymptomCheckAmed,
+} = require("./utils");
 const { admin } = require("../../init");
 const functions = require("firebase-functions");
 
@@ -40,13 +45,23 @@ describe("snapshotExists", () => {
   });
 });
 
-describe("addCreatedDate", () => {
+describe("updateSymptomAddCreatedDate", () => {
   it("should add createdDate correctly", () => {
     const mockObj = {};
     const createdDate = new Date();
-    addCreatedDate(mockObj, createdDate);
+    updateSymptomAddCreatedDate(mockObj, createdDate);
     expect(mockObj).toEqual({
       createdDate: admin.firestore.Timestamp.fromDate(createdDate),
     });
+  });
+});
+
+describe("updateSymptomCheckAmed", () => {
+  it("should throw Amed", () => {
+    function amed() {
+      const mockSnapshotData = { toAmed: 1 };
+      updateSymptomCheckAmed(mockSnapshotData);
+    }
+    expect(amed).toThrowError("your information is already handle by Amed");
   });
 });

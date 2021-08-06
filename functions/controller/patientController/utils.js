@@ -30,7 +30,17 @@ exports.snapshotExists = (snapshot) => {
   }
 };
 
-exports.addCreatedDate = (obj, date) => {
+exports.updateSymptomAddCreatedDate = (obj, date) => {
   const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
   obj.createdDate = createdTimeStamp;
+};
+
+exports.updateSymptomCheckAmed = (snapshotData) => {
+  const { toAmed } = snapshotData;
+  if (toAmed === 1) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "your information is already handle by Amed"
+    );
+  }
 };

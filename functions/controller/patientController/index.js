@@ -18,7 +18,12 @@ const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils/date");
 const { config } = require("../../config/index");
-const { setPatientStatus, snapshotExists, addCreatedDate } = require("./utils");
+const {
+  setPatientStatus,
+  snapshotExists,
+  updateSymptomAddCreatedDate,
+  updateSymptomCheckAmed,
+} = require("./utils");
 
 const addTotalPatientCount = async () => {
   const snapshot = await admin
@@ -188,8 +193,9 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   const createdDate = new Date();
-  addCreatedDate(obj, createdDate);
+  updateSymptomAddCreatedDate(obj, date);
 
+  //need db connection
   const snapshot = await admin
     .firestore()
     .collection("patient")
@@ -211,12 +217,7 @@ exports.updateSymptom = async (data, _context) => {
     status: previousStatus,
   } = snapshotData;
 
-  if (toAmed === 1) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "your information is already handle by Amed"
-    );
-  }
+  updateSymptomCheckAmed(snapshotData);
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
 
