@@ -3,10 +3,7 @@ const { admin } = require("../init");
 
 exports.convertTZ = (date, tzString) => {
   return new Date(
-    (typeof date === "string"
-      ? new Date(date.toISOString())
-      : date
-    ).toLocaleString("en-US", {
+    (typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
       timeZone: tzString,
     })
   );
