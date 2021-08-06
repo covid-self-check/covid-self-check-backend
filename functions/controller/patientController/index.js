@@ -3,21 +3,22 @@ const {
   registerSchema,
   getProfileSchema,
   historySchema,
-} = require("../schema");
-const { admin } = require("../init");
-const { getProfile } = require("../middleware/authentication");
-const { convertTZ } = require("../utils");
-const { success } = require("../response/success");
+} = require("../../schema");
+const { admin } = require("../../init");
+const { getProfile } = require("../../middleware/authentication");
+const { convertTZ } = require("../../utils");
+const { success } = require("../../response/success");
 const {
   makeStatusAPIPayload,
   makeRequest,
   statusList,
   statusListReverse,
-} = require("../api/api");
-const { sendPatientstatus } = require("../linefunctions/linepushmessage");
-const { notifyToLine } = require("../linenotify");
-const { convertTimestampToStr } = require("../utils/date");
-const { config } = require("../config/index");
+} = require("../../api/api");
+const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
+const { notifyToLine } = require("../../linenotify");
+const { convertTimestampToStr } = require("../../utils/date");
+const { config } = require("../../config/index");
+const { setPatientStatus } = require("./utils");
 
 const addTotalPatientCount = async () => {
   const snapshot = await admin
@@ -98,18 +99,8 @@ exports.registerPatient = async (data, _context) => {
     throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
   }
 
-  const needFollowUp = true;
-  obj["status"] = 0;
-  obj["needFollowUp"] = needFollowUp;
-  obj["followUp"] = [];
   const createdDate = new Date();
-  const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
-  obj["createdDate"] = createdTimestamp;
-  obj["lastUpdatedAt"] = createdTimestamp;
-  obj["isRequestToCallExported"] = false;
-  obj["isRequestToCall"] = false;
-  obj["isNurseExported"] = false;
-  obj["toAmed"] = 0;
+  setPatientStatus(createdDate);
 
   const snapshot = await admin
     .firestore()
