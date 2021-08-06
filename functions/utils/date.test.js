@@ -23,12 +23,12 @@ describe("convertTZ", () => {
     const now = new Date(stringTime);
     const result = convertTZ(stringTime, "Asia/Bangkok");
     expect(result.getDate()).toEqual(now.getDate());
-    expect(result.getHours()).toEqual(now.getHours());
+    expect(result.getHours() - 7 + offset).toEqual(now.getHours());
   });
 
   it("should convert different string timezone correctly", () => {
     const result = convertTZ("2021-08-06T01:54:08+07:00", "Africa/Accra");
     expect(result.getDate()).toEqual(5);
-    expect(result.getHours() - 7 + offset).toEqual(18);
+    expect(result.getHours()).toEqual(18);
   });
 });
