@@ -24,6 +24,8 @@ jobs:
       - name: install libraries
         run: yarn install --frozen-lockfile
         working-directory: ${{env.working-directory}}
+      - name: test
+        run: yarn test:ci
       - name: install firebase
         run: yarn global add firebase-tools
       - name: deploy
