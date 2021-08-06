@@ -1,0 +1,16 @@
+{
+  "type": "template",
+  "altText": "this is a image carousel template",
+  "template": {
+    "type": "image_carousel",
+    "columns": [
+      {
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/Guide%2Fimage-20210805-54221%20PM-080d1fa0.jpeg?alt=media&token=1adeb510-b858-43bf-8c00-c0f6bc0acc13",
+        "action": {
+          "type": "uri",
+          "uri": "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/Guide%2Fimage-20210805-54221%20PM-080d1fa0.jpeg?alt=media&token=1adeb510-b858-43bf-8c00-c0f6bc0acc13"
+        }
+      }
+    ]
+  }
+}
