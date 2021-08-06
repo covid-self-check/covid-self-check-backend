@@ -11,7 +11,7 @@
     "logs": "firebase functions:log",
     "prepare": "cd .. && husky install functions/.husky",
     "precommit": "lint-staged",
-    "test": "yarn jest --watch",
+    "test": "yarn jest --watch --verbose",
     "test:ci": "yarn jest --collectCoverage"
   },
   "dependencies": {
