@@ -5,7 +5,7 @@ const functions = require("firebase-functions");
 const { admin } = require("../../init");
 const { generateZipFileRoundRobin } = require("../../utils/zip");
 const { exportRequestToCallSchema } = require("../../schema");
-const { statusList } = require("../../api/api");
+const { statusList } = require("../../api");
 const { patientReportHeader, sheetName } = require("../../utils/status");
 const { calculateAge, convertTZ } = require("../../utils/date");
 
