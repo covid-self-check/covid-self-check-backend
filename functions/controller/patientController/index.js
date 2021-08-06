@@ -22,6 +22,7 @@ const {
   setPatientStatus,
   snapshotExists,
   updateSymptomAddCreatedDate,
+  updateSymptomCheckUser,
   updateSymptomCheckAmed,
 } = require("./utils");
 
@@ -201,12 +202,8 @@ exports.updateSymptom = async (data, _context) => {
     .collection("patient")
     .doc(lineUserID)
     .get();
-  if (!snapshot.exists) {
-    throw new functions.https.HttpsError(
-      "not-found",
-      `ไม่พบผู้ใช้ ${lineUserID}`
-    );
-  }
+
+  updateSymptomCheckUser(snapshot, lineUserID);
 
   const snapshotData = snapshot.data();
   const {
