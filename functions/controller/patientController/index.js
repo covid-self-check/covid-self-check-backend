@@ -13,7 +13,7 @@ const {
   makeRequest,
   statusList,
   statusListReverse,
-} = require("../../api/api");
+} = require("../../api");
 const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils/date");
