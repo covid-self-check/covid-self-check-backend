@@ -13,6 +13,7 @@ const defaultReply = require("../json/defaultReply.json");
 const tutorial1 = require("../json/tutorial1.json");
 const tutorial2 = require("../json/tutorial2.json");
 const guide = require("../json/guide.json");
+const r2cQuestion = require("../json/r2cQuestion.json");
 
 const map = {
   greeting,
@@ -30,6 +31,7 @@ const map = {
   tutorial1,
   tutorial2,
   guide,
+  r2cQuestion,
 };
 
 module.exports = { jsonController: (json) => map[json] };
