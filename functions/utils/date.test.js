@@ -4,6 +4,8 @@ describe("convertTZ", () => {
   it("should convert timezone correctly", () => {
     const now = new Date("2021-08-06T07:54:08.993Z");
     const result = convertTZ(now, "Asia/Bangkok");
+    console.log(now.toString());
+    console.log(result.toString());
     expect(result.getDate()).toEqual(now.getDate());
     expect(result.getHours()).toEqual(now.getHours());
   });
