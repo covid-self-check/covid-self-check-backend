@@ -2,6 +2,7 @@ const {
   setPatientStatus,
   snapshotExists,
   updateSymptomAddCreatedDate,
+  updateSymptomCheckUser,
   updateSymptomCheckAmed,
 } = require("./utils");
 const { admin } = require("../../init");
@@ -53,6 +54,18 @@ describe("updateSymptomAddCreatedDate", () => {
     expect(mockObj).toEqual({
       createdDate: admin.firestore.Timestamp.fromDate(createdDate),
     });
+  });
+});
+
+describe("updateSymptomCheckUser", () => {
+  it("throw ไม่พบผู้ใช้", () => {
+    const lineUserID = "testUserId";
+
+    function checkUser() {
+      const mockSnapshot = { exists: false };
+      updateSymptomCheckUser(mockSnapshot, lineUserID);
+    }
+    expect(checkUser).toThrowError(`ไม่พบผู้ใช้ ${lineUserID}`);
   });
 });
 

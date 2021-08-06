@@ -44,3 +44,12 @@ exports.updateSymptomCheckAmed = (snapshotData) => {
     );
   }
 };
+
+exports.updateSymptomCheckUser = (snapshot, lineUserID) => {
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบผู้ใช้ ${lineUserID}`
+    );
+  }
+};
