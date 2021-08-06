@@ -2,7 +2,6 @@ const functions = require('firebase-functions')
 const { registerSchema, getProfileSchema, historySchema } = require('../schema')
 const { admin } = require('../init')
 const { getProfile } = require('../middleware/authentication')
-const { convertTZ } = require('../utils')
 const { success } = require('../response/success')
 const {
     makeStatusAPIPayload,
