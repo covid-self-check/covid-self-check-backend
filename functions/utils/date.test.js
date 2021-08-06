@@ -13,9 +13,9 @@ describe("convertTZ", () => {
   });
 
   it("should convert different timezone correctly", () => {
-    const now = new Date("2021-08-06T20:54:08");
+    const now = new Date("2021-08-06T01:54:08");
     const result = convertTZ(now, "Africa/Accra");
-    expect(result.getDate()).toEqual(6);
-    expect(result.getHours()).toEqual(13);
+    expect(result.getDate()).toEqual(5);
+    expect(result.getHours()).toEqual(18);
   });
 });
