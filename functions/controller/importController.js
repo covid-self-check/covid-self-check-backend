@@ -106,7 +106,6 @@ exports.importFinishR2C = async (data, _context) => {
             .then(({ docData, ref }) => {
               batch.create(ref, {
                 ...docData,
-                reason,
               });
               batch.delete(docRef);
             })
