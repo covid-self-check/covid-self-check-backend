@@ -8,12 +8,8 @@ const { admin } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
 const { convertTZ } = require("../../utils");
 const { success } = require("../../response/success");
-const {
-  makeStatusAPIPayload,
-  makeRequest,
-  statusList,
-  statusListReverse,
-} = require("../../api");
+const { makeStatusAPIPayload, makeRequest } = require("../../api");
+const { statusList, statusListReverse } = require("../../api/const");
 const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils/date");
