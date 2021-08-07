@@ -3,26 +3,7 @@ const { calculateAge, formatDateTimeAPI } = require("../utils/date");
 const functions = require("firebase-functions");
 const URL = "https://pedsanam.ydm.family/pedsanam/label_score";
 const AUTHORIZATION = functions.config().api.authorization;
-
-exports.statusList = {
-  unknown: 0,
-  G1: 1,
-  G2: 2,
-  Y1: 3,
-  Y2: 4,
-  R1: 5,
-  R2: 6,
-};
-
-exports.statusListReverse = {
-  0: "unknown",
-  1: "G1",
-  2: "G2",
-  3: "Y1",
-  4: "Y2",
-  5: "R1",
-  6: "R2",
-};
+const { statusList } = require("./const");
 
 exports.makeStatusAPIPayload = (data, lastFollowUp) => {
   const age = calculateAge(data.birthDate.toDate());
@@ -100,7 +81,7 @@ exports.makeRequest = async (formPayload) => {
   } catch (e) {
     console.log("error:", e);
     return {
-      inclusion_label: this.statusList.unknown,
+      inclusion_label: statusList.unknown,
       inclusion_label_type: "at_least",
     };
   }

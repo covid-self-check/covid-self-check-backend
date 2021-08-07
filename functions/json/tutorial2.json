@@ -1,4 +1,15 @@
 {
-  "type": "text",
-  "text": "ระบบเรายังไม่มีข้อมูลเบอร์ของท่าน\nท่านสามารถเข้าไปกรอกเบอร์ของท่านได้ที่\nhttps://covid-self-check.vercel.app/requestHelp"
+  "type": "template",
+  "altText": "กรอกเบอร์โทรศัพท์",
+  "template": {
+    "type": "buttons",
+    "text": "ระบบเรายังไม่มีข้อมูลเบอร์ของท่าน กรุณากรอกเบอร์โทรศัพท์ของท่าน",
+    "actions": [
+      {
+        "type": "uri",
+        "label": "กรอกเบอร์โทรศัพท์",
+        "uri": "https://covid-self-check.vercel.app/requestHelp"
+      }
+    ]
+  }
 }
