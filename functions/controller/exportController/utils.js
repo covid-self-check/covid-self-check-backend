@@ -1,5 +1,5 @@
 const { admin } = require("../../init");
-
+const { convertTZ } = require("../../utils");
 const R2R_COLLECTION = "requestToRegisterAssistance";
 
 exports.getUnExportedR2RUsers = () => {
@@ -49,6 +49,28 @@ exports.getUnExportedR2CUsers = () => {
     .where("isRequestToCallExported", "==", false)
     .orderBy("lastUpdatedAt")
     .get();
+};
+
+exports.get36hrsUsers = async () => {
+  const snapshot = await admin.firestore().collection("patient").get();
+  var notUpdatedList = [];
+  const currentDate = convertTZ(new Date(), "Asia/Bangkok");
+  snapshot.forEach((doc) => {
+    const patient = doc.data();
+
+    const lastUpdatedDate = patient.lastUpdatedAt.toDate();
+    var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+
+    if (hours >= 36 && hours < 72) {
+      //console.log(hours);
+      notUpdatedList.push({
+        firstName: patient.firstName,
+        personalPhoneNo: patient.personalPhoneNo,
+      });
+    }
+  });
+  //console.log(notUpdatedList);
+  return notUpdatedList;
 };
 
 /**

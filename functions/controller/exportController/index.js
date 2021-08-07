@@ -211,3 +211,24 @@ exports.exportPatientForNurse = async (req, res) => {
     res.json({ success: false });
   }
 };
+
+exports.export36hrs = async (data, _context) => {
+  const { value, error } = exportRequestToCallSchema.validate(data);
+  if (error) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "ข้อมูลไม่ถูกต้อง"
+    );
+  }
+  const { volunteerSize } = value;
+  const patientList = await utils.get36hrsUsers();
+  const header = ["first name", "tel"];
+
+  const formatter = (doc) => [doc.firstName, `="${doc.personalPhoneNo}"`];
+  return generateZipFileRoundRobin(
+    volunteerSize,
+    patientList,
+    header,
+    formatter
+  );
+};

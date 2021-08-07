@@ -73,6 +73,9 @@ exports.getProfile = functions
 exports.exportRequestToRegister = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.exportR2R));
+exports.export36hrs = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(exportController.export36hrs));
 
 exports.exportRequestToCall = functions
   .region(region)
@@ -171,24 +174,6 @@ exports.getFollowupHistory = functions
       );
     }
     return success(snapshot.data().followUp);
-  });
-exports.fetchNotUpdatedPatients = functions
-  .region(region)
-  .https.onCall(async (data) => {
-    // const snapshot = await admin.firestore().collection("patient").get();
-    // var notUpdatedList = [];
-    // const currentDate = convertTZ(new Date(), "Asia/Bangkok");
-    // snapshot.forEach((doc) => {
-    //   const patient = doc.data();
-
-    //   const lastUpdatedDate = patient.lastUpdatedAt.toDate();
-    //   var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
-    //   if (hours >= 36) {
-    //     notUpdatedList.push(patient);
-    //   }
-    // });
-    // return success(notUpdatedList);
-    return success();
   });
 
 exports.fetchYellowPatients = functions
