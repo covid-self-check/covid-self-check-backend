@@ -120,7 +120,8 @@ describe("makeStatusAPIPayload", () => {
 describe("makeRequest", () => {
   const URL = "https://pedsanam.ydm.family/pedsanam/label_score";
   const formPayload = ["sdfsdf"];
-  const { makeRequest, statusList } = require(".");
+  const { makeRequest } = require(".");
+  const { statusList } = require("./const");
 
   it("should return expected mock data if axios success", async () => {
     // run make request
