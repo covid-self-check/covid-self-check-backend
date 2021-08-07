@@ -92,3 +92,10 @@ exports.updateExportedR2CUser = (id) => {
 };
 
 exports.formatterR2R = (doc) => [doc.name, doc.personalPhoneNo];
+
+exports.formatterR2C = (doc) => [
+  doc.id,
+  doc.firstName,
+  doc.hasCalled,
+  `="${doc.personalPhoneNo}"`,
+];

@@ -53,18 +53,11 @@ exports.exportR2C = async (data, _context) => {
 
   const header = ["internal id", "first name", "call status", "tel"];
 
-  const formatter = (doc) => [
-    doc.id,
-    doc.firstName,
-    doc.hasCalled,
-    `="${doc.personalPhoneNo}"`,
-  ];
-
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
     header,
-    formatter
+    utils.formatterR2C
   );
 };
 
