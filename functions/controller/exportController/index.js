@@ -26,12 +26,11 @@ exports.exportR2R = async (data, _context) => {
 
   // create zip file
   const header = ["name", "tel"];
-  const formatter = (doc) => [doc.name, doc.personalPhoneNo];
   const result = await generateZipFileRoundRobin(
     size,
     userList,
     header,
-    formatter
+    utils.formatterR2R
   );
 
   // mark user as exported
@@ -54,18 +53,11 @@ exports.exportR2C = async (data, _context) => {
 
   const header = ["internal id", "first name", "call status", "tel"];
 
-  const formatter = (doc) => [
-    doc.id,
-    doc.firstName,
-    doc.hasCalled,
-    `="${doc.personalPhoneNo}"`,
-  ];
-
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
     header,
-    formatter
+    utils.formatterR2C
   );
 };
 
