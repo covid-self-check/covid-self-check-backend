@@ -90,3 +90,5 @@ exports.updateExportedR2CUser = (id) => {
     isRequestToCallExported: true,
   });
 };
+
+exports.formatterR2R = (doc) => [doc.name, doc.personalPhoneNo];
