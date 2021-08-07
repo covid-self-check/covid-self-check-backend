@@ -26,12 +26,11 @@ exports.exportR2R = async (data, _context) => {
 
   // create zip file
   const header = ["name", "tel"];
-  const formatter = (doc) => [doc.name, doc.personalPhoneNo];
   const result = await generateZipFileRoundRobin(
     size,
     userList,
     header,
-    formatter
+    utils.formatterR2R
   );
 
   // mark user as exported
