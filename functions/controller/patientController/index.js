@@ -8,17 +8,21 @@ const { admin } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
 const { convertTZ } = require("../../utils");
 const { success } = require("../../response/success");
-const {
-  makeStatusAPIPayload,
-  makeRequest,
-  statusList,
-  statusListReverse,
-} = require("../../api/api");
+const { makeStatusAPIPayload, makeRequest } = require("../../api");
+const { statusList, statusListReverse } = require("../../api/const");
 const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils/date");
 const { config } = require("../../config/index");
-const { setPatientStatus } = require("./utils");
+const {
+  setPatientStatus,
+  snapshotExists,
+  updateSymptomAddCreatedDate,
+  updateSymptomCheckUser,
+  updateSymptomCheckAmed,
+  updateSymptomUpdateStatus,
+  setAmedStatus,
+} = require("./utils");
 
 const addTotalPatientCount = async () => {
   const snapshot = await admin
@@ -100,27 +104,18 @@ exports.registerPatient = async (data, _context) => {
   }
 
   const createdDate = new Date();
-  setPatientStatus(createdDate);
+  setPatientStatus(obj, createdDate);
 
+  //need db connection
   const snapshot = await admin
     .firestore()
     .collection("patient")
     .doc(lineUserID)
     .get();
 
-  if (snapshot.exists) {
-    if (snapshot.data().toAmed === 1) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "your information is already handle by Amed"
-      );
-    }
-    throw new functions.https.HttpsError(
-      "already-exists",
-      "มีข้อมูลผู้ใช้ในระบบแล้ว"
-    );
-  }
+  snapshotExists(snapshot);
 
+  //need db connection
   await snapshot.ref.create(obj);
   try {
     await addTotalPatientCount();
@@ -196,21 +191,18 @@ exports.updateSymptom = async (data, _context) => {
     );
   }
 
-  const createdDate = new Date();
-  const createdTimeStamp = admin.firestore.Timestamp.fromDate(createdDate);
-  obj.createdDate = createdTimeStamp;
+  const date = new Date();
+  const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
+  updateSymptomAddCreatedDate(obj, createdTimeStamp);
 
+  //need db connection
   const snapshot = await admin
     .firestore()
     .collection("patient")
     .doc(lineUserID)
     .get();
-  if (!snapshot.exists) {
-    throw new functions.https.HttpsError(
-      "not-found",
-      `ไม่พบผู้ใช้ ${lineUserID}`
-    );
-  }
+
+  updateSymptomCheckUser(snapshot, lineUserID);
 
   const snapshotData = snapshot.data();
   const {
@@ -221,12 +213,7 @@ exports.updateSymptom = async (data, _context) => {
     status: previousStatus,
   } = snapshotData;
 
-  if (toAmed === 1) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "your information is already handle by Amed"
-    );
-  }
+  updateSymptomCheckAmed(snapshotData);
   //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
   //update lastUpdatedAt field on patient
 
@@ -235,15 +222,16 @@ exports.updateSymptom = async (data, _context) => {
     await makeRequest(formPayload);
 
   const status = statusList[inclusion_label];
-  obj["status"] = status;
-  obj["status_label_type"] = inclusion_label_type;
-  obj["triage_score"] = triage_score;
-  obj["lastUpdatedAt"] = createdTimeStamp;
+  updateSymptomUpdateStatus(
+    obj,
+    status,
+    inclusion_label_type,
+    triage_score,
+    createdTimeStamp
+  );
 
   const followUpObj = { ...obj };
-
   obj["isNurseExported"] = false;
-
   const TO_AMED_STATUS = [
     statusList["G2"],
     statusList["Y1"],
@@ -259,13 +247,9 @@ exports.updateSymptom = async (data, _context) => {
     statusList["R2"],
   ];
 
-  if (status !== previousStatus && TO_AMED_STATUS.includes(status)) {
-    obj["toAmed"] = 1;
-  } else {
-    obj["toAmed"] = 0;
-  }
+  setAmedStatus(obj, status, previousStatus, TO_AMED_STATUS);
 
-  const objWithOutCreatedDate = { ...obj, createdDate };
+  const { createdDate, ...objWithOutCreatedDate } = obj;
 
   if (!followUp) {
     await snapshot.ref.set({

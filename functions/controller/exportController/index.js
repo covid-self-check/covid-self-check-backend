@@ -2,14 +2,15 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 const functions = require("firebase-functions");
-const { admin } = require("../init");
-const { generateZipFileRoundRobin } = require("../utils/zip");
-const { exportRequestToCallSchema } = require("../schema");
-const { statusList } = require("../api/api");
-const { patientReportHeader, sheetName } = require("../utils/status");
-const { calculateAge, convertTZ } = require("../utils/date");
+const { admin } = require("../../init");
+const { generateZipFileRoundRobin } = require("../../utils/zip");
+const { exportRequestToCallSchema } = require("../../schema");
+const { statusList } = require("../../api/const");
+const { patientReportHeader, sheetName } = require("../../utils/status");
+const { calculateAge, convertTZ } = require("../../utils/date");
+const utils = require("./utils");
 
-exports.exportR2R = async (data, context) => {
+exports.exportR2R = async (data, _context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -17,38 +18,23 @@ exports.exportR2R = async (data, context) => {
       "ข้อมูลไม่ถูกต้อง"
     );
   }
-  const { volunteerSize } = value;
-  const userList = [];
+  const { volunteerSize: size } = value;
 
-  const snapshot = await admin
-    .firestore()
-    .collection("requestToRegisterAssistance")
-    .where("isR2RExported", "==", false)
-    .get();
+  // get and serialize user from database
+  const snapshot = await utils.getUnExportedR2RUsers();
+  const userList = utils.serializeData(snapshot);
 
-  snapshot.docs.forEach((doc) => {
-    userList.push(doc.data());
-  });
-
+  // create zip file
   const header = ["name", "tel"];
   const result = await generateZipFileRoundRobin(
-    volunteerSize,
+    size,
     userList,
     header,
-    (doc) => [doc.name, doc.personalPhoneNo]
+    utils.formatterR2R
   );
-  await Promise.all(
-    snapshot.docs.map((doc) => {
-      const docRef = admin
-        .firestore()
-        .collection("requestToRegisterAssistance")
-        .doc(doc.id);
 
-      return docRef.update({
-        isR2RExported: true,
-      });
-    })
-  );
+  // mark user as exported
+  await utils.updateExportedR2RUsers(snapshot);
 
   return result;
 };
@@ -62,43 +48,16 @@ exports.exportR2C = async (data, _context) => {
     );
   }
   const { volunteerSize } = value;
-  const patientList = [];
+  const snapshot = await utils.getUnExportedR2CUsers();
+  const patientList = await utils.updateAndSerializeR2CData(snapshot);
 
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .where("isRequestToCall", "==", true)
-    .where("isRequestToCallExported", "==", false)
-    .orderBy("lastUpdatedAt")
-    .get();
-
-  await Promise.all(
-    snapshot.docs.map((doc) => {
-      // WARNING SIDE EFFECT inside map
-      const docData = doc.data();
-      const dataResult = {
-        firstName: docData.firstName,
-        lastName: docData.firstName,
-        hasCalled: 0,
-        id: doc.id,
-        personalPhoneNo: docData.personalPhoneNo,
-      };
-      patientList.push(dataResult);
-      // end of side effects
-
-      const docRef = admin.firestore().collection("patient").doc(doc.id);
-      docRef.update({
-        isRequestToCallExported: true,
-      });
-    })
-  );
   const header = ["internal id", "first name", "call status", "tel"];
 
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
     header,
-    (doc) => [doc.id, doc.firstName, doc.hasCalled, `="${doc.personalPhoneNo}"`]
+    utils.formatterR2C
   );
 };
 
