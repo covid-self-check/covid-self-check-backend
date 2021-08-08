@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const { importPatientIdSchema } = require("../schema");
+const { importPatientIdSchema, importWhitelistSchema } = require("../schema");
 const { admin } = require("../init");
 const { success } = require("../response/success");
 
@@ -118,5 +118,34 @@ exports.importFinishR2C = async (data, _context) => {
 
   await Promise.all(promises);
   await batch.commit();
+  return success();
+};
+
+exports.importWhitelist = async (data, _context) => {
+  const { value, error } = importWhitelistSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { users } = value;
+  const map = {};
+  for (const user of users) {
+    const { id } = user;
+    map[user.id] = id;
+  }
+  const promises = [];
+  map.forEach((user) => {
+    promises.push(
+      admin.firestore().collection("whitelist").doc(map[user.id]).set({
+        id: user.id,
+      })
+    );
+  });
+  await Promise.all(promises);
   return success();
 };
