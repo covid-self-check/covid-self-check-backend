@@ -1,15 +1,17 @@
 const XLSX = require("xlsx");
 const fs = require("fs");
+const _ = require("lodash");
 const path = require("path");
 const functions = require("firebase-functions");
 const { admin } = require("../../init");
 const { generateZipFileRoundRobin } = require("../../utils/zip");
 const { exportRequestToCallSchema } = require("../../schema");
-const { statusList } = require("../../api");
+const { statusList } = require("../../api/const");
 const { patientReportHeader, sheetName } = require("../../utils/status");
 const { calculateAge, convertTZ } = require("../../utils/date");
+const utils = require("./utils");
 
-exports.exportR2R = async (data, context) => {
+exports.exportR2R = async (data, _context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -17,38 +19,23 @@ exports.exportR2R = async (data, context) => {
       "ข้อมูลไม่ถูกต้อง"
     );
   }
-  const { volunteerSize } = value;
-  const userList = [];
+  const { volunteerSize: size } = value;
 
-  const snapshot = await admin
-    .firestore()
-    .collection("requestToRegisterAssistance")
-    .where("isR2RExported", "==", false)
-    .get();
+  // get and serialize user from database
+  const snapshot = await utils.getUnExportedR2RUsers();
+  const userList = utils.serializeData(snapshot);
 
-  snapshot.docs.forEach((doc) => {
-    userList.push(doc.data());
-  });
-
+  // create zip file
   const header = ["name", "tel"];
   const result = await generateZipFileRoundRobin(
-    volunteerSize,
+    size,
     userList,
     header,
-    (doc) => [doc.name, doc.personalPhoneNo]
+    utils.formatterR2R
   );
-  await Promise.all(
-    snapshot.docs.map((doc) => {
-      const docRef = admin
-        .firestore()
-        .collection("requestToRegisterAssistance")
-        .doc(doc.id);
 
-      return docRef.update({
-        isR2RExported: true,
-      });
-    })
-  );
+  // mark user as exported
+  await utils.updateExportedR2RUsers(snapshot);
 
   return result;
 };
@@ -62,43 +49,16 @@ exports.exportR2C = async (data, _context) => {
     );
   }
   const { volunteerSize } = value;
-  const patientList = [];
+  const snapshot = await utils.getUnExportedR2CUsers();
+  const patientList = await utils.updateAndSerializeR2CData(snapshot);
 
-  const snapshot = await admin
-    .firestore()
-    .collection("patient")
-    .where("isRequestToCall", "==", true)
-    .where("isRequestToCallExported", "==", false)
-    .orderBy("lastUpdatedAt")
-    .get();
-
-  await Promise.all(
-    snapshot.docs.map((doc) => {
-      // WARNING SIDE EFFECT inside map
-      const docData = doc.data();
-      const dataResult = {
-        firstName: docData.firstName,
-        lastName: docData.firstName,
-        hasCalled: 0,
-        id: doc.id,
-        personalPhoneNo: docData.personalPhoneNo,
-      };
-      patientList.push(dataResult);
-      // end of side effects
-
-      const docRef = admin.firestore().collection("patient").doc(doc.id);
-      docRef.update({
-        isRequestToCallExported: true,
-      });
-    })
-  );
   const header = ["internal id", "first name", "call status", "tel"];
 
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
     header,
-    (doc) => [doc.id, doc.firstName, doc.hasCalled, `="${doc.personalPhoneNo}"`]
+    utils.formatterR2C
   );
 };
 
@@ -158,8 +118,6 @@ exports.exportPatientForNurse = async (req, res) => {
       .collection("patient")
       .where("isNurseExported", "==", false)
       .get();
-
-    console.log("size", snapshot.size);
 
     const INCLUDE_STATUS = [
       statusList["G2"],
@@ -247,6 +205,110 @@ exports.exportPatientForNurse = async (req, res) => {
         });
       }),
     ]);
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false });
+  }
+};
+
+exports.export36hrs = async (data, _context) => {
+  const { value, error } = exportRequestToCallSchema.validate(data);
+  if (error) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "ข้อมูลไม่ถูกต้อง"
+    );
+  }
+  const { volunteerSize } = value;
+  const patientList = await utils.get36hrsUsers();
+  const header = ["first name", "tel"];
+
+  const formatter = (doc) => [doc.firstName, `="${doc.personalPhoneNo}"`];
+  return generateZipFileRoundRobin(
+    volunteerSize,
+    patientList,
+    header,
+    formatter
+  );
+};
+
+/**
+ * one time used only
+ */
+exports.exportAllPatient = async (req, res) => {
+  try {
+    const { password } = req.query;
+    if (password !== "SpkA43Zadkl") {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "ไม่มี permission"
+      );
+    }
+
+    const snapshot = await admin.firestore().collection("patient").get();
+
+    const statusListArr = _.keys(statusList);
+    const results = new Array(statusListArr.length);
+
+    for (let i = 0; i < results.length; i++) {
+      results[i] = [[...patientReportHeader]];
+    }
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const arr = [
+        data.personalID,
+        data.firstName,
+        data.lastName,
+        data.personalPhoneNo,
+        data.emergencyPhoneNo,
+        calculateAge(data.birthDate.toDate()),
+        data.weight,
+        data.height,
+        data.gender,
+        convertTZ(data.lastUpdatedAt.toDate()),
+        data.address,
+        data.district,
+        data.prefecture,
+        data.province,
+        statusListArr[data.status],
+      ];
+
+      results[data.status].push(arr);
+    });
+
+    const sheets = [
+      "รายงานผู้ป่วยที่ไม่สามารถระบุสี",
+      "รายงานผู้ป่วยเขียวไม่มีอาการ",
+      "รายงานผู้ป่วยเขียวมีอาการ",
+      "รายงานผู้ป่วยเหลืองไม่มีอาการ",
+      "รายงานผู้ป่วยเหลืองมีอาการ",
+      "รายงานผู้ป่วยแดงอ่อน",
+      "รายงานผู้ป่วยแดงเข้ม",
+    ];
+
+    const wb = XLSX.utils.book_new();
+    // append result to sheet
+    for (let i = 0; i < results.length && i < sheets.length; i++) {
+      const ws = XLSX.utils.aoa_to_sheet(results[i]);
+      XLSX.utils.book_append_sheet(wb, ws, sheets[i]);
+    }
+    // write workbook file
+    const filename = `report.xlsx`;
+    const opts = { bookType: "xlsx", type: "binary" };
+
+    // it must be save to tmp directory because it run on firebase
+    const pathToSave = path.join("/tmp", filename);
+    XLSX.writeFile(wb, pathToSave, opts);
+    // create read stream
+    const stream = fs.createReadStream(pathToSave);
+    // prepare http header
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    stream.pipe(res);
   } catch (err) {
     console.log(err);
     res.json({ success: false });
