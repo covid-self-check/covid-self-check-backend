@@ -62,15 +62,8 @@ exports.exportR2C = async (data, _context) => {
   );
 };
 
-exports.exportMasterAddress = async (req, res) => {
+exports.exportMaster = async (req, res) => {
   try {
-    const { password } = req.query;
-    if (password !== "CpciLBG63jEJ") {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "ไม่มี permission"
-      );
-    }
     const snapshot = await admin.firestore().collection("patient").get();
 
     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
@@ -313,4 +306,45 @@ exports.exportAllPatient = async (req, res) => {
     console.log(err);
     res.json({ success: false });
   }
+};
+
+exports.exportRequestToCallDayOne = async (data, _context) => {
+  const { value, error } = exportRequestToCallSchema.validate(data);
+  if (error) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง"
+    );
+  }
+
+  const { volunteerSize } = value;
+  const patientList = [];
+
+  const snapshot = await admin.firestore().collection("patient").get();
+  await Promise.all(
+    snapshot.docs.map((doc) => {
+      // WARNING SIDE EFFECT inside map
+      const docData = doc.data();
+      patientList.push(docData);
+    })
+  );
+  const headers = [
+    "personal id",
+    "first name",
+    "last name",
+    "tel",
+    "emergency phone",
+  ];
+  return generateZipFileRoundRobin(
+    volunteerSize,
+    patientList,
+    headers,
+    (doc) => [
+      doc.personalID,
+      doc.firstName,
+      doc.lastName,
+      doc.personalPhoneNo,
+      doc.emergencyPhoneNo,
+    ]
+  );
 };
