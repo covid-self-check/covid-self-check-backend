@@ -91,7 +91,7 @@ exports.importFinishR2C = async (data, _context) => {
         });
         break;
       // out of system
-      case 9:
+      case 99:
         promises.push(
           docRef
             .get()
