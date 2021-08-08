@@ -9,20 +9,20 @@ const requestCall = async (userObject, client, replyToken) => {
     .doc(userObject.userId)
     .get();
   if (!snapshot.exists) {
-    await client.replyMessage(replyToken, jsonController("tutorial2"));
+    //await client.replyMessage(replyToken, jsonController("tutorial2"));
 
     return success();
   }
 
   await client.replyMessage(replyToken, jsonController("tutorial1"));
 
-  const { isRequestToCall } = snapshot.data();
+  // const { isRequestToCall } = snapshot.data();
 
-  if (isRequestToCall) {
-    return success(
-      `userID: ${userObject.userId} has already requested to call`
-    );
-  }
+  // if (isRequestToCall) {
+  //   return success(
+  //     `userID: ${userObject.userId} has already requested to call`
+  //   );
+  // }
 
   await snapshot.ref.update({
     isRequestToCall: true,
