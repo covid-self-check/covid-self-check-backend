@@ -1,5 +1,6 @@
 const { jsonController } = require("../jsonHandler");
 const { requestCall } = require("../../linefunctions/requestCallHandler");
+const { requestGuide } = require("../../linefunctions/requestGuideHandler");
 
 const handleMessage = async (event, userObject, client) => {
   const replyToken = await event.replyToken;
@@ -26,14 +27,11 @@ const handleMessage = async (event, userObject, client) => {
         await client.replyMessage(replyToken, jsonController("help"));
         break;
       case "สอนการใช้งาน":
-        await client.replyMessage(replyToken, [
-          jsonController("guide"),
-          //jsonController("r2cQuestion"),
-        ]);
+        await requestGuide(userObject, client, replyToken);
         break;
-      // case "ติดต่ออาสาสมัคร":
-      //   await requestCall(userObject, client, replyToken);
-      //   break;
+      case "ติดต่ออาสาสมัคร":
+        await requestCall(userObject, client, replyToken);
+        break;
       case "ลงทะเบียน":
         await client.replyMessage(
           replyToken,
