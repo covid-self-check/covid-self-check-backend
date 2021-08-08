@@ -104,7 +104,7 @@ exports.importFinishR2C = async (data, _context) => {
               return { docData, ref };
             })
             .then(({ docData, ref }) => {
-              batch.create(ref, {
+              batch.set(ref, {
                 ...docData,
               });
               batch.delete(docRef);

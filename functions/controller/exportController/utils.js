@@ -88,7 +88,7 @@ exports.updateAndSerializeR2CData = async (snapshot) => {
       patientList.push(dataResult);
       // end of side effects
 
-      this.updateExportedR2CUser(id);
+      this.updateExportedR2CUser(doc.id);
     })
   );
 
