@@ -86,6 +86,9 @@ exports.exportRequestToCall = functions
 exports.importFinishedRequestToCall = functions
   .region(region)
   .https.onCall(authenticateVolunteer(importController.importFinishR2C));
+exports.importWhitelist = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(importController.importWhitelist));
 
 exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   authenticateVolunteer(async (data, context) => {
