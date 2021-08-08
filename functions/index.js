@@ -39,6 +39,8 @@ initializeApp();
 
 app.get("/master", exportController.exportMasterAddress);
 
+app.get("/patient", exportController.exportAllPatient);
+
 app.get(
   "/",
   authenticateVolunteerRequest(exportController.exportPatientForNurse)
