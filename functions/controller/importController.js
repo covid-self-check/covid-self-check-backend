@@ -133,15 +133,11 @@ exports.importWhitelist = async (data, _context) => {
   }
 
   const { users } = value;
-  const map = {};
-  for (const user of users) {
-    const { id } = user;
-    map[user.id] = id;
-  }
+
   const promises = [];
-  map.forEach((user) => {
+  users.forEach((user) => {
     promises.push(
-      admin.firestore().collection("whitelist").doc(map[user.id]).set({
+      admin.firestore().collection("whitelist").doc(user.id).set({
         id: user.id,
       })
     );
