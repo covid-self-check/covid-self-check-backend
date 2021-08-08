@@ -82,6 +82,11 @@ exports.export36hrs = functions
 exports.exportRequestToCall = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.exportR2C));
+exports.exportRequestToCallDayOne = functions
+  .region(region)
+  .https.onCall(
+    authenticateVolunteer(exportController.exportRequestToCallDayOne)
+  );
 
 exports.importFinishedRequestToCall = functions
   .region(region)
