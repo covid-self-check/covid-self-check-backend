@@ -1,5 +1,5 @@
 const functions = require("firebase-functions");
-const { importPatientIdSchema } = require("../schema");
+const { importPatientIdSchema, importWhitelistSchema } = require("../schema");
 const { admin } = require("../init");
 const { success } = require("../response/success");
 
@@ -91,7 +91,7 @@ exports.importFinishR2C = async (data, _context) => {
         });
         break;
       // out of system
-      case 9:
+      case 99:
         promises.push(
           docRef
             .get()
@@ -104,7 +104,7 @@ exports.importFinishR2C = async (data, _context) => {
               return { docData, ref };
             })
             .then(({ docData, ref }) => {
-              batch.create(ref, {
+              batch.set(ref, {
                 ...docData,
               });
               batch.delete(docRef);
@@ -118,5 +118,30 @@ exports.importFinishR2C = async (data, _context) => {
 
   await Promise.all(promises);
   await batch.commit();
+  return success();
+};
+
+exports.importWhitelist = async (data, _context) => {
+  const { value, error } = importWhitelistSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { users } = value;
+
+  const promises = [];
+  users.forEach((user) => {
+    promises.push(
+      admin.firestore().collection("whitelist").doc(user.id).set({
+        id: user.id,
+      })
+    );
+  });
+  await Promise.all(promises);
   return success();
 };

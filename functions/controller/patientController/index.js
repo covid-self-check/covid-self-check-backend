@@ -113,6 +113,18 @@ exports.registerPatient = async (data, _context) => {
     .doc(lineUserID)
     .get();
 
+  const whitelist = await admin
+    .firestore()
+    .collection("whitelist")
+    .doc(obj.personalID)
+    .get();
+  if (!whitelist.exists) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "You are not in our whitelist"
+    );
+  }
+
   snapshotExists(snapshot);
 
   //need db connection

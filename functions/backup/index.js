@@ -1,13 +1,16 @@
 const { admin } = require("../init");
 const { convertTZ } = require("../utils/date");
 const _ = require("lodash");
+const functions = require("firebase-functions");
 
 const { config } = require("../config/index");
 
 const { google } = require("googleapis");
 
 const privateKey = _.replace(config.backupAccount.privateKey, /\\n/g, "\n");
-
+const isDevelopment =
+  functions.config().environment &&
+  functions.config().environment.isdevelopment;
 const authClient = new google.auth.JWT({
   email: config.backupAccount.clientEmail,
   key: privateKey,
@@ -24,6 +27,7 @@ const firestoreClient = google.firestore({
 });
 
 exports.backup = async (context) => {
+  if (isDevelopment) return;
   // TODO: get project ID from env
   const projectId = admin.instanceId().app.options.projectId;
 
