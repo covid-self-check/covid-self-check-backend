@@ -7,7 +7,7 @@ const { config } = require("../config/index");
 const { google } = require("googleapis");
 
 const privateKey = _.replace(config.backupAccount.privateKey, /\\n/g, "\n");
-const isDevelopment = functions.config().environment.isDevelopment;
+const isDevelopment = functions.config().environment.isdevelopment;
 
 const authClient = new google.auth.JWT({
   email: config.backupAccount.clientEmail,
