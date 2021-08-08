@@ -314,3 +314,42 @@ exports.exportAllPatient = async (req, res) => {
     res.json({ success: false });
   }
 };
+
+exports.exportRequestToCallDayOne = async (data, _context) => {
+  const { value, error } = exportRequestToCallSchema.validate(data);
+  if (error) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง"
+    );
+  }
+
+  const { volunteerSize } = value;
+  const patientList = [];
+
+  const snapshot = await admin.firestore().collection("patient").get();
+
+  await Promise.all(
+    snapshot.docs.map((doc) => {
+      // WARNING SIDE EFFECT inside map
+      const docData = doc.data();
+      const dataResult = {
+        firstName: docData.firstName,
+        lastName: docData.firstName,
+        hasCalled: "",
+        id: doc.id,
+        personalPhoneNo: docData.personalPhoneNo,
+      };
+      patientList.push(dataResult);
+    })
+  );
+
+  const headers = ["internal id", "first name", "call status", "tel"];
+
+  return generateZipFileRoundRobin(
+    volunteerSize,
+    patientList,
+    headers,
+    (doc) => [doc.id, doc.firstName, doc.hasCalled, `="${doc.personalPhoneNo}"`]
+  );
+};
