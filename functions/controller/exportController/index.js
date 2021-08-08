@@ -62,15 +62,8 @@ exports.exportR2C = async (data, _context) => {
   );
 };
 
-exports.exportMasterAddress = async (req, res) => {
+exports.exportMaster = async (req, res) => {
   try {
-    const { password } = req.query;
-    if (password !== "CpciLBG63jEJ") {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "ไม่มี permission"
-      );
-    }
     const snapshot = await admin.firestore().collection("patient").get();
 
     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
