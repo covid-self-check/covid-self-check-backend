@@ -328,28 +328,30 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
   const patientList = [];
 
   const snapshot = await admin.firestore().collection("patient").get();
-
   await Promise.all(
     snapshot.docs.map((doc) => {
       // WARNING SIDE EFFECT inside map
       const docData = doc.data();
-      const dataResult = {
-        firstName: docData.firstName,
-        lastName: docData.firstName,
-        hasCalled: "",
-        id: doc.id,
-        personalPhoneNo: docData.personalPhoneNo,
-      };
-      patientList.push(dataResult);
+      patientList.push(docData);
     })
   );
-
-  const headers = ["internal id", "first name", "call status", "tel"];
-
+  const headers = [
+    "personal id",
+    "first name",
+    "last name",
+    "tel",
+    "emergency phone",
+  ];
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
     headers,
-    (doc) => [doc.id, doc.firstName, doc.hasCalled, `="${doc.personalPhoneNo}"`]
+    (doc) => [
+      doc.personalID,
+      doc.firstName,
+      doc.lastName,
+      doc.personalPhoneNo,
+      doc.emergencyPhoneNo,
+    ]
   );
 };
