@@ -1,5 +1,6 @@
 const XLSX = require("xlsx");
 const fs = require("fs");
+const _ = require("lodash");
 const path = require("path");
 const functions = require("firebase-functions");
 const { admin } = require("../../init");
@@ -118,8 +119,6 @@ exports.exportPatientForNurse = async (req, res) => {
       .where("isNurseExported", "==", false)
       .get();
 
-    console.log("size", snapshot.size);
-
     const INCLUDE_STATUS = [
       statusList["G2"],
       statusList["Y1"],
@@ -231,4 +230,87 @@ exports.export36hrs = async (data, _context) => {
     header,
     formatter
   );
+};
+
+/**
+ * one time used only
+ */
+exports.exportAllPatient = async (req, res) => {
+  try {
+    const { password } = req.query;
+    if (password !== "SpkA43Zadkl") {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "ไม่มี permission"
+      );
+    }
+
+    const snapshot = await admin.firestore().collection("patient").get();
+
+    const statusListArr = _.keys(statusList);
+    const results = new Array(statusListArr.length);
+
+    for (let i = 0; i < results.length; i++) {
+      results[i] = [[...patientReportHeader]];
+    }
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const arr = [
+        data.personalID,
+        data.firstName,
+        data.lastName,
+        data.personalPhoneNo,
+        data.emergencyPhoneNo,
+        calculateAge(data.birthDate.toDate()),
+        data.weight,
+        data.height,
+        data.gender,
+        convertTZ(data.lastUpdatedAt.toDate()),
+        data.address,
+        data.district,
+        data.prefecture,
+        data.province,
+        statusListArr[data.status],
+      ];
+
+      results[data.status].push(arr);
+    });
+
+    const sheets = [
+      "รายงานผู้ป่วยที่ไม่สามารถระบุสี",
+      "รายงานผู้ป่วยเขียวไม่มีอาการ",
+      "รายงานผู้ป่วยเขียวมีอาการ",
+      "รายงานผู้ป่วยเหลืองไม่มีอาการ",
+      "รายงานผู้ป่วยเหลืองมีอาการ",
+      "รายงานผู้ป่วยแดงอ่อน",
+      "รายงานผู้ป่วยแดงเข้ม",
+    ];
+
+    const wb = XLSX.utils.book_new();
+    // append result to sheet
+    for (let i = 0; i < results.length && i < sheets.length; i++) {
+      const ws = XLSX.utils.aoa_to_sheet(results[i]);
+      XLSX.utils.book_append_sheet(wb, ws, sheets[i]);
+    }
+    // write workbook file
+    const filename = `report.xlsx`;
+    const opts = { bookType: "xlsx", type: "binary" };
+
+    // it must be save to tmp directory because it run on firebase
+    const pathToSave = path.join("/tmp", filename);
+    XLSX.writeFile(wb, pathToSave, opts);
+    // create read stream
+    const stream = fs.createReadStream(pathToSave);
+    // prepare http header
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    stream.pipe(res);
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false });
+  }
 };
