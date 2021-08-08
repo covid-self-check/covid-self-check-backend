@@ -134,7 +134,7 @@ exports.registerPatient = async (data, _context) => {
   } catch (err) {
     console.log(err);
   }
-
+  whitelist.ref.delete();
   return success(`Registration with ID: ${lineUserID} added`);
 };
 
