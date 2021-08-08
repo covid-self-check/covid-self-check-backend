@@ -1,18 +1,20 @@
 const utils = require("./utils");
-const { admin } = require("../../init");
 
 const mockFbWhere = jest.fn(() => {
   return { get: jest.fn() };
 });
 
 const mockUpdate = jest.fn();
+const mockDoc = jest.fn(() => ({
+  update: mockUpdate,
+}));
+const mockGet36Users = jest.fn().mockReturnValue();
 
 const mockCollection = jest.fn(() => {
   return {
     where: mockFbWhere,
-    doc: jest.fn(() => ({
-      update: mockUpdate,
-    })),
+    doc: mockDoc,
+    get: mockGet36Users,
   };
 });
 
@@ -103,6 +105,55 @@ describe("exportController", () => {
         expect(result.lastName).toEqual(lname);
         expect(result.hasCalled).toEqual(0);
         expect(result.personalPhoneNo).toEqual(phoneNo);
+      });
+    });
+
+    describe("serializeData", () => {
+      it("should get all data from collection snapshot and return to array", () => {
+        const MOCK_DOC_1 = { data: () => "data 1" };
+        const MOCK_DOC_2 = { data: () => "data 2" };
+        const MOCK_SNAPSHOT = { docs: [MOCK_DOC_1, MOCK_DOC_2] };
+        const EXPECTED_RESULT = ["data 1", "data 2"];
+
+        const result = utils.serializeData(MOCK_SNAPSHOT);
+
+        expect(result).toEqual(EXPECTED_RESULT);
+      });
+    });
+
+    describe("updateExportedR2RUsers", () => {
+      it("should update all data from collection snapshot with isUpdated: true", async () => {
+        const MOCK_DOC_1 = { id: "id 1" };
+        const MOCK_DOC_2 = { id: "id 2" };
+        const MOCK_SNAPSHOT = { docs: [MOCK_DOC_1, MOCK_DOC_2] };
+
+        const result = await utils.updateExportedR2RUsers(MOCK_SNAPSHOT);
+        expect(mockDoc).toHaveBeenNthCalledWith(1, "id 1");
+        expect(mockDoc).toHaveBeenNthCalledWith(2, "id 2");
+
+        const UPDATE_PARAM = {
+          isR2RExported: true,
+        };
+        expect(mockUpdate).toHaveBeenNthCalledWith(1, UPDATE_PARAM);
+        expect(mockUpdate).toHaveBeenNthCalledWith(2, UPDATE_PARAM);
+      });
+    });
+
+    describe("get36hrsUsers", () => {
+      it("should get all users that is between 36 and 72 hours last updated symptom", async () => {
+        const MOCK_DOC_1 = { id: "id 1" };
+        const MOCK_DOC_2 = { id: "id 2" };
+        const MOCK_SNAPSHOT = { docs: [MOCK_DOC_1, MOCK_DOC_2] };
+
+        const result = await utils.updateExportedR2RUsers(MOCK_SNAPSHOT);
+        expect(mockDoc).toHaveBeenNthCalledWith(1, "id 1");
+        expect(mockDoc).toHaveBeenNthCalledWith(2, "id 2");
+
+        const UPDATE_PARAM = {
+          isR2RExported: true,
+        };
+        expect(mockUpdate).toHaveBeenNthCalledWith(1, UPDATE_PARAM);
+        expect(mockUpdate).toHaveBeenNthCalledWith(2, UPDATE_PARAM);
       });
     });
   });
