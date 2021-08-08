@@ -54,7 +54,7 @@ exports.getUnExportedR2CUsers = () => {
 exports.get36hrsUsers = async () => {
   const snapshot = await admin.firestore().collection("patient").get();
   var notUpdatedList = [];
-  const currentDate = convertTZ(new Date(), "Asia/Bangkok");
+  const currentDate = new Date();
   snapshot.forEach((doc) => {
     const patient = doc.data();
 

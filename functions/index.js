@@ -37,9 +37,9 @@ initializeApp();
 // Take the text parameter passed to this HTTP endpoint and insert it into
 // Firestore under the path /messages/:documentId/original
 
-app.get("/master", authenticateVolunteerRequest(exportController.exportMaster));
+// app.get("/master", exportController.exportMasterAddress);
 
-app.get("/patient", exportController.exportAllPatient);
+// app.get("/patient", exportController.exportAllPatient);
 
 app.get(
   "/",
@@ -82,6 +82,12 @@ exports.export36hrs = functions
 exports.exportRequestToCall = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.exportR2C));
+
+exports.exportRequestToCallDayOne = functions
+  .region(region)
+  .https.onCall(
+    authenticateVolunteer(exportController.exportRequestToCallDayOne)
+  );
 
 exports.importFinishedRequestToCall = functions
   .region(region)
@@ -235,52 +241,6 @@ exports.fetchRedPatients = functions
     // return success(patientList);
     return success();
   });
-
-exports.exportRequestToCallDayOne = functions.region(region).https.onCall(
-  authenticateVolunteer(async (data, context) => {
-    const { value, error } = exportRequestToCallSchema.validate(data);
-    if (error) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "ข้อมูลไม่ถูกต้อง"
-      );
-    }
-
-    const { volunteerSize } = value;
-    const patientList = [];
-
-    const snapshot = await admin.firestore().collection("patient").get();
-
-    await Promise.all(
-      snapshot.docs.map((doc) => {
-        // WARNING SIDE EFFECT inside map
-        const docData = doc.data();
-        const dataResult = {
-          firstName: docData.firstName,
-          lastName: docData.firstName,
-          hasCalled: "",
-          id: doc.id,
-          personalPhoneNo: docData.personalPhoneNo,
-        };
-        patientList.push(dataResult);
-      })
-    );
-
-    const headers = ["internal id", "first name", "call status", "tel"];
-
-    return generateZipFileRoundRobin(
-      volunteerSize,
-      patientList,
-      headers,
-      (doc) => [
-        doc.id,
-        doc.firstName,
-        doc.hasCalled,
-        `="${doc.personalPhoneNo}"`,
-      ]
-    );
-  })
-);
 
 // exports.testExportRequestToCall = functions.region(region).https.onRequest(
 //   authenticateVolunteerRequest(async (req, res) => {
