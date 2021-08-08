@@ -5,9 +5,9 @@ module.exports = Joi.object({
     .items(
       Joi.object({
         id: Joi.string().required(),
-        status: Joi.string().valid(0, 1, 9).required(),
+        status: Joi.string().valid(0, 1, 99).required(),
         reason: Joi.when("status", {
-          is: 9,
+          is: 99,
           then: Joi.string(),
         }),
       })
