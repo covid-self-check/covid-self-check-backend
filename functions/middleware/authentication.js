@@ -26,7 +26,10 @@ exports.authenticateVolunteer = (func) => {
       .where("email", "==", email)
       .get();
     if (userInfo.empty) {
-      return { status: "error", code: 401, message: "Not authorized" };
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "ไม่มี permission"
+      );
     }
     return await func(data, context);
   };
