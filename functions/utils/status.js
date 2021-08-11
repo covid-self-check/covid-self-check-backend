@@ -118,7 +118,7 @@ exports.MAP_PATIENT_FIELD = {
   "มีโรคไตเรื้อรัง ตั้งแต่ระดับสามขึ้นไป": "rf_ckd_stagr_3_to_4",
   มีโรคหัวใจ: "rf_chronic_heart_disease",
   มีโรคหลอดเลือดสมอง: "rf_cva",
-  มีโรคเบาหวาน: "rf_t2dm",
+  t2dm: "rf_t2dm",
   มีโรคตับแข็ง: "rf_cirrhosis",
   มีภาวะภูมิคุ้มกันบกพร่อง: "rf_immunocompromise",
 
