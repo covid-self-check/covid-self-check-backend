@@ -11,6 +11,7 @@ const info5 = require("../json/info3.json");
 const info6 = require("../json/info6.json");
 const defaultReply = require("../json/defaultReply.json");
 const tutorial1 = require("../json/tutorial1.json");
+const { config } = require("../config/index");
 const tutorial2 = require("../json/tutorial2.json");
 const guide = require("../json/guide.json");
 const r2cQuestion = require("../json/r2cQuestion.json");
