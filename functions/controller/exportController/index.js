@@ -7,7 +7,11 @@ const { admin } = require("../../init");
 const { generateZipFileRoundRobin } = require("../../utils/zip");
 const { exportRequestToCallSchema } = require("../../schema");
 const { statusList } = require("../../api/const");
-const { patientReportHeader, sheetName } = require("../../utils/status");
+const {
+  patientReportHeader,
+  sheetName,
+  MAP_PATIENT_FIELD,
+} = require("../../utils/status");
 const { calculateAge, convertTZ } = require("../../utils/date");
 const utils = require("./utils");
 
@@ -113,19 +117,17 @@ exports.exportPatientForNurse = async (req, res) => {
       .get();
 
     const INCLUDE_STATUS = [
-      statusList["G2"],
       statusList["Y1"],
       statusList["Y2"],
       statusList["R1"],
       statusList["R2"],
     ];
 
-    console.log("include status : ", INCLUDE_STATUS);
-
     const results = new Array(INCLUDE_STATUS.length);
+    const reportHeader = _.keys(MAP_PATIENT_FIELD);
 
     for (let i = 0; i < results.length; i++) {
-      results[i] = [[...patientReportHeader]];
+      results[i] = [[...reportHeader]];
     }
 
     const updatedDocId = [];
@@ -135,31 +137,17 @@ exports.exportPatientForNurse = async (req, res) => {
       if (typeof data.status !== "number") {
         return;
       }
-      // exclude unknown and G1
+      // exclude unknown, G1 and G2
       if (!INCLUDE_STATUS.includes(data.status)) {
         return;
       }
 
       updatedDocId.push(doc.id);
-
-      const arr = [
-        data.personalID,
-        data.firstName,
-        data.lastName,
-        data.personalPhoneNo,
-        data.emergencyPhoneNo,
-        calculateAge(data.birthDate.toDate()),
-        data.weight,
-        data.height,
-        data.gender,
-        convertTZ(data.lastUpdatedAt.toDate()),
-        data.address,
-        data.district,
-        data.prefecture,
-        data.province,
-        data.status,
-      ];
-      const status = data.status - 2;
+      const arr = [];
+      for (const key of reportHeader) {
+        arr.push(data[MAP_PATIENT_FIELD[key]]);
+      }
+      const status = data.status - 3;
       results[status].push(arr);
     });
 
@@ -242,7 +230,6 @@ exports.exportAllPatient = async (req, res) => {
 
     const statusListArr = _.keys(statusList);
     const results = new Array(statusListArr.length);
-
     for (let i = 0; i < results.length; i++) {
       results[i] = [[...patientReportHeader]];
     }
