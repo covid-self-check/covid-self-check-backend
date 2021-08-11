@@ -244,13 +244,6 @@ exports.updateSymptom = async (data, _context) => {
 
   const followUpObj = { ...obj };
   obj["isNurseExported"] = false;
-  const TO_AMED_STATUS = [
-    statusList["G2"],
-    statusList["Y1"],
-    statusList["Y2"],
-    statusList["R1"],
-    statusList["R2"],
-  ];
 
   const ALERT_STATUS = [
     statusList["Y1"],
@@ -259,7 +252,7 @@ exports.updateSymptom = async (data, _context) => {
     statusList["R2"],
   ];
 
-  setAmedStatus(obj, status, previousStatus, TO_AMED_STATUS);
+  setAmedStatus(obj, status, previousStatus, ALERT_STATUS);
 
   const { createdDate, ...objWithOutCreatedDate } = obj;
 
