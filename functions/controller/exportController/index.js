@@ -117,7 +117,6 @@ exports.exportPatientForNurse = async (req, res) => {
       .get();
 
     const INCLUDE_STATUS = [
-      statusList["G2"],
       statusList["Y1"],
       statusList["Y2"],
       statusList["R1"],
@@ -138,7 +137,7 @@ exports.exportPatientForNurse = async (req, res) => {
       if (typeof data.status !== "number") {
         return;
       }
-      // exclude unknown and G1
+      // exclude unknown, G1 and G2
       if (!INCLUDE_STATUS.includes(data.status)) {
         return;
       }
@@ -148,7 +147,7 @@ exports.exportPatientForNurse = async (req, res) => {
       for (const key of reportHeader) {
         arr.push(data[MAP_PATIENT_FIELD[key]]);
       }
-      const status = data.status - 2;
+      const status = data.status - 3;
       results[status].push(arr);
     });
 
