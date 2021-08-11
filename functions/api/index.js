@@ -67,7 +67,7 @@ exports.makeRequest = async (formPayload) => {
   try {
     const response = await axios.post(URL, formPayload, {
       headers: {
-        Authorization: AUTHORIZATION,
+        "API-KEY": AUTHORIZATION,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
