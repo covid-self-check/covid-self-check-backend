@@ -2,6 +2,11 @@ describe("endpoints", () => {
   jest.doMock("./config/index", () => ({
     config: {
       region: "region",
+      line: {
+        channel_token: "channel_token",
+        channel_secret: "channel_secret",
+        r2r_uri: "r2r_uri",
+      },
     },
   }));
   jest.doMock("firebase-functions", () => ({
@@ -9,6 +14,7 @@ describe("endpoints", () => {
       line: {
         channel_token: "channel_token",
         channel_secret: "channel_secret",
+        r2r_uri: "r2r_uri",
       },
       api: { authorization: "authorization" },
     }),
