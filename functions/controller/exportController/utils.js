@@ -113,7 +113,7 @@ exports.updateExportedR2CUser = (id) => {
   });
 };
 
-exports.formatterR2R = (doc) => [doc.name, doc.personalPhoneNo];
+exports.formatterR2R = (doc) => [doc.id, doc.name, doc.personalPhoneNo];
 
 exports.formatterR2C = (doc) => [
   doc.id,
