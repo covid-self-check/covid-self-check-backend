@@ -18,7 +18,9 @@ exports.getUnExportedR2RUsers = () => {
 exports.serializeData = (snapshot) => {
   const result = [];
   snapshot.docs.forEach((doc) => {
-    result.push(doc.data());
+    const data = doc.data();
+    data.id = doc.id;
+    result.push(data);
   });
 
   return result;
@@ -113,7 +115,7 @@ exports.updateExportedR2CUser = (id) => {
   });
 };
 
-exports.formatterR2R = (doc) => [doc.name, doc.personalPhoneNo];
+exports.formatterR2R = (doc) => [doc.id, doc.name, doc.personalPhoneNo];
 
 exports.formatterR2C = (doc) => [
   doc.id,

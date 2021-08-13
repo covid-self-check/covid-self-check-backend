@@ -100,6 +100,7 @@ exports.MAP_PATIENT_FIELD = {
   รหัสไปรษณีย์: "postNo",
   เบอร์ติดต่อ: "personalPhoneNo",
   เบอร์ติดต่อฉุกเฉิน: "emergencyPhoneNo",
+  ได้รับยาแล้ว: "gotFavipiravir",
 
   ค่าออกซิเจนปลายนิ้ว: "sp_o2",
   "ค่าออกซิเจนปลายนิ้ว ขณะหายใจปกติ": "sp_o2_ra",

@@ -90,6 +90,9 @@ exports.exportRequestToCallDayOne = functions
 exports.importFinishedRequestToCall = functions
   .region(region)
   .https.onCall(authenticateVolunteer(importController.importFinishR2C));
+exports.importFinishedRequestToRegister = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(importController.importFinishR2R));
 exports.importWhitelist = functions
   .region(region)
   .https.onCall(authenticateVolunteer(importController.importWhitelist));
