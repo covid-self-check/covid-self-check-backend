@@ -95,7 +95,7 @@ describe("exportController", () => {
       expect(generateZipFileRoundRobinMock).toBeCalledWith(
         MOCK_SCHEMA_VALUE.volunteerSize,
         MOCK_USERLIST,
-        ["name", "tel"],
+        ["internal id", "name", "tel"],
         formatterR2RMock
       );
       expect(updateExportedR2RUsersMock).toBeCalledWith(MOCK_SNAPSHOT);
