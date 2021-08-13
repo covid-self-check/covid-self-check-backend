@@ -155,6 +155,11 @@ exports.importFinishR2R = async (data, _context) => {
 
     if (!map[doc.id]) return;
     const { status } = map[doc.id];
+    const docRef = admin
+      .firestore()
+      .collection("requestToRegisterAssistance")
+      .doc(doc.id);
+
     switch (status) {
       // not called
       case 0:
