@@ -18,7 +18,9 @@ exports.getUnExportedR2RUsers = () => {
 exports.serializeData = (snapshot) => {
   const result = [];
   snapshot.docs.forEach((doc) => {
-    result.push(doc.data());
+    const data = doc.data();
+    data.id = doc.id;
+    result.push(data);
   });
 
   return result;
