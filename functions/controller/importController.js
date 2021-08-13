@@ -1,5 +1,9 @@
 const functions = require("firebase-functions");
-const { importPatientIdSchema, importWhitelistSchema } = require("../schema");
+const {
+  importPatientIdSchema,
+  importWhitelistSchema,
+  importRequestToRegisterSchema,
+} = require("../schema");
 const { admin } = require("../init");
 const { success } = require("../response/success");
 
@@ -117,6 +121,57 @@ exports.importFinishR2C = async (data, _context) => {
   });
 
   await Promise.all(promises);
+  await batch.commit();
+  return success();
+};
+
+exports.importFinishR2R = async (data, _context) => {
+  const { value, error } = importRequestToRegisterSchema.validate(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { users } = value;
+  const map = {};
+  for (const user of users) {
+    const { id, ...obj } = user;
+    map[user.id] = obj;
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("requestToRegisterAssistance")
+    .where("isR2RExported", "==", true)
+    .get();
+
+  const batch = admin.firestore().batch();
+  snapshot.docs.forEach((doc) => {
+    // if user is not imported, there will not be updated
+
+    if (!map[doc.id]) return;
+    const { status } = map[doc.id];
+    const docRef = admin
+      .firestore()
+      .collection("requestToRegisterAssistance")
+      .doc(doc.id);
+
+    switch (status) {
+      // not called
+      case 0:
+        batch.update(docRef, {
+          isR2RExported: false,
+        });
+        break;
+      default:
+        return;
+    }
+  });
+
   await batch.commit();
   return success();
 };

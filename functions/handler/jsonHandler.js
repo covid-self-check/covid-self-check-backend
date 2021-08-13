@@ -11,7 +11,22 @@ const info5 = require("../json/info3.json");
 const info6 = require("../json/info6.json");
 const defaultReply = require("../json/defaultReply.json");
 const tutorial1 = require("../json/tutorial1.json");
-const tutorial2 = require("../json/tutorial2.json");
+const { config } = require("../config/index");
+const tutorial2 = {
+  type: "template",
+  altText: "กรอกเบอร์โทรศัพท์",
+  template: {
+    type: "buttons",
+    text: "ระบบเรายังไม่มีข้อมูลเบอร์ของท่าน กรุณากรอกเบอร์โทรศัพท์ของท่าน",
+    actions: [
+      {
+        type: "uri",
+        label: "กรอกเบอร์โทรศัพท์",
+        uri: config.line.r2rUri,
+      },
+    ],
+  },
+};
 const guide = require("../json/guide.json");
 const r2cQuestion = require("../json/r2cQuestion.json");
 const closeRegistration = require("../json/closeRegistration.json");
