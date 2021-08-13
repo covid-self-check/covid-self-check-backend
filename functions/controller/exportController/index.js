@@ -30,7 +30,7 @@ exports.exportR2R = async (data, _context) => {
   const userList = utils.serializeData(snapshot);
 
   // create zip file
-  const header = ["name", "tel"];
+  const header = ["internal id", "name", "tel"];
   const result = await generateZipFileRoundRobin(
     size,
     userList,
