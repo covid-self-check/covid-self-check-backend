@@ -8,6 +8,7 @@ exports.config = {
   line: {
     channelSecret: functions.config().line.channel_secret,
     channelAccessToken: functions.config().line.channel_token,
+    r2rUri: functions.config().line.r2r_uri,
   },
   liff: {
     channelId: functions.config().liff.channelid,

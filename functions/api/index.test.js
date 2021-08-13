@@ -128,7 +128,7 @@ describe("makeRequest", () => {
     const result = await makeRequest(formPayload);
     expect(mockPostFn).toBeCalledWith(URL, formPayload, {
       headers: {
-        Authorization: AUTHORIZATION,
+        "API-KEY": AUTHORIZATION,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
@@ -143,7 +143,7 @@ describe("makeRequest", () => {
     const result = await makeRequest(formPayload);
     expect(mockPostFn).toBeCalledWith(URL, formPayload, {
       headers: {
-        Authorization: AUTHORIZATION,
+        "API-KEY": AUTHORIZATION,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
