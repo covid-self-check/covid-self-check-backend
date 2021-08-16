@@ -9,7 +9,6 @@ const {
 } = require("../../schema");
 const { admin } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
-const { convertTZ } = require("../../utils");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
 const { statusList, statusListReverse } = require("../../api/const");
@@ -96,29 +95,60 @@ const deletePatient = async (personalID) => {
     return false;
   } else {
     //deletes all patient with personalID = personalID and decrement relevant counters
-    return Promise.all(
-      snapshot.docs.map((doc) => {
-        admin.firestore().collection("patient").doc(doc.id).delete();
-        admin
-          .firestore()
-          .collection("legacyUser")
-          .doc(doc.id)
-          .set({ ...doc.data() });
-        decrementTotalPatientCount();
-        if (doc.data().triage_score in statusListReverse) {
-          decrementTotalPatientCountByColor(
-            statusListReverse[doc.data().triage_score]
-          );
-        }
-      })
-    )
-      .then(() => {
-        return true;
-      })
+    const batch = admin.firestore().batch();
+    snapshot.forEach((doc) => {
+      const patientDocRef = admin.firestore().collection("patient").doc(doc.id);
+      const legacyRef = admin.firestore().collection("legacyUser").doc(doc.id);
+      const patientCountRef = admin
+        .firestore()
+        .collection("userCount")
+        .doc("users");
+      const colorCountRef =
+        doc.data().status in statusListReverse
+          ? admin
+              .firestore()
+              .collection("userCount")
+              .doc(statusListReverse[doc.data().status])
+          : null;
+      batch.delete(patientDocRef);
+      batch.set(legacyRef, { ...doc.data() });
+      batch.update(
+        patientCountRef,
+        "count",
+        admin.firestore.FieldValue.increment(-1)
+      );
+      if (colorCountRef) {
+        batch.update(
+          colorCountRef,
+          "count",
+          admin.firestore.FieldValue.increment(-1)
+        );
+      }
+    });
+    return batch
+      .commit()
+      .then(() => true)
       .catch((error) => {
         console.log(error);
         return false;
       });
+    // res = await Promise.all(snapshot.docs.map((doc) => {
+    //   admin.firestore().collection("patient").doc(doc.id).delete();
+    //   admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
+    //   decrementTotalPatientCount();
+    //   if(doc.data().triage_score in statusListReverse) {
+    //     decrementTotalPatientCountByColor(
+    //       statusListReverse[doc.data().triage_score]
+    //     );
+    //   }
+    // }))
+    // .then(() => {
+    //   return true;
+    // })
+    // .catch(error => {
+    //   console.log(error);
+    //   return false;
+    // });
   }
 };
 
