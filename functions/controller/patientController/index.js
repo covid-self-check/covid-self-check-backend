@@ -81,6 +81,58 @@ const decrementTotalPatientCountByColor = async (status) => {
   }
 };
 
+// Mon added this code
+const deletePatient = async (personalID) => {
+  const snapshot = await admin
+  .firestore()
+  .collection("patient")
+  .where("personalID","==",personalID)
+  .get();
+
+  if (snapshot.empty){
+    return false;
+  }else {
+    //deletes all patient with personalID = personalID and decrement relevant counters
+    res = await Promise.all(snapshot.map((doc) => {
+      doc.delete();
+      admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
+      decrementTotalPatientCount();
+      decrementTotalPatientCountByColor(statusListReverse[doc.data().triage_score]);
+    }))
+    .then(() => {
+      return true;
+    })
+    .catch(error => {
+      console.log(error);
+      return false;
+    });
+  }
+}
+
+exports.requestDeletePatient = async (data, _context) => {
+  const {value, error} = deletePatientSchema.validate(data);
+
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "รหัสบัตรประชาชนคนไข้ไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const {personalID, noAuth} = value;
+  res = await deletePatient(personalID);
+  if(res) {
+    return success(`patient with personalID: ${personalID} was deleted successfully`);
+  }else{
+    throw new functions.https.HttpsError(
+      "delete operation failed or id not found",
+    );
+  }
+}
+// end of mon's code
+
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
 
