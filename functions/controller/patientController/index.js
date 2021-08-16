@@ -9,7 +9,6 @@ const {
 } = require("../../schema");
 const { admin } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
-const { convertTZ } = require("../../utils");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
 const { statusList, statusListReverse } = require("../../api/const");
@@ -87,38 +86,74 @@ const decrementTotalPatientCountByColor = async (status) => {
 // Mon added this code
 const deletePatient = async (personalID) => {
   const snapshot = await admin
-  .firestore()
-  .collection("patient")
-  .where("personalID","==",personalID)
-  .get();
+    .firestore()
+    .collection("patient")
+    .where("personalID", "==", personalID)
+    .get();
 
-  if (snapshot.empty){
+  if (snapshot.empty) {
     return false;
-  }else {
+  } else {
     //deletes all patient with personalID = personalID and decrement relevant counters
-    res = await Promise.all(snapshot.docs.map((doc) => {
-      admin.firestore().collection("patient").doc(doc.id).delete();
-      admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
-      decrementTotalPatientCount();
-      if(doc.data().triage_score in statusListReverse) {
-        decrementTotalPatientCountByColor(
-          statusListReverse[doc.data().triage_score]
+    const batch = admin.firestore().batch();
+    snapshot.forEach((doc) => {
+      const patientDocRef = admin.firestore().collection("patient").doc(doc.id);
+      const legacyRef = admin.firestore().collection("legacyUser").doc(doc.id);
+      const patientCountRef = admin
+        .firestore()
+        .collection("userCount")
+        .doc("users");
+      const colorCountRef =
+        doc.data().status in statusListReverse
+          ? admin
+              .firestore()
+              .collection("userCount")
+              .doc(statusListReverse[doc.data().status])
+          : null;
+      batch.delete(patientDocRef);
+      batch.set(legacyRef, { ...doc.data() });
+      batch.update(
+        patientCountRef,
+        "count",
+        admin.firestore.FieldValue.increment(-1)
+      );
+      if (colorCountRef) {
+        batch.update(
+          colorCountRef,
+          "count",
+          admin.firestore.FieldValue.increment(-1)
         );
       }
-    }))
-    .then(() => {
-      return true;
-    })
-    .catch(error => {
-      console.log(error);
-      return false;
     });
-    return res;
+    return batch
+      .commit()
+      .then(() => true)
+      .catch((error) => {
+        console.log("batch ", error);
+        return false;
+      });
+    // res = await Promise.all(snapshot.docs.map((doc) => {
+    //   admin.firestore().collection("patient").doc(doc.id).delete();
+    //   admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
+    //   decrementTotalPatientCount();
+    //   if(doc.data().triage_score in statusListReverse) {
+    //     decrementTotalPatientCountByColor(
+    //       statusListReverse[doc.data().triage_score]
+    //     );
+    //   }
+    // }))
+    // .then(() => {
+    //   return true;
+    // })
+    // .catch(error => {
+    //   console.log(error);
+    //   return false;
+    // });
   }
-}
+};
 
 exports.requestDeletePatient = async (data, _context) => {
-  const {value, error} = deletePatientSchema.validate(data);
+  const { value, error } = deletePatientSchema.validate(data);
 
   if (error) {
     console.log(error.details);
@@ -129,16 +164,19 @@ exports.requestDeletePatient = async (data, _context) => {
     );
   }
 
-  const {personalID, noAuth} = value;
-  res = await deletePatient(personalID);
-  if(res) {
-    return success(`patient with personalID: ${personalID} was deleted successfully`);
-  }else{
+  const { personalID } = value;
+  const res = await deletePatient(personalID);
+  if (res) {
+    return success(
+      `patient with personalID: ${personalID} was deleted successfully`
+    );
+  } else {
     throw new functions.https.HttpsError(
-      "delete operation failed or id not found",
+      "not-found",
+      "delete operation failed or id not found"
     );
   }
-}
+};
 // end of mon's code
 
 exports.registerPatient = async (data, _context) => {
