@@ -129,7 +129,7 @@ const deletePatient = async (personalID) => {
       .commit()
       .then(() => true)
       .catch((error) => {
-        console.log(error);
+        console.log("batch ", error);
         return false;
       });
     // res = await Promise.all(snapshot.docs.map((doc) => {
@@ -172,6 +172,7 @@ exports.requestDeletePatient = async (data, _context) => {
     );
   } else {
     throw new functions.https.HttpsError(
+      "not-found",
       "delete operation failed or id not found"
     );
   }
