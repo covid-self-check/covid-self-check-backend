@@ -96,8 +96,8 @@ const deletePatient = async (personalID) => {
     return false;
   }else {
     //deletes all patient with personalID = personalID and decrement relevant counters
-    res = await Promise.all(snapshot.map((doc) => {
-      doc.delete();
+    res = await Promise.all(snapshot.docs.map((doc) => {
+      admin.firestore().collection("patient").doc(doc.id).delete();
       admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
       decrementTotalPatientCount();
       decrementTotalPatientCountByColor(statusListReverse[doc.data().triage_score]);
@@ -109,6 +109,7 @@ const deletePatient = async (personalID) => {
       console.log(error);
       return false;
     });
+    return res;
   }
 }
 
