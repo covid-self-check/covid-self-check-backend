@@ -96,23 +96,50 @@ const deletePatient = async (personalID) => {
     return false;
   }else {
     //deletes all patient with personalID = personalID and decrement relevant counters
-    res = await Promise.all(snapshot.docs.map((doc) => {
-      admin.firestore().collection("patient").doc(doc.id).delete();
-      admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
-      decrementTotalPatientCount();
-      if(doc.data().triage_score in statusListReverse) {
-        decrementTotalPatientCountByColor(
-          statusListReverse[doc.data().triage_score]
+    const batch = admin.firestore().batch();
+    snapshot.forEach(doc => {
+      const patientDocRef = admin.firestore().collection("patient").doc(doc.id);
+      const legacyRef = admin.firestore().collection("legacyUser").doc(doc.id);
+      const patientCountRef = admin.firestore().collection("userCount").doc("users");
+      const colorCountRef = (doc.data().triage_score in statusListReverse)? admin.firestore().collection("userCount").doc(statusListReverse[doc.data().triage_score]) : null;
+      batch.delete(patientDocRef);
+      batch.set(legacyRef, { ...doc.data()});
+      batch.update(
+        patientCountRef,
+        "count",
+        admin.firestore.FieldValue.increment(-1)
+      );
+      if(colorCountRef){
+        batch.update(
+          colorCountRef,
+          "count",
+          admin.firestore.FieldValue.increment(-1)
         );
       }
-    }))
-    .then(() => {
-      return true;
-    })
+    });
+    const res = await batch.commit()
+    .then(() => true)
     .catch(error => {
-      console.log(error);
+      console.log(error); 
       return false;
     });
+    // res = await Promise.all(snapshot.docs.map((doc) => {
+    //   admin.firestore().collection("patient").doc(doc.id).delete();
+    //   admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
+    //   decrementTotalPatientCount();
+    //   if(doc.data().triage_score in statusListReverse) {
+    //     decrementTotalPatientCountByColor(
+    //       statusListReverse[doc.data().triage_score]
+    //     );
+    //   }
+    // }))
+    // .then(() => {
+    //   return true;
+    // })
+    // .catch(error => {
+    //   console.log(error);
+    //   return false;
+    // });
     return res;
   }
 }
