@@ -3,6 +3,9 @@ const {
   registerSchema,
   getProfileSchema,
   historySchema,
+  //mon added this
+  deletePatientSchema,
+  //end mon code
 } = require("../../schema");
 const { admin } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
