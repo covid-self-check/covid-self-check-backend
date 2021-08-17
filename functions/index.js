@@ -62,6 +62,10 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   }
 });
 
+exports.deletePatient = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(patientController.requestDeletePatient));
+
 exports.registerParticipant = functions
   .region(region)
   .https.onCall(patientController.registerPatient);
