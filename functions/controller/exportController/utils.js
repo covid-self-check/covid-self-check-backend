@@ -1,6 +1,6 @@
 const { admin } = require("../../init");
-const { convertTZ } = require("../../utils");
 const R2R_COLLECTION = "requestToRegisterAssistance";
+const { statusList } = require("../../api/const");
 
 exports.getUnExportedR2RUsers = () => {
   return admin
@@ -62,13 +62,20 @@ exports.get36hrsUsers = async () => {
 
     const lastUpdatedDate = patient.lastUpdatedAt.toDate();
     var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    const includeStatus = [
+      statusList["unknown"],
+      statusList["G1"],
+      statusList["G2"],
+    ];
 
-    if (hours >= 36 && hours < 72) {
-      //console.log(hours);
-      notUpdatedList.push({
-        firstName: patient.firstName,
-        personalPhoneNo: patient.personalPhoneNo,
-      });
+    if (includeStatus.includes(patient.status)) {
+      if (hours >= 36 && hours < 72) {
+        //console.log(hours);
+        notUpdatedList.push({
+          firstName: patient.firstName,
+          personalPhoneNo: patient.personalPhoneNo,
+        });
+      }
     }
   });
   //console.log(notUpdatedList);
