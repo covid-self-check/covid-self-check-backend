@@ -32,12 +32,6 @@ const handleMessage = async (event, userObject, client) => {
       case "ติดต่ออาสาสมัคร":
         await requestCall(userObject, client, replyToken);
         break;
-      case "ลงทะเบียน":
-        await client.replyMessage(
-          replyToken,
-          jsonController("closeRegistration")
-        );
-        break;
       default:
         await client.replyMessage(replyToken, jsonController("defaultReply"));
         break;
