@@ -84,11 +84,6 @@ exports.get36hrsUsers = async () => {
 };
 
 
-exports.getnumber36hrsUsers = async() => {
-  const temp_notUpdatedList = await this.get36hrsUsers();
-  return temp_notUpdatedList.length;
-}
-
 
 /**
  * marked users from R2C collection as exported and return serialized data
