@@ -14,6 +14,7 @@ exports.collection = {
   userCount: "userCount",
   legacyUser: "legacyUser",
   whitelist: "whitelist",
+  usersbtw36hrsto72hrs: "usersbtw36hrsto72hrs",
   dropOffStat: "dropOffStat",
   legacyStat: "legacyStat",
 };

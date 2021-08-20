@@ -119,6 +119,13 @@ exports.initializeR2CStat = functions
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeR2CStat);
 
+
+exports.updatenumberuserbtw36hrsto72hrs = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.updatenumberuserbtw36hrsto72hrs);
+
 exports.calculateDropOff = functions
   .region(region)
   .pubsub.schedule("every day 00:00")
