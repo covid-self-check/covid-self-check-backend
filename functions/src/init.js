@@ -17,4 +17,5 @@ exports.collection = {
   usersbtw36hrsto72hrs: "usersbtw36hrsto72hrs",
   dropOffStat: "dropOffStat",
   legacyStat: "legacyStat",
+  activeUser: "activeUser",
 };

@@ -137,7 +137,12 @@ exports.initializeLegacyStat = functions
   .pubsub.schedule("every day 00:00")
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeLegacyStat);
-
+exports.getActive = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(exportController.updateActiveUser);
+// exports.getActiveUser = functions.region(region).https.onCall(exportController.updateActiveUser)
 exports.getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {
@@ -336,3 +341,4 @@ exports.fetchRedPatients = functions
 
 //   })
 // );
+

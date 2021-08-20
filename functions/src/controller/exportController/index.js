@@ -12,8 +12,10 @@ const {
   sheetName,
   MAP_PATIENT_FIELD,
 } = require("../../utils/status");
-const { calculateAge, convertTZ } = require("../../utils/date");
+const { calculateAge, convertTZ,getDateID } = require("../../utils/date");
 const utils = require("./utils");
+const { success } = require("../../response/success");
+
 
 exports.exportR2R = async (data, _context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
@@ -342,3 +344,16 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
     ]
   );
 };
+
+exports.updateActiveUser = async () => {
+  const todayDate = getDateID();
+  // console.log(todayDate);
+  const snapshot = await admin.firestore().collection(collection.activeUser).doc(todayDate).get();
+  // console.log(snapshot);
+  if (!snapshot.exists) {
+    const dailyUser = await utils.getActiveUser();
+    const test = await snapshot.ref.create({active_patient: dailyUser})
+    // console.log(test)
+  }
+  return success();
+}
