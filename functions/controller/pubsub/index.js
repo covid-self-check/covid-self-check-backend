@@ -24,7 +24,7 @@ exports.calculateDropOffRate = async (_data, _context) => {
     const patient = doc.data();
     const followUpCount = patient.followUp.length;
     // there must be more than one update in order to calculate drop off rate
-    if (followUpCount > 1) {
+    if (followUpCount > 0) {
       const lastUpdatedDate = patient.lastUpdatedAt.toDate();
       const notUpdatedPeriod = utils.calculateHours(
         new Date(),
@@ -33,7 +33,7 @@ exports.calculateDropOffRate = async (_data, _context) => {
       if (notUpdatedPeriod >= 72) {
         console.log("include - ", doc.id);
         totalPatientCount++;
-        const firstDate = patient.followUp[0].createdDate.toDate();
+        const firstDate = patient.createdDate.toDate();
         const dropOffHours = utils.calculateHours(lastUpdatedDate, firstDate);
         console.log(lastUpdatedDate, firstDate);
         console.log(dropOffHours);
