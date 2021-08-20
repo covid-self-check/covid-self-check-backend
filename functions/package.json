@@ -1,9 +1,12 @@
 {
   "name": "functions",
   "description": "Cloud Functions for Firebase",
+  "main": "lib/index.js",
   "scripts": {
     "lint": "eslint .",
-    "serve": "firebase serve --only functions",
+    "watch": "ts-watch -p ./tsconfig.build.json",
+    "serve": "concurrently --kill-others \"yarn firebase:serve\" \"yarn watch\"",
+    "firebase:serve": "firebase serve --only functions",
     "emulator": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
@@ -12,7 +15,9 @@
     "prepare": "cd .. && husky install functions/.husky",
     "precommit": "lint-staged",
     "test": "yarn jest --watch --verbose",
-    "test:ci": "yarn jest --collectCoverage"
+    "test:ci": "yarn jest --collectCoverage",
+    "build": "yarn lint && tsc -p tsconfig.build.json",
+    "predeploy": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@line/bot-sdk": "^7.3.0",
@@ -30,14 +35,30 @@
     "xlsx": "^0.17.0"
   },
   "devDependencies": {
-    "eslint": "^5.12.0",
+    "@babel/preset-env": "^6.00.0",
+    "@types/faker": "^5.5.8",
+    "@types/jest": "^27.0.1",
+    "@types/lodash": "^4.14.172",
+    "@types/node": "^16.6.2",
+    "@typescript-eslint/eslint-plugin": "^4.29.2",
+    "@typescript-eslint/parser": "^4.29.2",
+    "babel-jest": "^27.0.6",
+    "babel-preset-env": "^1.7.0",
+    "concurrently": "^5.0.0",
+    "eslint": "^7.6.0",
+    "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.24.1",
     "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-unused-imports": "^1.1.4",
     "faker": "^5.5.3",
     "husky": "^7.0.0",
     "jest": "^27.0.6",
     "lint-staged": "^11.1.1",
-    "prettier": "^2.3.2"
+    "prettier": "^2.3.2",
+    "ts-jest": "^27.0.5",
+    "ts-watch": "^1.0.8",
+    "typescript": "^4.3.5"
   },
   "lint-staged": {
     "*.{js,json,yml}": "prettier --write",

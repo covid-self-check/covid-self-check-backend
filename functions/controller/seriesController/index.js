@@ -1,1 +1,0 @@
-exports.calculateDropOffRate = async (context) => {};
