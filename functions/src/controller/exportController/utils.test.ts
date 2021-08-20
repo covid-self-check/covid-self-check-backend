@@ -20,6 +20,7 @@ const mockCollection = jest.fn(() => {
 
 jest.mock("../../init", () => {
   return {
+    ...jest.requireActual("../../init"),
     admin: {
       firestore: () => ({
         collection: mockCollection,

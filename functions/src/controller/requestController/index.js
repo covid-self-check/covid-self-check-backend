@@ -1,8 +1,9 @@
 import * as functions from "firebase-functions";
-import { getProfile } from "../middleware/authentication";
-const { getProfileSchema, requestToRegisterSchema } = require("../schema");
-import { admin } from "../init";
-import { success } from "../response/success";
+import { getProfile } from "../../middleware/authentication";
+const { getProfileSchema, requestToRegisterSchema } = require("../../schema");
+import { admin, collection } from "../../init";
+import { success } from "../../response/success";
+const { incrementR2CUser } = require("./utils");
 
 exports.requestToCall = async (data, _context) => {
   const { value, error } = getProfileSchema.validate(data);
@@ -27,7 +28,7 @@ exports.requestToCall = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(lineUserID)
     .get();
   if (!snapshot.exists) {
@@ -47,6 +48,8 @@ exports.requestToCall = async (data, _context) => {
   if (isRequestToCall) {
     return success(`userID: ${lineUserID} has already requested to call`);
   }
+
+  await incrementR2CUser();
 
   await snapshot.ref.update({
     isRequestToCall: true,
@@ -81,7 +84,7 @@ exports.requestToRegister = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(value.lineUserID)
     .get();
 
@@ -93,7 +96,7 @@ exports.requestToRegister = async (data, _context) => {
   } else {
     const requestRegisterSnapshot = await admin
       .firestore()
-      .collection("requestToRegisterAssistance")
+      .collection(collection.r2rAssistance)
       .doc(lineUserID)
       .get();
 

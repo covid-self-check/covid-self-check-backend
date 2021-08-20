@@ -3,10 +3,12 @@ const {
   registerSchema,
   getProfileSchema,
   historySchema,
+  //mon added this
+  deletePatientSchema,
+  //end mon code
 } = require("../../schema");
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
-const { convertTZ } = require("../../utils");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
 const { statusList, statusListReverse } = require("../../api/const");
@@ -27,7 +29,7 @@ const {
 const addTotalPatientCount = async () => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc("users")
     .get();
 
@@ -41,7 +43,7 @@ const addTotalPatientCount = async () => {
 const decrementTotalPatientCount = async () => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc("users")
     .get();
   if (snapshot.exists) {
@@ -55,7 +57,7 @@ const decrementTotalPatientCount = async () => {
 const addTotalPatientCountByColor = async (status) => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc(status)
     .get();
 
@@ -69,7 +71,7 @@ const addTotalPatientCountByColor = async (status) => {
 const decrementTotalPatientCountByColor = async (status) => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc(status)
     .get();
 
@@ -80,6 +82,115 @@ const decrementTotalPatientCountByColor = async (status) => {
     );
   }
 };
+
+// Mon added this code
+const deletePatient = async (personalID) => {
+  const snapshot = await admin
+    .firestore()
+    .collection(collection.patient)
+    .where("personalID", "==", personalID)
+    .get();
+
+  if (snapshot.empty) {
+    return false;
+  } else {
+    //deletes all patient with personalID = personalID and decrement relevant counters
+    const batch = admin.firestore().batch();
+    snapshot.forEach((doc) => {
+      const patientDocRef = admin
+        .firestore()
+        .collection(collection.patient)
+        .doc(doc.id);
+
+      const legacyRef = admin
+        .firestore()
+        .collection(collection.legacyUser)
+        .doc(doc.id);
+
+      const patientCountRef = admin
+        .firestore()
+        .collection(collection.userCount)
+        .doc("users");
+
+      const colorCountRef =
+        doc.data().status in statusListReverse
+          ? admin
+              .firestore()
+              .collection(collection.userCount)
+              .doc(statusListReverse[doc.data().status])
+          : null;
+
+      batch.delete(patientDocRef);
+
+      batch.set(legacyRef, { ...doc.data() });
+
+      batch.update(
+        patientCountRef,
+        "count",
+        admin.firestore.FieldValue.increment(-1)
+      );
+
+      if (colorCountRef) {
+        batch.update(
+          colorCountRef,
+          "count",
+          admin.firestore.FieldValue.increment(-1)
+        );
+      }
+    });
+    return batch
+      .commit()
+      .then(() => true)
+      .catch((error) => {
+        console.log("batch ", error);
+        return false;
+      });
+    // res = await Promise.all(snapshot.docs.map((doc) => {
+    //   admin.firestore().collection("patient").doc(doc.id).delete();
+    //   admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
+    //   decrementTotalPatientCount();
+    //   if(doc.data().triage_score in statusListReverse) {
+    //     decrementTotalPatientCountByColor(
+    //       statusListReverse[doc.data().triage_score]
+    //     );
+    //   }
+    // }))
+    // .then(() => {
+    //   return true;
+    // })
+    // .catch(error => {
+    //   console.log(error);
+    //   return false;
+    // });
+  }
+};
+
+exports.requestDeletePatient = async (data, _context) => {
+  const { value, error } = deletePatientSchema.validate(data);
+
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "รหัสบัตรประชาชนคนไข้ไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { personalID } = value;
+  const res = await deletePatient(personalID);
+  if (res) {
+    return success(
+      `patient with personalID: ${personalID} was deleted successfully`
+    );
+  } else {
+    throw new functions.https.HttpsError(
+      "not-found",
+      "delete operation failed or id not found"
+    );
+  }
+};
+// end of mon's code
 
 exports.registerPatient = async (data, _context) => {
   const { value, error } = registerSchema.validate(data);
@@ -109,15 +220,16 @@ exports.registerPatient = async (data, _context) => {
   //need db connection
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(lineUserID)
     .get();
 
   const whitelist = await admin
     .firestore()
-    .collection("whitelist")
+    .collection(collection.whitelist)
     .doc(obj.personalID)
     .get();
+
   if (!whitelist.exists) {
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -164,7 +276,7 @@ exports.getProfile = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(value.lineUserID)
     .get();
 
@@ -210,7 +322,7 @@ exports.updateSymptom = async (data, _context) => {
   //need db connection
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(lineUserID)
     .get();
 
