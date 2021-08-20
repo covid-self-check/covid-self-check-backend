@@ -1,6 +1,5 @@
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { getDateID } = require("../../utils/date");
-const { collection } = require("../../init");
 
 exports.incrementR2CUser = async () => {
   const id = getDateID();

@@ -1,6 +1,5 @@
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { getDateID } = require("../../utils/date");
-const { collection } = require("../../init");
 
 exports.initializeR2CStat = async (_context) => {
   const id = getDateID();

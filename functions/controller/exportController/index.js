@@ -3,7 +3,7 @@ const fs = require("fs");
 const _ = require("lodash");
 const path = require("path");
 const functions = require("firebase-functions");
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { generateZipFileRoundRobin } = require("../../utils/zip");
 const { exportRequestToCallSchema } = require("../../schema");
 const { statusList } = require("../../api/const");
@@ -14,7 +14,6 @@ const {
 } = require("../../utils/status");
 const { calculateAge, convertTZ } = require("../../utils/date");
 const utils = require("./utils");
-const { collection } = require("../../init");
 
 exports.exportR2R = async (data, _context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
