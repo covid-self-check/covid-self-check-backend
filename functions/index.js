@@ -126,6 +126,12 @@ exports.calculateDropOff = functions
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.calculateDropOffRate);
 
+exports.initializeLegacyStat = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.initializeLegacyStat);
+
 exports.getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {
