@@ -83,6 +83,13 @@ exports.get36hrsUsers = async () => {
   return notUpdatedList;
 };
 
+
+exports.getnumber36hrsUsers = async() => {
+  const temp_notUpdatedList = await this.get36hrsUsers();
+  return temp_notUpdatedList.length;
+}
+
+
 /**
  * marked users from R2C collection as exported and return serialized data
  * @param {FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>} snapshot
@@ -108,6 +115,8 @@ exports.updateAndSerializeR2CData = async (snapshot) => {
 exports.makeR2CPayload = (id, data) => {
   return {
     id,
+
+
     firstName: data.firstName,
     lastName: data.lastName,
     hasCalled: 0,
