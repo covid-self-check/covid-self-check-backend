@@ -6,7 +6,6 @@ const {
 } = require("../../schema");
 const { admin, collection } = require("../../init");
 const { success } = require("../../response/success");
-const { incrementLegacyUser } = require("../importController/utils");
 
 // exports.importFinishR2C = async (data, _context) => {
 //     const { value, error } = importPatientIdSchema.validate(data)
@@ -72,6 +71,11 @@ exports.importFinishR2C = async (data, _context) => {
     .where("isRequestToCallExported", "==", true)
     .get();
 
+  const legacyRef = admin
+    .firestore()
+    .collection(collection.legacyStat)
+    .doc("stat");
+
   const batch = admin.firestore().batch();
   const promises = [];
   snapshot.docs.forEach((doc) => {
@@ -116,7 +120,9 @@ exports.importFinishR2C = async (data, _context) => {
             })
         );
         //increment Legacy user count
-        promises.push(incrementLegacyUser());
+        batch.update(legacyRef, {
+          count: admin.firestore.FieldValue.increment(1),
+        });
         break;
       default:
         return;
