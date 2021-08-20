@@ -4,7 +4,9 @@
   "main": "lib/index.js",
   "scripts": {
     "lint": "eslint .",
-    "serve": "firebase serve --only functions",
+    "watch": "ts-watch -p ./tsconfig.build.json",
+    "serve": "concurrently --kill-others \"yarn firebase:serve\" \"yarn watch\"",
+    "firebase:serve": "firebase serve --only functions",
     "emulator": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
@@ -37,6 +39,7 @@
     "@types/node": "^16.6.2",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
+    "concurrently": "^5.0.0",
     "eslint": "^7.6.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.3.0",
@@ -49,6 +52,7 @@
     "lint-staged": "^11.1.1",
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.5",
+    "ts-watch": "^1.0.8",
     "typescript": "^4.3.5"
   },
   "lint-staged": {
