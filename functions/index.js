@@ -126,10 +126,6 @@ exports.initializeLegacyStat = functions
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeLegacyStat);
 
-exports.testInitializeLegacyStat = functions
-  .region(region)
-  .https.onCall(pubsub.initializeLegacyStat);
-
 exports.getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {
