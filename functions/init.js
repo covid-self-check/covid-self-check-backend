@@ -6,3 +6,12 @@ exports.initializeApp = function () {
 };
 
 exports.admin = admin;
+
+exports.collection = {
+  patient: "patient",
+  r2rAssistance: "requestToRegisterAssistance",
+  r2cStat: "r2cStat",
+  userCount: "userCount",
+  legacyUser: "legacyUser",
+  whitelist: "whitelist",
+};

@@ -4,7 +4,7 @@ const {
   importWhitelistSchema,
   importRequestToRegisterSchema,
 } = require("../schema");
-const { admin } = require("../init");
+const { admin, collection } = require("../init");
 const { success } = require("../response/success");
 
 // exports.importFinishR2C = async (data, _context) => {
@@ -66,7 +66,7 @@ exports.importFinishR2C = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .where("isRequestToCall", "==", true)
     .where("isRequestToCallExported", "==", true)
     .get();
@@ -74,7 +74,7 @@ exports.importFinishR2C = async (data, _context) => {
   const batch = admin.firestore().batch();
   const promises = [];
   snapshot.docs.forEach((doc) => {
-    const docRef = admin.firestore().collection("patient").doc(doc.id);
+    const docRef = admin.firestore().collection(collection.patient).doc(doc.id);
     // if user is not imported, there will not be updated
 
     if (!map[doc.id]) return;
@@ -103,7 +103,7 @@ exports.importFinishR2C = async (data, _context) => {
             .then((docData) => {
               const ref = admin
                 .firestore()
-                .collection("legacyUser")
+                .collection(collection.legacyUser)
                 .doc(doc.id);
               return { docData, ref };
             })
@@ -145,7 +145,7 @@ exports.importFinishR2R = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("requestToRegisterAssistance")
+    .collection(collection.r2rAssistance)
     .where("isR2RExported", "==", true)
     .get();
 
@@ -157,7 +157,7 @@ exports.importFinishR2R = async (data, _context) => {
     const { status } = map[doc.id];
     const docRef = admin
       .firestore()
-      .collection("requestToRegisterAssistance")
+      .collection(collection.r2rAssistance)
       .doc(doc.id);
 
     switch (status) {

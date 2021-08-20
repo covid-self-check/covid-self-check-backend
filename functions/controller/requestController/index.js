@@ -4,6 +4,7 @@ const { getProfileSchema, requestToRegisterSchema } = require("../../schema");
 const { admin } = require("../../init");
 const { success } = require("../../response/success");
 const { incrementR2CUser } = require("./utils");
+const { collection } = require("../../init");
 
 exports.requestToCall = async (data, _context) => {
   const { value, error } = getProfileSchema.validate(data);
@@ -28,7 +29,7 @@ exports.requestToCall = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(lineUserID)
     .get();
   if (!snapshot.exists) {
@@ -84,7 +85,7 @@ exports.requestToRegister = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(value.lineUserID)
     .get();
 
@@ -96,7 +97,7 @@ exports.requestToRegister = async (data, _context) => {
   } else {
     const requestRegisterSnapshot = await admin
       .firestore()
-      .collection("requestToRegisterAssistance")
+      .collection(collection.r2rAssistance)
       .doc(lineUserID)
       .get();
 
