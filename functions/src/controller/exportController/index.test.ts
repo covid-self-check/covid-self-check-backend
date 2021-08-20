@@ -1,4 +1,4 @@
-const functions = require("firebase-functions");
+import * as functions from "firebase-functions";
 
 describe("exportController", () => {
   const MOCK_RESULT = { ok: true, title: "report.zip", content: "content" };
@@ -20,7 +20,7 @@ describe("exportController", () => {
     const MOCK_SCHEMA_VALUE = { volunteerSize: 5 };
     const MOCK_SCHEMA_ERROR_FREE = undefined;
     const MOCK_SNAPSHOT = {};
-    const MOCK_USERLIST = [];
+    const MOCK_USERLIST = [] as any[];
 
     jest.unmock("./utils");
     jest.resetModules();
@@ -107,7 +107,7 @@ describe("exportController", () => {
     const MOCK_SCHEMA_VALUE = { volunteerSize: 5 };
     const MOCK_SCHEMA_ERROR_FREE = undefined;
     const MOCK_SNAPSHOT = {};
-    const MOCK_PATIENT_LIST = [];
+    const MOCK_PATIENT_LIST = [] as any[];
     const MOCK_RESULT = { ok: true, title: "report.zip", content: "content" };
 
     jest.unmock("./utils");

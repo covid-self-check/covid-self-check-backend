@@ -8,7 +8,7 @@ const mockUpdate = jest.fn();
 const mockDoc = jest.fn(() => ({
   update: mockUpdate,
 }));
-const mockGet36Users = jest.fn().mockReturnValue();
+const mockGet36Users = jest.fn()
 
 const mockCollection = jest.fn(() => {
   return {
@@ -36,13 +36,13 @@ describe("exportController", () => {
     describe("getUnExportedR2RUsers", () => {
       it("should fetch from R2R collection", () => {
         utils.getUnExportedR2RUsers();
-        const arg = mockCollection.mock.calls[0][0];
+        const arg = (mockCollection.mock.calls[0] as any)[0];
         expect(arg).toEqual("requestToRegisterAssistance");
       });
 
       it("should select un exported users", () => {
         utils.getUnExportedR2RUsers();
-        const args = mockFbWhere.mock.calls[0];
+        const args = mockFbWhere.mock.calls[0] as any;
         expect(args[0]).toEqual("isR2RExported");
         expect(args[1]).toEqual("==");
         expect(args[2]).toEqual(false);
@@ -59,25 +59,25 @@ describe("exportController", () => {
         const mockFbWhere2 = jest.fn(() => ({ orderBy: mockOrderBy }));
         mockFbWhere.mockImplementationOnce(() => ({
           where: mockFbWhere2,
-        }));
+        } as any));
         // called function
         utils.getUnExportedR2CUsers();
 
         // check arguments
-        const collection = mockCollection.mock.calls[0][0];
+        const collection = (mockCollection.mock.calls[0] as any)[0];
         expect(collection).toEqual("patient");
 
-        const whereArgs = mockFbWhere.mock.calls[0];
+        const whereArgs = mockFbWhere.mock.calls[0] as any;
         expect(whereArgs[0]).toEqual("isRequestToCall");
         expect(whereArgs[1]).toEqual("==");
         expect(whereArgs[2]).toEqual(true);
 
-        const where2Args = mockFbWhere2.mock.calls[0];
+        const where2Args = mockFbWhere2.mock.calls[0] as any;
         expect(where2Args[0]).toEqual("isRequestToCallExported");
         expect(where2Args[1]).toEqual("==");
         expect(where2Args[2]).toEqual(false);
 
-        const orderByArg = mockOrderBy.mock.calls[0][0];
+        const orderByArg = (mockOrderBy.mock.calls[0] as any)[0];
         expect(orderByArg).toEqual("lastUpdatedAt");
 
         expect(mockGet).toHaveBeenCalledTimes(1);
@@ -110,10 +110,10 @@ describe("exportController", () => {
 
     describe("serializeData", () => {
       it("should get all data from collection snapshot and return to array", () => {
-        const MOCK_DOC_1 = { data: () => "data 1" };
-        const MOCK_DOC_2 = { data: () => "data 2" };
+        const MOCK_DOC_1 = { id: "id 1", data: () => ({ id: "id 1", data: "data 1" }) };
+        const MOCK_DOC_2 = { id: "id 2", data: () => ({ id: "id 2", data: "data 2" }) };
         const MOCK_SNAPSHOT = { docs: [MOCK_DOC_1, MOCK_DOC_2] };
-        const EXPECTED_RESULT = ["data 1", "data 2"];
+        const EXPECTED_RESULT = [{ id: "id 1", data: "data 1" }, { id: "id 2", data: "data 2" }];
 
         const result = utils.serializeData(MOCK_SNAPSHOT);
 
@@ -127,7 +127,7 @@ describe("exportController", () => {
         const MOCK_DOC_2 = { id: "id 2" };
         const MOCK_SNAPSHOT = { docs: [MOCK_DOC_1, MOCK_DOC_2] };
 
-        const result = await utils.updateExportedR2RUsers(MOCK_SNAPSHOT);
+        await utils.updateExportedR2RUsers(MOCK_SNAPSHOT);
         expect(mockDoc).toHaveBeenNthCalledWith(1, "id 1");
         expect(mockDoc).toHaveBeenNthCalledWith(2, "id 2");
 
@@ -145,7 +145,7 @@ describe("exportController", () => {
         const MOCK_DOC_2 = { id: "id 2" };
         const MOCK_SNAPSHOT = { docs: [MOCK_DOC_1, MOCK_DOC_2] };
 
-        const result = await utils.updateExportedR2RUsers(MOCK_SNAPSHOT);
+        await utils.updateExportedR2RUsers(MOCK_SNAPSHOT);
         expect(mockDoc).toHaveBeenNthCalledWith(1, "id 1");
         expect(mockDoc).toHaveBeenNthCalledWith(2, "id 2");
 

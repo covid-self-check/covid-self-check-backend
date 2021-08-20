@@ -32,7 +32,7 @@ describe("endpoints", () => {
   jest.doMock("./backup", () => ({
     backup: jest.fn(),
   }));
-  const index = require(".");
+  require(".");
 
   it("should run something useful (will implement in future", () => {
     expect(true).toBe(true);

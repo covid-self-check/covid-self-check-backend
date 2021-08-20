@@ -1,7 +1,7 @@
 import XLSX from "xlsx";
 import JSZip from "jszip";
 
-exports.makeAoA = (size) => {
+export const makeAoA = (size) => {
   const aoa = new Array(size);
 
   for (let i = 0; i < size; i++) {
@@ -16,7 +16,7 @@ exports.makeAoA = (size) => {
  * @param {any[][]} aoa
  * @param {any[]} data
  */
-exports.fillWith = (aoa, data) => {
+export const fillWith = (aoa, data) => {
   const size = aoa.length;
 
   for (let i = 0; i < data.length; i++) {
@@ -32,7 +32,7 @@ exports.fillWith = (aoa, data) => {
  * @param {() => any[]} formatter
  * @returns
  */
-exports.prepareZipFile = (zip, aoa, headers, formatter) => {
+export const prepareZipFile = (zip, aoa, headers, formatter) => {
   aoa.forEach((arr, i) => {
     const result = [[...headers]];
     arr.forEach((el) => {
@@ -53,14 +53,19 @@ exports.prepareZipFile = (zip, aoa, headers, formatter) => {
  * @param {string[]} headers - array of headers
  * @param {() => any[]} formatter - function that return element of each row
  */
-exports.generateZipFileRoundRobin = async (size, data, headers, formatter) => {
-  const aoa = this.makeAoA(size);
+export const generateZipFileRoundRobin = async (
+  size,
+  data,
+  headers,
+  formatter
+) => {
+  const aoa = makeAoA(size);
 
-  this.fillWith(aoa, data);
+  fillWith(aoa, data);
 
   const zip = new JSZip();
 
-  this.prepareZipFile(zip, aoa, headers, formatter);
+  prepareZipFile(zip, aoa, headers, formatter);
 
   const content = await zip.generateAsync({ type: "base64" });
   return { ok: true, title: "report.zip", content };
