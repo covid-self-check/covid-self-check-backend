@@ -13,7 +13,7 @@ const config = {
   channelSecret: functions.config().line.channel_secret,
 };
 const client = new line.Client(config);
-const { getProfileSchema } = require("./schema");
+import { validateGetProfileSchema } from "./schema";
 const { success } = require("./response/success");
 const express = require("express");
 const cors = require("cors");
@@ -179,7 +179,7 @@ exports.createReport = functions.region(region).https.onRequest(app);
 exports.getFollowupHistory = functions
   .region(region)
   .https.onCall(async (data, context) => {
-    const { value, error } = getProfileSchema.validate(data);
+    const { value, error } = validateGetProfileSchema(data);
     if (error) {
       console.log(error.details);
       throw new functions.https.HttpsError(

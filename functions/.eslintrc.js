@@ -23,5 +23,6 @@ module.exports = {
   rules: {
     "@typescript-eslint/no-var-requires": "warn",
     "unused-imports/no-unused-imports": "error",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
   },
 };
