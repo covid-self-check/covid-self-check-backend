@@ -120,6 +120,12 @@ exports.initializeR2CStat = functions
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeR2CStat);
 
+exports.calculateDropOff = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.calculateDropOffRate);
+
 exports.getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {
