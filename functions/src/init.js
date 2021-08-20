@@ -16,4 +16,5 @@ exports.collection = {
   whitelist: "whitelist",
   dropOffStat: "dropOffStat",
   legacyStat: "legacyStat",
+  activeUser: "activeUser",
 };
