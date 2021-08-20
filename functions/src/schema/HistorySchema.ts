@@ -1,6 +1,7 @@
-import * as Joi from "joi";
+import * as Joi from '@hapi/joi';
+import 'joi-extract-type';
 
-module.exports = Joi.object({
+export const HistorySchema = Joi.object({
   lineIDToken: Joi.string().required(),
   lineUserID: Joi.string().required(),
 
@@ -66,3 +67,7 @@ module.exports = Joi.object({
   fac_gi_symptoms: Joi.number().allow(0, 1).required(),
   noAuth: Joi.boolean(),
 });
+
+
+export type HistoryType = Joi.extractType<typeof HistorySchema>;
+
