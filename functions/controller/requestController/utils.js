@@ -1,10 +1,10 @@
 const moment = require("moment");
 const { admin } = require("../../init");
 const { convertTZ } = require("../../utils");
+const { getDateID } = require("../pubsub/utils");
 
 exports.incrementR2CUser = async () => {
-  const date = convertTZ(new Date(), "Asia/Bangkok");
-  const id = moment(date).format("YYYY-MM-DD");
+  const id = getDateID();
 
   const snapshot = await admin.firestore().collection("r2cStat").doc(id).get();
 

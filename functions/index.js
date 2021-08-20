@@ -26,6 +26,7 @@ const {
   patientController,
   requestController,
   importController,
+  pubsub,
 } = require("./controller");
 
 const app = express();
@@ -112,6 +113,12 @@ exports.backupFirestore = functions
   .pubsub.schedule("every day 18:00")
   .timeZone("Asia/Bangkok")
   .onRun(backup);
+
+exports.initializeR2CStat = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.initializeR2CStat);
 
 exports.getNumberOfPatients = functions
   .region(region)

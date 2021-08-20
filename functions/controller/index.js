@@ -3,4 +3,5 @@ module.exports = {
   importController: require("./importController"),
   patientController: require("./patientController"),
   requestController: require("./requestController"),
+  pubsub: require("./pubsub"),
 };
