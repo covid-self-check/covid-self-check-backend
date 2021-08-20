@@ -1,7 +1,5 @@
-const moment = require("moment");
 const { admin } = require("../../init");
-const { convertTZ } = require("../../utils");
-const { getDateID } = require("../pubsub/utils");
+const { getDateID } = require("../../utils/date");
 
 exports.incrementR2CUser = async () => {
   const id = getDateID();
@@ -16,9 +14,4 @@ exports.incrementR2CUser = async () => {
       admin.firestore.FieldValue.increment(1)
     );
   }
-};
-
-exports.getDateID = () => {
-  const date = convertTZ(new Date(), "Asia/Bangkok");
-  return moment(date).format("YYYY-MM-DD");
 };

@@ -290,7 +290,7 @@ exports.exportAllPatient = async (req, res) => {
 
     stream.pipe(res);
   } catch (err) {
-    console.log("error", err);
+    console.log(err);
     res.json({ success: false });
   }
 };

@@ -1,5 +1,5 @@
 const { admin } = require("../../init");
-const { getDateID } = require("./utils");
+const { getDateID } = require("../../utils/date");
 
 exports.initializeR2CStat = async (_context) => {
   const id = getDateID();
