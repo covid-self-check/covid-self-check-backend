@@ -1,12 +1,15 @@
 import * as functions from "firebase-functions";
 import { getProfile } from "../../middleware/authentication";
-const { getProfileSchema, requestToRegisterSchema } = require("../../schema");
+const {
+  validateGetProfileSchema,
+  validateRequestToRegisterSchema,
+} = require("../../schema");
 import { admin, collection } from "../../init";
 import { success } from "../../response/success";
 const { incrementR2CUser } = require("./utils");
 
 exports.requestToCall = async (data, _context) => {
-  const { value, error } = getProfileSchema.validate(data);
+  const { value, error } = validateGetProfileSchema(data);
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
@@ -59,7 +62,7 @@ exports.requestToCall = async (data, _context) => {
 };
 
 exports.requestToRegister = async (data, _context) => {
-  const { value, error } = requestToRegisterSchema.validate(data);
+  const { value, error } = validateRequestToRegisterSchema(data);
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
