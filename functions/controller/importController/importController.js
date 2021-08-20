@@ -3,9 +3,9 @@ const {
   importPatientIdSchema,
   importWhitelistSchema,
   importRequestToRegisterSchema,
-} = require("../schema");
-const { admin, collection } = require("../init");
-const { success } = require("../response/success");
+} = require("../../schema");
+const { admin, collection } = require("../../init");
+const { success } = require("../../response/success");
 
 // exports.importFinishR2C = async (data, _context) => {
 //     const { value, error } = importPatientIdSchema.validate(data)
@@ -71,6 +71,11 @@ exports.importFinishR2C = async (data, _context) => {
     .where("isRequestToCallExported", "==", true)
     .get();
 
+  const legacyRef = admin
+    .firestore()
+    .collection(collection.legacyStat)
+    .doc("stat");
+
   const batch = admin.firestore().batch();
   const promises = [];
   snapshot.docs.forEach((doc) => {
@@ -114,6 +119,10 @@ exports.importFinishR2C = async (data, _context) => {
               batch.delete(docRef);
             })
         );
+        //increment Legacy user count
+        batch.update(legacyRef, {
+          count: admin.firestore.FieldValue.increment(1),
+        });
         break;
       default:
         return;

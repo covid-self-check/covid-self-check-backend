@@ -19,3 +19,20 @@ exports.incrementR2CUser = async () => {
     );
   }
 };
+
+exports.incrementLegacyUser = async () => {
+  const snapshot = await admin
+    .firestore()
+    .collection(collection.legacyStat)
+    .doc("stat")
+    .get();
+
+  if (!snapshot.exists) {
+    return snapshot.ref.create({ count: 1 });
+  } else {
+    return snapshot.ref.update(
+      "count",
+      admin.firestore.FieldValue.increment(1)
+    );
+  }
+};
