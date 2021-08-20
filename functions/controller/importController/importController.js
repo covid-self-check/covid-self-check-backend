@@ -115,6 +115,7 @@ exports.importFinishR2C = async (data, _context) => {
               batch.delete(docRef);
             })
         );
+        //increment Legacy user count
         promises.push(incrementLegacyUser());
         break;
       default:
