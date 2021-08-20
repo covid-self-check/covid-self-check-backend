@@ -120,6 +120,12 @@ exports.initializeR2CStat = functions
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeR2CStat);
 
+exports.calculateDropOff = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.calculateDropOffRate);
+
 exports.initializeLegacyStat = functions
   .region(region)
   .pubsub.schedule("every day 00:00")
@@ -207,11 +213,11 @@ exports.getFollowupHistory = functions
 
 exports.fetchYellowPatients = functions
   .region(region)
-  .https.onCall(async () => {
+  .https.onCall(async (data) => {
     // const snapshot = await admin
     //   .firestore()
     //   .collection("patient")
-    //   .where("status", "==", "เหลือง")
+    //   .where("status", "==", data.status)
     //   .get();
 
     // var patientList = [];
