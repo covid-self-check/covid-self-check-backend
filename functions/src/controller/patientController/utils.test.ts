@@ -110,7 +110,7 @@ describe("setAmedStatus", () => {
     R2: 6,
   };
   const TO_AMED_STATUS = {
-    includes: (status) => {
+    includes: (status: any) => {
       return amedList.includes(status) ? true : false;
     },
   };

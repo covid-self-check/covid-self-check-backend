@@ -1,11 +1,5 @@
-const {
-  makeAoA,
-  fillWith,
-  prepareZipFile,
-  generateZipFileRoundRobin,
-} = require("./zip");
-import faker from "faker";
-import JSZip from "jszip";
+import * as faker from "faker";
+
 import * as _ from "lodash";
 
 const mockGenerateAsync = jest.fn(() => {
@@ -21,7 +15,18 @@ jest.mock("jszip", () => {
   });
 });
 
+
 describe("zip", () => {
+
+  const {
+    makeAoA,
+    fillWith,
+    prepareZipFile,
+    generateZipFileRoundRobin,
+  } = require("./zip");
+
+  const JSZip = require("jszip");
+
   describe("makeAOA", () => {
     it("should return an array of a given size", () => {
       expect(makeAoA(5).length).toEqual(5);
@@ -59,7 +64,7 @@ describe("zip", () => {
       const size = 5;
       const aoa = makeAoA(size);
       const zip = new JSZip();
-      prepareZipFile(zip, aoa, [], (doc) => []);
+      prepareZipFile(zip, aoa, [], () => []);
       // expect number of files to equal to size;
       expect(zip.file).toHaveBeenCalledTimes(size);
     });
@@ -80,7 +85,7 @@ describe("zip", () => {
       const header = ["name", "tel"];
 
       const zip = new JSZip();
-      prepareZipFile(zip, aoa, header, (doc) => [
+      prepareZipFile(zip, aoa, header, (doc: any) => [
         doc.name,
         doc.personalPhoneNo,
       ]);
@@ -102,13 +107,13 @@ describe("zip", () => {
 
   describe("generateZipFileRoundRobin", () => {
     it("expect encoded type to equal to base64", async () => {
-      await generateZipFileRoundRobin(5, [], [], (el) => []);
+      await generateZipFileRoundRobin(5, [], [], (el: any) => []);
       expect(mockGenerateAsync).toHaveBeenCalledTimes(1);
-      expect(mockGenerateAsync.mock.calls[0][0].type).toEqual("base64");
+      expect((mockGenerateAsync as any).mock.calls[0][0].type).toEqual("base64");
     });
 
     it("should return correct field name", async () => {
-      const result = await generateZipFileRoundRobin(5, [], [], (el) => []);
+      const result = await generateZipFileRoundRobin(5, [], [], (el: any) => []);
       console.log(result);
       expect(result.ok).toEqual(true);
       expect(result.title).toEqual("report.zip");
