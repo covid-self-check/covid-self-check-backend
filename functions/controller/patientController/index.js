@@ -7,7 +7,7 @@ const {
   deletePatientSchema,
   //end mon code
 } = require("../../schema");
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
@@ -25,7 +25,6 @@ const {
   updateSymptomUpdateStatus,
   setAmedStatus,
 } = require("./utils");
-const { collection } = require("../../init");
 
 const addTotalPatientCount = async () => {
   const snapshot = await admin

@@ -1,10 +1,9 @@
 const functions = require("firebase-functions");
 const { getProfile } = require("../../middleware/authentication");
 const { getProfileSchema, requestToRegisterSchema } = require("../../schema");
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { success } = require("../../response/success");
 const { incrementR2CUser } = require("./utils");
-const { collection } = require("../../init");
 
 exports.requestToCall = async (data, _context) => {
   const { value, error } = getProfileSchema.validate(data);
