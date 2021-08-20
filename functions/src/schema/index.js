@@ -7,4 +7,7 @@ module.exports = {
   importRequestToRegisterSchema: require("./ImportRequestToRegisterSchema"),
   importWhitelistSchema: require("./ImportWhitelistSchema"),
   exportRequestToCallSchema: require("./ExportRequestToCallSchema"),
+  //mon added this
+  deletePatientSchema: require("./DeletePatientSchema"),
+  //end mon code
 };

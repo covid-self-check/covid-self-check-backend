@@ -25,6 +25,7 @@ const {
   patientController,
   requestController,
   importController,
+  pubsub,
 } = require("./controller");
 
 const app = express();
@@ -60,6 +61,10 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
     console.log("Not from line application.");
   }
 });
+
+exports.deletePatient = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(patientController.requestDeletePatient));
 
 exports.registerParticipant = functions
   .region(region)
@@ -107,6 +112,24 @@ exports.backupFirestore = functions
   .pubsub.schedule("every day 18:00")
   .timeZone("Asia/Bangkok")
   .onRun(backup);
+
+exports.initializeR2CStat = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.initializeR2CStat);
+
+exports.calculateDropOff = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.calculateDropOffRate);
+
+exports.initializeLegacyStat = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.initializeLegacyStat);
 
 exports.getNumberOfPatients = functions
   .region(region)
@@ -189,11 +212,11 @@ exports.getFollowupHistory = functions
 
 exports.fetchYellowPatients = functions
   .region(region)
-  .https.onCall(async () => {
+  .https.onCall(async (data) => {
     // const snapshot = await admin
     //   .firestore()
     //   .collection("patient")
-    //   .where("status", "==", "เหลือง")
+    //   .where("status", "==", data.status)
     //   .get();
 
     // var patientList = [];

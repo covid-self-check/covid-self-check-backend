@@ -1,11 +1,10 @@
-const { admin } = require("../../init");
-const { convertTZ } = require("../../utils");
-const R2R_COLLECTION = "requestToRegisterAssistance";
+const { admin, collection } = require("../../init");
+const { statusList } = require("../../api/const");
 
 exports.getUnExportedR2RUsers = () => {
   return admin
     .firestore()
-    .collection(R2R_COLLECTION)
+    .collection(collection.r2rAssistance)
     .where("isR2RExported", "==", false)
     .get();
 };
@@ -34,7 +33,10 @@ exports.serializeData = (snapshot) => {
 exports.updateExportedR2RUsers = (snapshot) => {
   return Promise.all(
     snapshot.docs.map((doc) => {
-      const ref = admin.firestore().collection(R2R_COLLECTION).doc(doc.id);
+      const ref = admin
+        .firestore()
+        .collection(collection.r2rAssistance)
+        .doc(doc.id);
 
       return ref.update({
         isR2RExported: true,
@@ -46,7 +48,7 @@ exports.updateExportedR2RUsers = (snapshot) => {
 exports.getUnExportedR2CUsers = () => {
   return admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .where("isRequestToCall", "==", true)
     .where("isRequestToCallExported", "==", false)
     .orderBy("lastUpdatedAt")
@@ -54,7 +56,8 @@ exports.getUnExportedR2CUsers = () => {
 };
 
 exports.get36hrsUsers = async () => {
-  const snapshot = await admin.firestore().collection("patient").get();
+  const snapshot = await admin.firestore().collection(collection.patient).get();
+
   var notUpdatedList = [];
   const currentDate = new Date();
   snapshot.forEach((doc) => {
@@ -62,16 +65,21 @@ exports.get36hrsUsers = async () => {
 
     const lastUpdatedDate = patient.lastUpdatedAt.toDate();
     var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    const includeStatus = [
+      statusList["unknown"],
+      statusList["G1"],
+      statusList["G2"],
+    ];
 
-    if (hours >= 36 && hours < 72) {
-      //console.log(hours);
-      notUpdatedList.push({
-        firstName: patient.firstName,
-        personalPhoneNo: patient.personalPhoneNo,
-      });
+    if (includeStatus.includes(patient.status)) {
+      if (hours >= 36 && hours < 72) {
+        notUpdatedList.push({
+          firstName: patient.firstName,
+          personalPhoneNo: patient.personalPhoneNo,
+        });
+      }
     }
   });
-  //console.log(notUpdatedList);
   return notUpdatedList;
 };
 
@@ -108,7 +116,7 @@ exports.makeR2CPayload = (id, data) => {
 };
 
 exports.updateExportedR2CUser = (id) => {
-  const ref = admin.firestore().collection("patient").doc(id);
+  const ref = admin.firestore().collection(collection.patient).doc(id);
 
   ref.update({
     isRequestToCallExported: true,
