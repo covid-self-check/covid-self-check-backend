@@ -18,8 +18,7 @@ exports.initializeLegacyStat = async (_context) => {
     .collection(collection.legacyUser)
     .get();
 
-  console.log("current #legacy user: ", snapshot.docs.length);
-  const legacySnapshot = await admin
+  await admin
     .firestore()
     .collection(collection.legacyStat)
     .doc("stat")
