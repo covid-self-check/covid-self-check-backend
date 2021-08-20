@@ -82,6 +82,10 @@ exports.export36hrs = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.export36hrs));
 
+exports.updatenumberuserbtw36hrsto72hrs = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(pubsub.updatenumberuserbtw36hrsto72hrs));
+
 exports.exportnumber36hrs = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.exportnumber36hrs));
@@ -123,6 +127,12 @@ exports.initializeR2CStat = functions
   .pubsub.schedule("every day 00:00")
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeR2CStat);
+
+exports.updatenumberuserbtw36hrsto72hrs = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.updatenumberuserbtw36hrsto72hrs);
 
 exports.getNumberOfPatients = functions
   .region(region)
