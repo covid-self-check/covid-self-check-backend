@@ -12,3 +12,15 @@ exports.initializeR2CStat = async (_context) => {
     await snapshot.ref.create({ count: 0 });
   }
 };
+exports.initializeLegacyStat = async (_context) => {
+  const snapshot = await admin
+    .firestore()
+    .collection(collection.legacyUser)
+    .get();
+
+  await admin
+    .firestore()
+    .collection(collection.legacyStat)
+    .doc("stat")
+    .set({ count: snapshot.docs.length });
+};
