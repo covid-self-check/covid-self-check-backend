@@ -1,0 +1,4 @@
+/lib/**/*
+*.test.js
+*.test.js
+/*.js

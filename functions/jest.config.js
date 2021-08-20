@@ -1,15 +1,11 @@
-// jest.config.js
-// Sync object
-/** @type {import('@jest/types').Config.InitialOptions} */
-const config = {
+/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
+module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
   verbose: true,
-};
-
-module.exports = config;
-
-// Or async function
-module.exports = async () => {
-  return {
-    verbose: true,
-  };
+  globals: {
+    "ts-jest": {
+      tsConfig: "tsconfig.test.json",
+    },
+  },
 };
