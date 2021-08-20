@@ -45,3 +45,8 @@ exports.calculateAge = (date) => {
   var ageDate = new Date(ageDifMs); // miliseconds from epoch
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 };
+
+exports.getDateID = () => {
+  const date = this.convertTZ(new Date(), "Asia/Bangkok");
+  return moment(date).format("YYYY-MM-DD");
+};
