@@ -1,8 +1,8 @@
 import * as functions from "firebase-functions";
 const {
-  importPatientIdSchema,
-  importWhitelistSchema,
-  importRequestToRegisterSchema,
+  validateImportPatientIdSchema,
+  validateImportWhitelistSchema,
+  validateImportRequestToRegisterSchema,
 } = require("../../schema");
 const { admin, collection } = require("../../init");
 const { success } = require("../../response/success");
@@ -47,7 +47,7 @@ const { success } = require("../../response/success");
 // }
 
 exports.importFinishR2C = async (data, _context) => {
-  const { value, error } = importPatientIdSchema.validate(data);
+  const { value, error } = validateImportPatientIdSchema(data);
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
@@ -135,7 +135,7 @@ exports.importFinishR2C = async (data, _context) => {
 };
 
 exports.importFinishR2R = async (data, _context) => {
-  const { value, error } = importRequestToRegisterSchema.validate(data);
+  const { value, error } = validateImportRequestToRegisterSchema(data);
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
@@ -186,7 +186,7 @@ exports.importFinishR2R = async (data, _context) => {
 };
 
 exports.importWhitelist = async (data, _context) => {
-  const { value, error } = importWhitelistSchema.validate(data);
+  const { value, error } = validateImportWhitelistSchema(data);
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(

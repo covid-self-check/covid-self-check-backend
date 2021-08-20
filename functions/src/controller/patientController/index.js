@@ -1,10 +1,10 @@
 const functions = require("firebase-functions");
 const {
-  registerSchema,
-  getProfileSchema,
-  historySchema,
+  validateRegisterSchema,
+  validateGetProfileSchema,
+  validateHistorySchema,
   //mon added this
-  deletePatientSchema,
+  validateDeletePatientSchema,
   //end mon code
 } = require("../../schema");
 const { admin, collection } = require("../../init");
@@ -166,7 +166,7 @@ const deletePatient = async (personalID) => {
 };
 
 exports.requestDeletePatient = async (data, _context) => {
-  const { value, error } = deletePatientSchema.validate(data);
+  const { value, error } = validateDeletePatientSchema(data);
 
   if (error) {
     console.log(error.details);
@@ -193,7 +193,7 @@ exports.requestDeletePatient = async (data, _context) => {
 // end of mon's code
 
 exports.registerPatient = async (data, _context) => {
-  const { value, error } = registerSchema.validate(data);
+  const { value, error } = validateRegisterSchema(data);
 
   if (error) {
     console.log(error.details);
@@ -251,7 +251,7 @@ exports.registerPatient = async (data, _context) => {
 };
 
 exports.getProfile = async (data, _context) => {
-  const { value, error } = getProfileSchema.validate(data);
+  const { value, error } = validateGetProfileSchema(data);
   if (error) {
     console.log(error.details);
     throw new functions.https.HttpsError(
@@ -291,7 +291,7 @@ exports.getProfile = async (data, _context) => {
 };
 
 exports.updateSymptom = async (data, _context) => {
-  const { value, error } = historySchema.validate(data);
+  const { value, error } = validateHistorySchema(data);
   if (error) {
     // DEBUG
     console.log(error.details);

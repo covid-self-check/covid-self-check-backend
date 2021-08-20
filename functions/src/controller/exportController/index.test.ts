@@ -5,7 +5,7 @@ describe("exportController", () => {
   const exportRequestToCallSchemaMock = jest.fn();
 
   jest.doMock("../../schema", () => ({
-    exportRequestToCallSchema: { validate: exportRequestToCallSchemaMock },
+    validateExportRequestToCallSchema: exportRequestToCallSchemaMock,
   }));
 
   jest.doMock("../../utils/zip", () => ({

@@ -1,6 +1,7 @@
-import * as Joi from "joi";
+import * as Joi from '@hapi/joi';
+import 'joi-extract-type';
 
-module.exports = Joi.object({
+export const ImportWhitelistSchema = Joi.object({
   users: Joi.array()
     .items(
       Joi.object({
@@ -12,3 +13,7 @@ module.exports = Joi.object({
   // ids: Joi.array().items(Joi.string()).required(),
   noAuth: Joi.boolean(),
 });
+
+
+export type ImportWhitelistType = Joi.extractType<typeof ImportWhitelistSchema>;
+

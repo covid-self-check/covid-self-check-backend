@@ -5,7 +5,7 @@ const path = require("path");
 const functions = require("firebase-functions");
 const { admin, collection } = require("../../init");
 const { generateZipFileRoundRobin } = require("../../utils/zip");
-const { exportRequestToCallSchema } = require("../../schema");
+import { validateExportRequestToCallSchema } from "../../schema";
 const { statusList } = require("../../api/const");
 const {
   patientReportHeader,
@@ -18,7 +18,7 @@ const { success } = require("../../response/success");
 
 
 exports.exportR2R = async (data, _context) => {
-  const { value, error } = exportRequestToCallSchema.validate(data);
+  const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -47,7 +47,7 @@ exports.exportR2R = async (data, _context) => {
 };
 
 exports.exportR2C = async (data, _context) => {
-  const { value, error } = exportRequestToCallSchema.validate(data);
+  const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -198,7 +198,7 @@ exports.exportPatientForNurse = async (req, res) => {
 };
 
 exports.export36hrs = async (data, _context) => {
-  const { value, error } = exportRequestToCallSchema.validate(data);
+  const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -217,7 +217,6 @@ exports.export36hrs = async (data, _context) => {
     formatter
   );
 };
-
 
 /**
  * one time used only
@@ -305,7 +304,7 @@ exports.exportAllPatient = async (req, res) => {
 };
 
 exports.exportRequestToCallDayOne = async (data, _context) => {
-  const { value, error } = exportRequestToCallSchema.validate(data);
+  const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
       "invalid-argument",
