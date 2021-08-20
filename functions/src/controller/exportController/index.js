@@ -216,12 +216,6 @@ exports.export36hrs = async (data, _context) => {
   );
 };
 
-exports.exportnumber36hrs = async () => {
-  const notUpdatedlistnumber =  await utils.getnumber36hrsUsers();
-  console.log("running");
-  console.log(notUpdatedlistnumber);
-  return notUpdatedlistnumber;
-}
 
 /**
  * one time used only
