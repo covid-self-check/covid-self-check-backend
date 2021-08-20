@@ -9,8 +9,7 @@
     "target": "es2017",
     "allowJs": true,
     "resolveJsonModule": true,
-    "types": ["jest", "node"],
-    "typeRoots": ["src/@types/joi.d.ts"]
+    "types": ["jest", "node"]
   },
   "compileOnSave": true,
   "include": ["src"]
