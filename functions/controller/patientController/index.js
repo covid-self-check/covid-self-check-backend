@@ -7,7 +7,7 @@ const {
   deletePatientSchema,
   //end mon code
 } = require("../../schema");
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { getProfile } = require("../../middleware/authentication");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
@@ -29,7 +29,7 @@ const {
 const addTotalPatientCount = async () => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc("users")
     .get();
 
@@ -43,7 +43,7 @@ const addTotalPatientCount = async () => {
 const decrementTotalPatientCount = async () => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc("users")
     .get();
   if (snapshot.exists) {
@@ -57,7 +57,7 @@ const decrementTotalPatientCount = async () => {
 const addTotalPatientCountByColor = async (status) => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc(status)
     .get();
 
@@ -71,7 +71,7 @@ const addTotalPatientCountByColor = async (status) => {
 const decrementTotalPatientCountByColor = async (status) => {
   const snapshot = await admin
     .firestore()
-    .collection("userCount")
+    .collection(collection.userCount)
     .doc(status)
     .get();
 
@@ -87,7 +87,7 @@ const decrementTotalPatientCountByColor = async (status) => {
 const deletePatient = async (personalID) => {
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .where("personalID", "==", personalID)
     .get();
 
@@ -97,26 +97,39 @@ const deletePatient = async (personalID) => {
     //deletes all patient with personalID = personalID and decrement relevant counters
     const batch = admin.firestore().batch();
     snapshot.forEach((doc) => {
-      const patientDocRef = admin.firestore().collection("patient").doc(doc.id);
-      const legacyRef = admin.firestore().collection("legacyUser").doc(doc.id);
+      const patientDocRef = admin
+        .firestore()
+        .collection(collection.patient)
+        .doc(doc.id);
+
+      const legacyRef = admin
+        .firestore()
+        .collection(collection.legacyUser)
+        .doc(doc.id);
+
       const patientCountRef = admin
         .firestore()
-        .collection("userCount")
+        .collection(collection.userCount)
         .doc("users");
+
       const colorCountRef =
         doc.data().status in statusListReverse
           ? admin
               .firestore()
-              .collection("userCount")
+              .collection(collection.userCount)
               .doc(statusListReverse[doc.data().status])
           : null;
+
       batch.delete(patientDocRef);
+
       batch.set(legacyRef, { ...doc.data() });
+
       batch.update(
         patientCountRef,
         "count",
         admin.firestore.FieldValue.increment(-1)
       );
+
       if (colorCountRef) {
         batch.update(
           colorCountRef,
@@ -207,15 +220,16 @@ exports.registerPatient = async (data, _context) => {
   //need db connection
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(lineUserID)
     .get();
 
   const whitelist = await admin
     .firestore()
-    .collection("whitelist")
+    .collection(collection.whitelist)
     .doc(obj.personalID)
     .get();
+
   if (!whitelist.exists) {
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -262,7 +276,7 @@ exports.getProfile = async (data, _context) => {
 
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(value.lineUserID)
     .get();
 
@@ -308,7 +322,7 @@ exports.updateSymptom = async (data, _context) => {
   //need db connection
   const snapshot = await admin
     .firestore()
-    .collection("patient")
+    .collection(collection.patient)
     .doc(lineUserID)
     .get();
 

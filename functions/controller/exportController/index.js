@@ -3,7 +3,7 @@ const fs = require("fs");
 const _ = require("lodash");
 const path = require("path");
 const functions = require("firebase-functions");
-const { admin } = require("../../init");
+const { admin, collection } = require("../../init");
 const { generateZipFileRoundRobin } = require("../../utils/zip");
 const { exportRequestToCallSchema } = require("../../schema");
 const { statusList } = require("../../api/const");
@@ -68,7 +68,10 @@ exports.exportR2C = async (data, _context) => {
 
 exports.exportMaster = async (req, res) => {
   try {
-    const snapshot = await admin.firestore().collection("patient").get();
+    const snapshot = await admin
+      .firestore()
+      .collection(collection.patient)
+      .get();
 
     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
     const result = [header];
@@ -112,7 +115,7 @@ exports.exportPatientForNurse = async (req, res) => {
   try {
     const snapshot = await admin
       .firestore()
-      .collection("patient")
+      .collection(collection.patient)
       .where("isNurseExported", "==", false)
       .get();
 
@@ -179,7 +182,7 @@ exports.exportPatientForNurse = async (req, res) => {
 
     await Promise.all([
       updatedDocId.map((id) => {
-        const docRef = admin.firestore().collection("patient").doc(id);
+        const docRef = admin.firestore().collection(collection.patient).doc(id);
 
         return docRef.update({
           isNurseExported: true,
@@ -226,7 +229,10 @@ exports.exportAllPatient = async (req, res) => {
       );
     }
 
-    const snapshot = await admin.firestore().collection("patient").get();
+    const snapshot = await admin
+      .firestore()
+      .collection(collection.patient)
+      .get();
 
     const statusListArr = _.keys(statusList);
     const results = new Array(statusListArr.length);
@@ -307,7 +313,7 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
   const { volunteerSize } = value;
   const patientList = [];
 
-  const snapshot = await admin.firestore().collection("patient").get();
+  const snapshot = await admin.firestore().collection(collection.patient).get();
   await Promise.all(
     snapshot.docs.map((doc) => {
       // WARNING SIDE EFFECT inside map
