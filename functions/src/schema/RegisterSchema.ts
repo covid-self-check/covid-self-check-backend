@@ -1,6 +1,7 @@
-import * as Joi from "joi";
+import * as Joi from '@hapi/joi';
+import 'joi-extract-type';
 
-module.exports = Joi.object({
+export const RegisterSchema = Joi.object({
   firstName: Joi.string().min(1).required(),
   lastName: Joi.string().min(1).required(),
 
@@ -70,3 +71,6 @@ module.exports = Joi.object({
   favipiraviaAmount: Joi.number().allow("", null),
   noAuth: Joi.boolean(),
 });
+
+
+export type RegisterType = Joi.extractType<typeof RegisterSchema>;
