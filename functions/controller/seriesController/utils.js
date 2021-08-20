@@ -1,7 +1,3 @@
-const moment = require("moment");
-const { admin } = require("../../init");
-const { convertTZ } = require("../../utils");
-
 exports.calculateDropOff = async (patient, followUp) => {
   const currentDate = new Date();
 

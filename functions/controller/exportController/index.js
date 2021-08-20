@@ -14,6 +14,7 @@ const {
 } = require("../../utils/status");
 const { calculateAge, convertTZ } = require("../../utils/date");
 const utils = require("./utils");
+const { collection } = require("../../init");
 
 exports.exportR2R = async (data, _context) => {
   const { value, error } = exportRequestToCallSchema.validate(data);
@@ -68,7 +69,10 @@ exports.exportR2C = async (data, _context) => {
 
 exports.exportMaster = async (req, res) => {
   try {
-    const snapshot = await admin.firestore().collection("patient").get();
+    const snapshot = await admin
+      .firestore()
+      .collection(collection.patient)
+      .get();
 
     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
     const result = [header];
@@ -112,7 +116,7 @@ exports.exportPatientForNurse = async (req, res) => {
   try {
     const snapshot = await admin
       .firestore()
-      .collection("patient")
+      .collection(collection.patient)
       .where("isNurseExported", "==", false)
       .get();
 
@@ -179,7 +183,7 @@ exports.exportPatientForNurse = async (req, res) => {
 
     await Promise.all([
       updatedDocId.map((id) => {
-        const docRef = admin.firestore().collection("patient").doc(id);
+        const docRef = admin.firestore().collection(collection.patient).doc(id);
 
         return docRef.update({
           isNurseExported: true,
@@ -226,7 +230,10 @@ exports.exportAllPatient = async (req, res) => {
       );
     }
 
-    const snapshot = await admin.firestore().collection("patient").get();
+    const snapshot = await admin
+      .firestore()
+      .collection(collection.patient)
+      .get();
 
     const statusListArr = _.keys(statusList);
     const results = new Array(statusListArr.length);
@@ -307,7 +314,7 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
   const { volunteerSize } = value;
   const patientList = [];
 
-  const snapshot = await admin.firestore().collection("patient").get();
+  const snapshot = await admin.firestore().collection(collection.patient).get();
   await Promise.all(
     snapshot.docs.map((doc) => {
       // WARNING SIDE EFFECT inside map
