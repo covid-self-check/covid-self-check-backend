@@ -120,6 +120,16 @@ exports.initializeR2CStat = functions
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeR2CStat);
 
+exports.initializeLegacyStat = functions
+  .region(region)
+  .pubsub.schedule("every day 00:00")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.initializeLegacyStat);
+
+exports.testInitializeLegacyStat = functions
+  .region(region)
+  .https.onCall(pubsub.initializeLegacyStat);
+
 exports.getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {

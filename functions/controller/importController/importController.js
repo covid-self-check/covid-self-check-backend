@@ -3,9 +3,10 @@ const {
   importPatientIdSchema,
   importWhitelistSchema,
   importRequestToRegisterSchema,
-} = require("../schema");
-const { admin, collection } = require("../init");
-const { success } = require("../response/success");
+} = require("../../schema");
+const { admin, collection } = require("../../init");
+const { success } = require("../../response/success");
+const { incrementLegacyUser } = require("../importController/utils");
 
 // exports.importFinishR2C = async (data, _context) => {
 //     const { value, error } = importPatientIdSchema.validate(data)
@@ -114,6 +115,7 @@ exports.importFinishR2C = async (data, _context) => {
               batch.delete(docRef);
             })
         );
+        promises.push(incrementLegacyUser());
         break;
       default:
         return;
