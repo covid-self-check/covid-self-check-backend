@@ -1,5 +1,4 @@
-import * as Joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as Joi from 'joi';
 
 export const RegisterSchema = Joi.object({
   firstName: Joi.string().min(1).required(),
