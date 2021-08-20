@@ -1,8 +1,9 @@
 const functions = require("firebase-functions");
-const { getProfile } = require("../middleware/authentication");
-const { getProfileSchema, requestToRegisterSchema } = require("../schema");
-const { admin } = require("../init");
-const { success } = require("../response/success");
+const { getProfile } = require("../../middleware/authentication");
+const { getProfileSchema, requestToRegisterSchema } = require("../../schema");
+const { admin } = require("../../init");
+const { success } = require("../../response/success");
+const { incrementR2CUser } = require("./utils");
 
 exports.requestToCall = async (data, _context) => {
   const { value, error } = getProfileSchema.validate(data);
@@ -47,6 +48,8 @@ exports.requestToCall = async (data, _context) => {
   if (isRequestToCall) {
     return success(`userID: ${lineUserID} has already requested to call`);
   }
+
+  await incrementR2CUser();
 
   await snapshot.ref.update({
     isRequestToCall: true,
