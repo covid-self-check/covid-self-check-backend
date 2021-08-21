@@ -50,36 +50,9 @@ const deletePatient = async (personalID) => {
         .collection(collection.legacyUser)
         .doc(doc.id);
 
-      const patientCountRef = admin
-        .firestore()
-        .collection(collection.userCount)
-        .doc("users");
-
-      const colorCountRef =
-        doc.data().status in statusListReverse
-          ? admin
-              .firestore()
-              .collection(collection.userCount)
-              .doc(statusListReverse[doc.data().status])
-          : null;
-
       batch.delete(patientDocRef);
 
       batch.set(legacyRef, { ...doc.data() });
-
-      batch.update(
-        patientCountRef,
-        "count",
-        admin.firestore.FieldValue.increment(-1)
-      );
-
-      if (colorCountRef) {
-        batch.update(
-          colorCountRef,
-          "count",
-          admin.firestore.FieldValue.increment(-1)
-        );
-      }
     });
     return batch
       .commit()
