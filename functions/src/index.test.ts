@@ -26,7 +26,9 @@ describe("endpoints", () => {
       },
       firestore: {
         document: jest.fn(() => ({
-          onCreate: jest.fn()
+          onCreate: jest.fn(),
+          onUpdate: jest.fn(),
+          onDelete: jest.fn()
         }))
       },
       pubsub: {
