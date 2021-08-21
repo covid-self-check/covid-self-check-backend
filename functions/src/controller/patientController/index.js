@@ -26,63 +26,6 @@ const {
   setAmedStatus,
 } = require("./utils");
 
-const addTotalPatientCount = async () => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc("users")
-    .get();
-
-  if (!snapshot.exists) {
-    await snapshot.ref.create({ count: 1 });
-  } else {
-    await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
-  }
-};
-
-const decrementTotalPatientCount = async () => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc("users")
-    .get();
-  if (snapshot.exists) {
-    await snapshot.ref.update(
-      "count",
-      admin.firestore.FieldValue.increment(-1)
-    );
-  }
-};
-
-const addTotalPatientCountByColor = async (status) => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc(status)
-    .get();
-
-  if (!snapshot.exists) {
-    await snapshot.ref.create({ count: 1 });
-  } else {
-    await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
-  }
-};
-
-const decrementTotalPatientCountByColor = async (status) => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc(status)
-    .get();
-
-  if (snapshot.exists) {
-    await snapshot.ref.update(
-      "count",
-      admin.firestore.FieldValue.increment(-1)
-    );
-  }
-};
-
 // Mon added this code
 const deletePatient = async (personalID) => {
   const snapshot = await admin
@@ -145,23 +88,6 @@ const deletePatient = async (personalID) => {
         console.log("batch ", error);
         return false;
       });
-    // res = await Promise.all(snapshot.docs.map((doc) => {
-    //   admin.firestore().collection("patient").doc(doc.id).delete();
-    //   admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
-    //   decrementTotalPatientCount();
-    //   if(doc.data().triage_score in statusListReverse) {
-    //     decrementTotalPatientCountByColor(
-    //       statusListReverse[doc.data().triage_score]
-    //     );
-    //   }
-    // }))
-    // .then(() => {
-    //   return true;
-    // })
-    // .catch(error => {
-    //   console.log(error);
-    //   return false;
-    // });
   }
 };
 
