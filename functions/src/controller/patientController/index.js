@@ -26,63 +26,6 @@ const {
   setAmedStatus,
 } = require("./utils");
 
-const addTotalPatientCount = async () => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc("users")
-    .get();
-
-  if (!snapshot.exists) {
-    await snapshot.ref.create({ count: 1 });
-  } else {
-    await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
-  }
-};
-
-const decrementTotalPatientCount = async () => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc("users")
-    .get();
-  if (snapshot.exists) {
-    await snapshot.ref.update(
-      "count",
-      admin.firestore.FieldValue.increment(-1)
-    );
-  }
-};
-
-const addTotalPatientCountByColor = async (status) => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc(status)
-    .get();
-
-  if (!snapshot.exists) {
-    await snapshot.ref.create({ count: 1 });
-  } else {
-    await snapshot.ref.update("count", admin.firestore.FieldValue.increment(1));
-  }
-};
-
-const decrementTotalPatientCountByColor = async (status) => {
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.userCount)
-    .doc(status)
-    .get();
-
-  if (snapshot.exists) {
-    await snapshot.ref.update(
-      "count",
-      admin.firestore.FieldValue.increment(-1)
-    );
-  }
-};
-
 // Mon added this code
 const deletePatient = async (personalID) => {
   const snapshot = await admin
@@ -107,36 +50,9 @@ const deletePatient = async (personalID) => {
         .collection(collection.legacyUser)
         .doc(doc.id);
 
-      const patientCountRef = admin
-        .firestore()
-        .collection(collection.userCount)
-        .doc("users");
-
-      const colorCountRef =
-        doc.data().status in statusListReverse
-          ? admin
-              .firestore()
-              .collection(collection.userCount)
-              .doc(statusListReverse[doc.data().status])
-          : null;
-
       batch.delete(patientDocRef);
 
       batch.set(legacyRef, { ...doc.data() });
-
-      batch.update(
-        patientCountRef,
-        "count",
-        admin.firestore.FieldValue.increment(-1)
-      );
-
-      if (colorCountRef) {
-        batch.update(
-          colorCountRef,
-          "count",
-          admin.firestore.FieldValue.increment(-1)
-        );
-      }
     });
     return batch
       .commit()
@@ -145,23 +61,6 @@ const deletePatient = async (personalID) => {
         console.log("batch ", error);
         return false;
       });
-    // res = await Promise.all(snapshot.docs.map((doc) => {
-    //   admin.firestore().collection("patient").doc(doc.id).delete();
-    //   admin.firestore().collection("legacyUser").doc(doc.id).set({...doc.data()});
-    //   decrementTotalPatientCount();
-    //   if(doc.data().triage_score in statusListReverse) {
-    //     decrementTotalPatientCountByColor(
-    //       statusListReverse[doc.data().triage_score]
-    //     );
-    //   }
-    // }))
-    // .then(() => {
-    //   return true;
-    // })
-    // .catch(error => {
-    //   console.log(error);
-    //   return false;
-    // });
   }
 };
 
@@ -241,11 +140,6 @@ exports.registerPatient = async (data, _context) => {
 
   //need db connection
   await snapshot.ref.create(obj);
-  try {
-    await addTotalPatientCount();
-  } catch (err) {
-    console.log(err);
-  }
 
   return success(`Registration with ID: ${lineUserID} added`);
 };
@@ -396,30 +290,6 @@ exports.updateSymptom = async (data, _context) => {
       objWithOutCreatedDate,
       config.line.channelAccessToken
     );
-  } catch (err) {
-    console.log(err);
-  }
-
-  try {
-    if (previousStatus !== null) {
-      await decrementTotalPatientCountByColor(
-        statusListReverse[previousStatus]
-      );
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  try {
-    if (objWithOutCreatedDate["toAmed"] === 1) {
-      await decrementTotalPatientCount();
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  try {
-    await addTotalPatientCountByColor(inclusion_label);
   } catch (err) {
     console.log(err);
   }
