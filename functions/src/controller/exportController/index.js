@@ -344,15 +344,3 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
   );
 };
 
-exports.updateActiveUser = async () => {
-  const todayDate = getDateID();
-  // console.log(todayDate);
-  const snapshot = await admin.firestore().collection(collection.activeUser).doc(todayDate).get();
-  // console.log(snapshot);
-  if (!snapshot.exists) {
-    const dailyUser = await utils.getActiveUser();
-    const test = await snapshot.ref.create({active_patient: dailyUser})
-    // console.log(test)
-  }
-  return success();
-}

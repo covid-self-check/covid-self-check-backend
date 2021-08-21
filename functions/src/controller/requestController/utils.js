@@ -6,15 +6,15 @@ exports.incrementR2CUser = async () => {
 
   const snapshot = await admin
     .firestore()
-    .collection(collection.r2cStat)
+    .collection(collection.timeSeries)
     .doc(id)
     .get();
 
   if (!snapshot.exists) {
-    return snapshot.ref.create({ count: 1 });
+    return snapshot.ref.update({ r2ccount: 1 });
   } else {
     return snapshot.ref.update(
-      "count",
+      "r2ccount",
       admin.firestore.FieldValue.increment(1)
     );
   }
