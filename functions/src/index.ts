@@ -26,6 +26,7 @@ const {
   requestController,
   importController,
   pubsub,
+  firestoreController,
 } = require("./controller");
 
 const app = express();
@@ -45,6 +46,8 @@ app.get(
   "/",
   authenticateVolunteerRequest(exportController.exportPatientForNurse)
 );
+
+
 
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
@@ -182,10 +185,8 @@ exports.createReport = functions.region(region).https.onRequest(app);
 
 exports.onRegisterPatient = functions
   .region(region)
-  .firestore.document("")
-  .onCreate(async (snapshot, context) => {
-
-  })
+  .firestore.document("patient/{id}")
+  .onCreate(firestoreController.onRegisterPatient)
 
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
