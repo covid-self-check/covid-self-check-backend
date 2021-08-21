@@ -1,4 +1,4 @@
-exports.statusList = {
+export const statusList: { [key: string]: number } = {
   unknown: 0,
   G1: 1,
   G2: 2,
@@ -8,7 +8,7 @@ exports.statusList = {
   R2: 6,
 };
 
-exports.statusListReverse = {
+export const statusListReverse: { [key: number]: string } = {
   0: "unknown",
   1: "G1",
   2: "G2",
