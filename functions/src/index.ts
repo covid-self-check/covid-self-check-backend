@@ -188,6 +188,11 @@ exports.onRegisterPatient = functions
   .firestore.document("patient/{id}")
   .onCreate(firestoreController.onRegisterPatient)
 
+exports.onUpdateSymptom = functions
+  .region(region)
+  .firestore.document("patient/{id}")
+  .onUpdate(firestoreController.onUpdatePatient)
+
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
   .region(region)
