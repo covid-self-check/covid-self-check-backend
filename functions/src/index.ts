@@ -180,6 +180,13 @@ exports.updateSymptom = functions
 
 exports.createReport = functions.region(region).https.onRequest(app);
 
+exports.onRegisterPatient = functions
+  .region(region)
+  .firestore.document("")
+  .onCreate(async (snapshot, context) => {
+
+  })
+
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
   .region(region)
