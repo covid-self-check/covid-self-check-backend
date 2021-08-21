@@ -1,20 +1,40 @@
 const { admin, collection } = require("../../init");
 const { getDateID } = require("../../utils/date");
 const utils = require("./utils");
+const { success } = require("../../response/success");
 
-exports.initializeR2CStat = async (_context) => {
+exports.initializeTimeSeries = async () => {
   const id = getDateID();
   const snapshot = await admin
     .firestore()
-    .collection(collection.r2cStat)
+    .collection(collection.timeSeries)
     .doc(id)
     .get();
   if (!snapshot.exists) {
-    await snapshot.ref.create({ count: 0 });
+    await snapshot.ref.create({ 
+      r2ccount: 0,
+      dropofrate: await this.calculateDropOffRate(),
+      usersbtw36hrsto72hrs: await utils.getnumberusersbtw36hrsto72hrs(),
+      activeUser: await utils.getActiveUser(),
+      terminateusers: 0
+     });
   }
-};
+};  
 
-exports.calculateDropOffRate = async (_data, _context) => {
+
+// exports.initializeR2CStat = async (_context) => {
+//   const id = getDateID();
+//   const snapshot = await admin
+//     .firestore()
+//     .collection(collection.r2cStat)
+//     .doc(id)
+//     .get();
+//   if (!snapshot.exists) {
+//     await snapshot.ref.create({ count: 0 });
+//   }
+// };
+
+exports.calculateDropOffRate = async () => {
   const snapshot = await admin.firestore().collection(collection.patient).get();
   let totalPatientCount = 0;
   let totalDropOffDays = 0;
@@ -46,18 +66,19 @@ exports.calculateDropOffRate = async (_data, _context) => {
     dropOffRate = totalDropOffDays / totalPatientCount;
   }
 
-  const id = getDateID();
-  const record = await admin
-    .firestore()
-    .collection(collection.dropOffStat)
-    .doc(id)
-    .get();
-  if (!record.exists) {
-    record.ref.create({ rate: dropOffRate });
-  } else {
-    console.log(`record id ${id} already exists`);
-    console.log(record.data());
-  }
+  return dropOffRate;
+  // const id = getDateID();
+  // const record = await admin
+  //   .firestore()
+  //   .collection(collection.dropOffStat)
+  //   .doc(id)
+  //   .get();
+  // if (!record.exists) {
+  //   record.ref.create({ rate: dropOffRate });
+  // } else {
+  //   console.log(`record id ${id} already exists`);
+  //   console.log(record.data());
+  // }
 };
 
 exports.initializeLegacyStat = async (_context) => {
@@ -73,16 +94,29 @@ exports.initializeLegacyStat = async (_context) => {
     .set({ count: snapshot.docs.length });
 };
 
-exports.updatenumberuserbtw36hrsto72hrs = async () => {
-  const notUpdatedlistnumber = await utils.getnumberusersbtw36hrsto72hrs();
-  const id = getDateID();
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.usersbtw36hrsto72hrs)
-    .doc(id)
-    .get();
-  if (!snapshot.exists) {
-    await snapshot.ref.create({ count: notUpdatedlistnumber });
-  }
-  // return(notUpdatedlistnumber);
-};
+// exports.updatenumberuserbtw36hrsto72hrs = async () => {
+//   const notUpdatedlistnumber = await utils.getnumberusersbtw36hrsto72hrs();
+//   const id = getDateID();
+//   const snapshot = await admin
+//     .firestore()
+//     .collection(collection.usersbtw36hrsto72hrs)
+//     .doc(id)
+//     .get();
+//   if (!snapshot.exists) {
+//     await snapshot.ref.create({ count: notUpdatedlistnumber });
+//   }
+//   // return(notUpdatedlistnumber);
+// };
+
+// exports.updateActiveUser = async () => {
+//   const todayDate = getDateID();
+//   // console.log(todayDate);
+//   const snapshot = await admin.firestore().collection(collection.activeUser).doc(todayDate).get();
+//   // console.log(snapshot);
+//   if (!snapshot.exists) {
+//     const dailyUser = await utils.getActiveUser();
+//     const test = await snapshot.ref.create({active_patient: dailyUser})
+//     // console.log(test)
+//   }
+//   return success();
+// }
