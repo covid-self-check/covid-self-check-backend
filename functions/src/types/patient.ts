@@ -68,7 +68,7 @@ export type Patient = {
   isRequestToCallExported: boolean
   isRequestToCall: boolean
   isNurseExported: boolean
-  toAmed: boolean
+  toAmed: number
 
 
   // destructors from follow up

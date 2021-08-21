@@ -23,22 +23,33 @@ export const onRegisterPatient: OnCreateHandler<Patient> = async (snapshot, _con
 
 export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, context) => {
   try {
+    console.log("execute update")
     const batch = admin.firestore().batch();
 
     const prevData = change.before.data();
     const currentData = change.after.data();
 
-    // decrement from old color
-    await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[prevData.status])
+    // if the change is relevant to update symptom
+    if (prevData.status !== currentData.status) {
+      // decrement from old color
+      await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[prevData.status])
 
-    // increment new color
+      // increment new color
+      await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[currentData.status])
 
-    await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[currentData.status])
+      if (currentData.toAmed === 1) {
+        await utils.decrementTotalPatientCount(batch);
+      }
+      console.log("COMMIT")
+      await batch.commit();
+    }
 
   } catch (e) {
     console.log(e)
   }
 }
+
+
 
 
 

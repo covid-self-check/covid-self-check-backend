@@ -7,7 +7,7 @@
     "watch": "ts-watch -p ./tsconfig.build.json",
     "serve": "concurrently --kill-others \"yarn firebase:serve\" \"yarn watch\"",
     "firebase:serve": "firebase serve --only functions",
-    "emulator": "firebase emulators:start --only functions",
+    "emulator": "concurrently \"firebase emulators:start --only functions,firestore\" \"yarn watch\"",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",

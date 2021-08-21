@@ -126,7 +126,6 @@ const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
     baseURL,
   };
   await axios(axiosConfig);
-  console.log("message:", message);
 };
 
 module.exports = { sendPatientstatus };

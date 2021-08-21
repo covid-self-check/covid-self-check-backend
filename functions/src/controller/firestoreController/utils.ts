@@ -49,6 +49,7 @@ export const decrementTotalPatientCountByStatus = async (batch: WriteBatch, labe
 
 }
 
+
 const createOrIncrementCount: PatientCountHandler = (snapshot, ref, batch) => {
   if (!snapshot.exists) {
     batch.create(ref, { count: 1 })

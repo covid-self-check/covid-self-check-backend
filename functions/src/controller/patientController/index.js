@@ -395,29 +395,5 @@ exports.updateSymptom = async (data, _context) => {
     console.log(err);
   }
 
-  try {
-    if (previousStatus !== null) {
-      await decrementTotalPatientCountByColor(
-        statusListReverse[previousStatus]
-      );
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  try {
-    if (objWithOutCreatedDate["toAmed"] === 1) {
-      await decrementTotalPatientCount();
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  try {
-    await addTotalPatientCountByColor(inclusion_label);
-  } catch (err) {
-    console.log(err);
-  }
-
   return success({ status: inclusion_label });
 };
