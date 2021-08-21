@@ -1,5 +1,4 @@
-import * as Joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as Joi from 'joi';
 
 export const RequestToRegisterSchema = Joi.object({
   lineIDToken: Joi.string().required(), // TODO: get from authentication

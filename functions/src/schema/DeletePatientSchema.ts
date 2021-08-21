@@ -1,5 +1,4 @@
-import * as Joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as Joi from 'joi';
 
 export const DeletePatientSchema = Joi.object({
   personalID: Joi.string().required(),
