@@ -10,9 +10,9 @@ export const onRegisterPatient: OnCreateHandler<Patient> = async (snapshot, _con
     const batch = admin.firestore().batch();
     // snapshot.status
     const data = snapshot.data()
-    utils.incrementTotalPatientCount(batch)
+    await utils.incrementTotalPatientCount(batch)
 
-    utils.incrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
+    await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
 
     await batch.commit()
 
