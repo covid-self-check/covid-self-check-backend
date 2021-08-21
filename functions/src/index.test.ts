@@ -22,6 +22,14 @@ describe("endpoints", () => {
       https: {
         onRequest: jest.fn(),
         onCall: jest.fn(),
+
+      },
+      firestore: {
+        document: jest.fn(() => ({
+          onCreate: jest.fn(),
+          onUpdate: jest.fn(),
+          onDelete: jest.fn()
+        }))
       },
       pubsub: {
         schedule: () => ({ timeZone: () => ({ onRun: jest.fn() }) }),

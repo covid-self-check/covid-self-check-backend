@@ -3,5 +3,6 @@ module.exports = {
   importController: require("./importController/importController"),
   patientController: require("./patientController"),
   requestController: require("./requestController"),
+  firestoreController: require("./firestoreController"),
   pubsub: require("./pubsub"),
 };
