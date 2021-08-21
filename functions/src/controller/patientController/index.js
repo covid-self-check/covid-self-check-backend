@@ -241,11 +241,6 @@ exports.registerPatient = async (data, _context) => {
 
   //need db connection
   await snapshot.ref.create(obj);
-  try {
-    await addTotalPatientCount();
-  } catch (err) {
-    console.log(err);
-  }
 
   return success(`Registration with ID: ${lineUserID} added`);
 };
