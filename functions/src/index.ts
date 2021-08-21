@@ -193,6 +193,11 @@ exports.onUpdateSymptom = functions
   .firestore.document("patient/{id}")
   .onUpdate(firestoreController.onUpdatePatient)
 
+exports.onDeletePatient = functions
+  .region(region)
+  .firestore.document("patient/{id}")
+  .onDelete(firestoreController.onDeletePatient)
+
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
   .region(region)

@@ -51,10 +51,13 @@ export const onDeletePatient: OnDeleteHandler<Patient> = async (snapshot, _conte
   const data = snapshot.data()
   try {
     const batch = admin.firestore().batch();
+    // if the patient is not sent to amed yet, 
+    // additional decrement total patient count is required
+    if (data.toAmed === 0) {
+      await utils.decrementTotalPatientCount(batch);
+    }
 
     await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
-
-    await utils.decrementTotalPatientCount(batch);
 
     await batch.commit()
 
