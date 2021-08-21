@@ -7,7 +7,8 @@ const {
 } = require("./middleware/authentication");
 const { admin, initializeApp } = require("./init");
 const { eventHandler } = require("./handler/eventHandler");
-const line = require("@line/bot-sdk");
+// const line = require("@line/bot-sdk");
+import * as line from "@line/bot-sdk"
 const config = {
   channelAccessToken: functions.config().line.channel_token,
   channelSecret: functions.config().line.channel_secret,
@@ -51,8 +52,8 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   try {
     const event = req.body.events[0];
     const userId = event.source.userId;
-    const profile = client.getProfile(userId);
-    const userObject = { userId: userId, profile: await profile };
+    const profile:any = await client.getProfile(userId);
+    const userObject = { userId: userId, profile:  profile };
     console.log(userObject);
     // console.log(event)
     await eventHandler(event, userObject, client);
