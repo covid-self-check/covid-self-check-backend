@@ -1,4 +1,4 @@
-import { OnCreateHandler, OnUpdateHandler, Patient } from "../../types"
+import { OnCreateHandler, OnUpdateHandler, OnDeleteHandler, Patient } from "../../types"
 import { admin } from "../../init"
 import * as utils from "./utils"
 import { statusListReverse } from "../../api/const"
@@ -21,9 +21,8 @@ export const onRegisterPatient: OnCreateHandler<Patient> = async (snapshot, _con
   }
 }
 
-export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, context) => {
+export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, _context) => {
   try {
-    console.log("execute update")
     const batch = admin.firestore().batch();
 
     const prevData = change.before.data();
@@ -40,7 +39,6 @@ export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, context)
       if (currentData.toAmed === 1) {
         await utils.decrementTotalPatientCount(batch);
       }
-      console.log("COMMIT")
       await batch.commit();
     }
 
@@ -49,6 +47,21 @@ export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, context)
   }
 }
 
+export const onDeletePatient: OnDeleteHandler<Patient> = async (snapshot, _context) => {
+  const data = snapshot.data()
+  try {
+    const batch = admin.firestore().batch();
+
+    await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
+
+    await utils.decrementTotalPatientCount(batch);
+
+    await batch.commit()
+
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 
 
