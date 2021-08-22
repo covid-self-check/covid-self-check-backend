@@ -28,6 +28,7 @@ const {
   importController,
   pubsub,
   firestoreController,
+  dashboard
 } = require("./controller");
 
 const app = express();
@@ -111,6 +112,9 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   })
 );
 
+exports.accumulativeData = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(dashboard.getAccumulative));
 
 exports.backupFirestore = functions
   .region(region)
