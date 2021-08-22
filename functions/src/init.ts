@@ -1,13 +1,13 @@
 // The Firebase Admin SDK to access Firestore.
-const admin = require("firebase-admin");
+import * as admin from "firebase-admin";
 
-exports.initializeApp = function () {
+export const initializeApp = () => {
   admin.initializeApp();
 };
 
-exports.admin = admin;
 
-exports.collection = {
+
+export const collection = {
   patient: "patient",
   r2rAssistance: "requestToRegisterAssistance",
   userCount: "userCount",
@@ -16,3 +16,6 @@ exports.collection = {
   legacyStat: "legacyStat",
   timeSeries: "timeSeries"
 };
+
+export { admin }
+
