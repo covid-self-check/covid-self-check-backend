@@ -110,11 +110,7 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
     return { result: `Content for authorized user` };
   })
 );
-
-  
-exports.updateTimeseries =functions
-  .region(region)
-  .https.onCall(authenticateVolunteer(pubsub.updateTimeSeries));
+ 
 
 exports.backupFirestore = functions
   .region(region)
@@ -126,7 +122,7 @@ exports.updateTimeSeries = functions
 .region(region)
 .pubsub.schedule("every day 23:59")
 .timeZone("Asia/Bangkok")
-.onRun(pubsub.initializeTimeSeries);
+.onRun(pubsub.updateTimeSeries);
 
 exports.initializeLegacyStat = functions
   .region(region)
