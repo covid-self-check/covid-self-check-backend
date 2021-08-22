@@ -14,7 +14,7 @@ const { makeStatusAPIPayload, makeRequest } = require("../../api");
 const { statusList, statusListReverse } = require("../../api/const");
 const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
-const { convertTimestampToStr } = require("../../utils/date");
+const { convertTimestampToStr } = require("../../utils");
 const { config } = require("../../config/index");
 const {
   setPatientStatus,
