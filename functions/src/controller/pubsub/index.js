@@ -1,8 +1,6 @@
 const { admin, collection } = require("../../init");
 const { getDateID } = require("../../utils/date");
 const utils = require("./utils");
-const { success } = require("../../response/success");
-const { promises } = require("dns");
 
 exports.updateTimeSeries = async () => {
   const id = getDateID();
