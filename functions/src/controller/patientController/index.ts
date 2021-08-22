@@ -1,34 +1,39 @@
-const functions = require("firebase-functions");
-const {
+import * as functions from "firebase-functions";
+import {
   validateRegisterSchema,
   validateGetProfileSchema,
   validateHistorySchema,
   //mon added this
   validateDeletePatientSchema,
+  RegisterType,
+  DeletePatientType,
+  GetProfileType,
+  HistoryType,
   //end mon code
-} = require("../../schema");
-const { admin, collection } = require("../../init");
+} from "../../schema";
+import { admin, collection } from "../../init";
 const { getProfile } = require("../../middleware/authentication");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
-const { statusList, statusListReverse } = require("../../api/const");
+const { statusList } = require("../../api/const");
 const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils");
 const { config } = require("../../config/index");
+const { TO_AMED_STATUS } = require("../../utils/status")
 
 import {
   setPatientStatus,
   snapshotExists,
-  updateSymptomAddCreatedDate,
   updateSymptomCheckUser,
   updateSymptomCheckAmed,
-  updateSymptomUpdateStatus,
-  setAmedStatus,
+  createFollowUpObj,
 } from "./utils";
+import { OnCallHandler } from "../../types/handler";
+import { Patient } from "../../types";
 
 // Mon added this code
-const deletePatient = async (personalID) => {
+const deletePatient = async (personalID: string) => {
   const snapshot = await admin
     .firestore()
     .collection(collection.patient)
@@ -65,7 +70,7 @@ const deletePatient = async (personalID) => {
   }
 };
 
-exports.requestDeletePatient = async (data, _context) => {
+export const requestDeletePatient: OnCallHandler<DeletePatientType> = async (data, _context) => {
   const { value, error } = validateDeletePatientSchema(data);
 
   if (error) {
@@ -92,7 +97,7 @@ exports.requestDeletePatient = async (data, _context) => {
 };
 // end of mon's code
 
-exports.registerPatient = async (data, _context) => {
+export const registerPatient: OnCallHandler<RegisterType> = async (data, _context) => {
   const { value, error } = validateRegisterSchema(data);
 
   if (error) {
@@ -145,7 +150,7 @@ exports.registerPatient = async (data, _context) => {
   return success(`Registration with ID: ${lineUserID} added`);
 };
 
-exports.getProfile = async (data, _context) => {
+export const getProfileHandler: OnCallHandler<GetProfileType> = async (data, _context) => {
   const { value, error } = validateGetProfileSchema(data);
   if (error) {
     console.log(error.details);
@@ -177,7 +182,7 @@ exports.getProfile = async (data, _context) => {
 
   const { name, picture } = lineProfile;
   if (snapshot.exists) {
-    const { followUp, ...patientData } = snapshot.data();
+    const { followUp, ...patientData } = snapshot.data() as Patient;
     const serializeData = convertTimestampToStr(patientData);
     return { line: { name, picture }, patient: serializeData };
   } else {
@@ -185,7 +190,7 @@ exports.getProfile = async (data, _context) => {
   }
 };
 
-exports.updateSymptom = async (data, _context) => {
+export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) => {
   const { value, error } = validateHistorySchema(data);
   if (error) {
     // DEBUG
@@ -212,7 +217,6 @@ exports.updateSymptom = async (data, _context) => {
 
   const date = new Date();
   const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
-  updateSymptomAddCreatedDate(obj, createdTimeStamp);
 
   //need db connection
   const snapshot = await admin
@@ -222,46 +226,32 @@ exports.updateSymptom = async (data, _context) => {
     .get();
 
   updateSymptomCheckUser(snapshot, lineUserID);
-
-  const snapshotData = snapshot.data();
+  const snapshotData = snapshot.data() as Patient;
   const {
     followUp,
     firstName,
     lastName,
-    toAmed,
     status: previousStatus,
   } = snapshotData;
 
   updateSymptomCheckAmed(snapshotData);
-  //TO BE CHANGED: snapshot.data.apply().status = statusCheckAPIorSomething;
-  //update lastUpdatedAt field on patient
 
   const formPayload = makeStatusAPIPayload(snapshotData, obj);
   const { inclusion_label, inclusion_label_type, triage_score } =
     await makeRequest(formPayload);
 
   const status = statusList[inclusion_label];
-  updateSymptomUpdateStatus(
+
+  const followUpObj = createFollowUpObj(
     obj,
     status,
     inclusion_label_type,
     triage_score,
-    createdTimeStamp
-  );
+    createdTimeStamp,
+    previousStatus
+  )
 
-  const followUpObj = { ...obj };
-  obj["isNurseExported"] = false;
-
-  const ALERT_STATUS = [
-    statusList["Y1"],
-    statusList["Y2"],
-    statusList["R1"],
-    statusList["R2"],
-  ];
-
-  setAmedStatus(obj, status, previousStatus, ALERT_STATUS);
-
-  const { createdDate, ...objWithOutCreatedDate } = obj;
+  const { createdDate, ...objWithOutCreatedDate } = followUpObj;
 
   if (!followUp) {
     await snapshot.ref.set({
@@ -276,7 +266,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   try {
-    if (ALERT_STATUS.includes(status)) {
+    if (TO_AMED_STATUS.includes(status)) {
       await notifyToLine(
         `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
       );
