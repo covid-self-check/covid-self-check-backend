@@ -1,6 +1,6 @@
 import { admin, collection } from "../../init";
 import { OnRunHandler } from "../../types";
-import { getDateID } from "../../utils/date";
+import { getDateID } from "../../utils";
 import * as utils from "./utils";
 
 export const updateTimeSeries = async () => {

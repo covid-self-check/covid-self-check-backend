@@ -1,14 +1,18 @@
 import * as functions from "firebase-functions";
-import { getProfile } from "../../middleware/authentication";
-const {
+// import { getProfile } from "../../middleware/authentication";
+const { getProfile } = require("../../middleware/authentication")
+import {
+  GetProfileType,
+  RequestToRegisterType,
   validateGetProfileSchema,
   validateRequestToRegisterSchema,
-} = require("../../schema");
+} from "../../schema";
 import { admin, collection } from "../../init";
 import { success } from "../../response/success";
+import { OnCallHandler, Patient, R2C, R2RAssistance } from "../../types";
 const { incrementR2CUser } = require("./utils");
 
-exports.requestToCall = async (data, _context) => {
+export const requestToCall: OnCallHandler<GetProfileType> = async (data, _context) => {
   const { value, error } = validateGetProfileSchema(data);
   if (error) {
     console.log(error.details);
@@ -34,8 +38,9 @@ exports.requestToCall = async (data, _context) => {
     .collection(collection.patient)
     .doc(lineUserID)
     .get();
+  const patient = snapshot.data() as Patient;
   if (!snapshot.exists) {
-    if (snapshot.data().toAmed === 1) {
+    if (patient.toAmed === 1) {
       throw new functions.https.HttpsError(
         "failed-precondition",
         "your information is already handle by Amed"
@@ -46,7 +51,7 @@ exports.requestToCall = async (data, _context) => {
       `ไม่พบผู้ใช้ ${lineUserID}`
     );
   }
-  const { isRequestToCall } = snapshot.data();
+  const { isRequestToCall } = patient;
 
   if (isRequestToCall) {
     return success(`userID: ${lineUserID} has already requested to call`);
@@ -61,7 +66,7 @@ exports.requestToCall = async (data, _context) => {
   return success();
 };
 
-exports.requestToRegister = async (data, _context) => {
+export const requestToRegister: OnCallHandler<RequestToRegisterType> = async (data, _context) => {
   const { value, error } = validateRequestToRegisterSchema(data);
   if (error) {
     console.log(error.details);
@@ -109,7 +114,7 @@ exports.requestToRegister = async (data, _context) => {
         `มีข้อมูลผู้ใช้ ${lineUserID} ในรายชื่อการโทรแล้ว`
       );
     }
-    const obj = {
+    const obj: R2RAssistance = {
       name: value.name,
       personalPhoneNo: value.personalPhoneNo,
       isR2RExported: false,

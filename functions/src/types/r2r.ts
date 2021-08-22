@@ -2,7 +2,6 @@ import { RequestToRegisterType } from "../schema"
 
 export type R2RAssistance = Omit<RequestToRegisterType, 'lineIDToken' | 'lineUserID' | 'noAuth'> & {
   isR2RExported: boolean,
-  isRequestToCallRegister: boolean,
 }
 
 export type NotUpdatedList = {
