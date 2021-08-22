@@ -10,17 +10,17 @@ exports.getAccumulative = async() => {
           .collection(collection.userCount)
           .doc(typeDocs[i])
           .get();
-        
-        console.log(typeDocs[i]);
-        tempNum.push(docRef.data());         
+        if(docRef.exists){
+            tempNum.push(docRef.data().count);  
+        } else {
+            tempNum.push(0);
+        }            
     };
-
     const legacyRef = await admin
       .firestore()
       .collection(collection.legacyStat)
       .doc("stat")
       .get();
-
     const temp = {
         G1:tempNum[0],
         G2:tempNum[1],
@@ -32,5 +32,4 @@ exports.getAccumulative = async() => {
         legacyCount: legacyRef.data().count
     };
     return temp;
-    
 };
