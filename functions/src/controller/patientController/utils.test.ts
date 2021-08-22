@@ -14,8 +14,8 @@ describe("setPatientStatus", () => {
   it("should setPatientStatus correctly", () => {
     const mockObj = {};
     const createdDate = new Date();
-    setPatientStatus(mockObj, createdDate);
-    expect(mockObj).toEqual({
+    const result = setPatientStatus(mockObj, createdDate);
+    expect(result).toEqual({
       status: 0,
       needFollowUp: true,
       followUp: [],
