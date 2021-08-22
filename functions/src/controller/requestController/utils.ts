@@ -1,7 +1,7 @@
-const { admin, collection } = require("../../init");
-const { getDateID } = require("../../utils/date");
+import { admin, collection } from "../../init";
+import { getDateID } from "../../utils";
 
-exports.incrementR2CUser = async () => {
+export const incrementR2CUser = async () => {
   const id = getDateID();
 
   const snapshot = await admin
@@ -20,7 +20,7 @@ exports.incrementR2CUser = async () => {
   }
 };
 
-exports.incrementLegacyUser = async () => {
+export const incrementLegacyUser = async () => {
   const snapshot = await admin
     .firestore()
     .collection(collection.legacyStat)
