@@ -111,48 +111,29 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
   })
 );
 
+  
+exports.updateTimeseries =functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(pubsub.updateTimeSeries));
+
 exports.backupFirestore = functions
   .region(region)
   .pubsub.schedule("every day 18:00")
   .timeZone("Asia/Bangkok")
   .onRun(backup);
 
-exports.initializeTimeSeries = functions
+exports.updateTimeSeries = functions
 .region(region)
-.pubsub.schedule("every day 00:00")
+.pubsub.schedule("every day 23:59")
 .timeZone("Asia/Bangkok")
 .onRun(pubsub.initializeTimeSeries);
-
-// exports.initializeR2CStat = functions
-//   .region(region)
-//   .pubsub.schedule("every day 00:00")
-//   .timeZone("Asia/Bangkok")
-//   .onRun(pubsub.initializeR2CStat);
-
-
-// exports.updatenumberuserbtw36hrsto72hrs = functions
-//   .region(region)
-//   .pubsub.schedule("every day 00:00")
-//   .timeZone("Asia/Bangkok")
-//   .onRun(pubsub.updatenumberuserbtw36hrsto72hrs);
-
-// exports.calculateDropOff = functions
-//   .region(region)
-//   .pubsub.schedule("every day 00:00")
-//   .timeZone("Asia/Bangkok")
-// .onRun(pubsub.calculateDropOffRate);
 
 exports.initializeLegacyStat = functions
   .region(region)
   .pubsub.schedule("every day 00:00")
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeLegacyStat);
-// exports.getActive = functions
-//   .region(region)
-//   .pubsub.schedule("every day 00:00")
-//   .timeZone("Asia/Bangkok")
-//   .onRun(pubsub.updateActiveUser);
-// exports.getActiveUser = functions.region(region).https.onCall(exportController.updateActiveUser)
+
 exports.getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {

@@ -57,7 +57,9 @@ export const onDeletePatient: OnDeleteHandler<Patient> = async (snapshot, _conte
       await utils.decrementTotalPatientCount(batch);
     }
 
-    await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
+    await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[data.status]);
+
+    await utils.incrementTerminateUser(batch);
 
     await batch.commit()
 
