@@ -1,23 +1,30 @@
 const { admin } = require("../../init");
 const functions = require("firebase-functions");
+import { RegisterType } from '../../schema';
+import { Patient } from '../../types'
 
-exports.setPatientStatus = (obj, createdDate) => {
-  const needFollowUp = true;
-  obj["status"] = 0;
-  obj["needFollowUp"] = needFollowUp;
-  obj["followUp"] = [];
+exports.setPatientStatus = (obj: Omit<RegisterType, 'noAuth' | 'lineIDToken' | 'lineUserID'>, createdDate: Date): Patient => {
   const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
-  obj["createdDate"] = createdTimestamp;
-  obj["lastUpdatedAt"] = createdTimestamp;
-  obj["isRequestToCallExported"] = false;
-  obj["isRequestToCall"] = false;
-  obj["isNurseExported"] = false;
-  obj["toAmed"] = 0;
+
+  const result = {
+    status: 0,
+    needFollowUp: true,
+    followUp: [],
+    createdDate: createdTimestamp,
+    lastUpdatedAt: createdTimestamp,
+    isRequestToCallExported: false,
+    isRequestToCall: false,
+    isNurseExported: false,
+    toAmed: 0,
+    ...obj
+  }
+
+  return result
 };
 
-exports.snapshotExists = (snapshot) => {
+exports.snapshotExists = (snapshot: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>) => {
   if (snapshot.exists) {
-    if (snapshot.data().toAmed === 1) {
+    if (snapshot.data()?.toAmed === 1) {
       throw new functions.https.HttpsError(
         "failed-precondition",
         "your information is already handle by Amed"
@@ -30,11 +37,11 @@ exports.snapshotExists = (snapshot) => {
   }
 };
 
-exports.updateSymptomAddCreatedDate = (obj, date) => {
+exports.updateSymptomAddCreatedDate = (obj: Record<string, any>, date: Date) => {
   obj.createdDate = date;
 };
 
-exports.updateSymptomCheckUser = (snapshot, lineUserID) => {
+exports.updateSymptomCheckUser = (snapshot: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>, lineUserID: string) => {
   if (!snapshot.exists) {
     throw new functions.https.HttpsError(
       "not-found",
@@ -43,7 +50,7 @@ exports.updateSymptomCheckUser = (snapshot, lineUserID) => {
   }
 };
 
-exports.updateSymptomCheckAmed = (snapshotData) => {
+exports.updateSymptomCheckAmed = (snapshotData: Record<string, any>) => {
   const { toAmed } = snapshotData;
   if (toAmed === 1) {
     throw new functions.https.HttpsError(
@@ -54,11 +61,11 @@ exports.updateSymptomCheckAmed = (snapshotData) => {
 };
 
 exports.updateSymptomUpdateStatus = (
-  obj,
-  status,
-  inclusion_label_type,
-  triage_score,
-  createdTimeStamp
+  obj: Record<string, any>,
+  status: number,
+  inclusion_label_type: string,
+  triage_score: number,
+  createdTimeStamp: any
 ) => {
   obj["status"] = status;
   obj["status_label_type"] = inclusion_label_type;
@@ -66,7 +73,7 @@ exports.updateSymptomUpdateStatus = (
   obj["lastUpdatedAt"] = createdTimeStamp;
 };
 
-exports.setAmedStatus = (obj, status, previousStatus, TO_AMED_STATUS) => {
+exports.setAmedStatus = (obj: Record<string, any>, status: number, previousStatus: number, TO_AMED_STATUS: any) => {
   if (status !== previousStatus && TO_AMED_STATUS.includes(status)) {
     obj["toAmed"] = 1;
   } else {
