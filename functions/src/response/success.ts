@@ -3,8 +3,8 @@
  * @param {any} result
  * @returns
  */
-exports.success = (result = null) => {
-  const obj = { ok: true };
+export const success = (result: any = null) => {
+  const obj: { [key: string]: any } = { ok: true };
   if (result) obj["result"] = result;
   return obj;
 };

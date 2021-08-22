@@ -1,23 +1,27 @@
-const XLSX = require("xlsx");
-const fs = require("fs");
-const _ = require("lodash");
-const path = require("path");
-const functions = require("firebase-functions");
-const { admin, collection } = require("../../init");
-const { generateZipFileRoundRobin } = require("../../utils/zip");
-import { validateExportRequestToCallSchema } from "../../schema";
-const { statusList } = require("../../api/const");
-const {
+import * as fs from "fs";
+import * as path from "path";
+import * as _ from "lodash";
+import * as XLSX from "xlsx";
+import * as  functions from "firebase-functions";
+import { admin, collection } from "../../init";
+import { ExportRequestToCallType, validateExportRequestToCallSchema } from "../../schema";
+import { OnCallHandler, OnRequestHandler, Patient, R2RAssistance } from "../../types";
+import { formatPatient, formatter36Hr } from "./utils";
+import { calculateAge, convertTZ } from "../../utils/date";
+import * as utils from "./utils";
+import { statusList } from "../../api/const"
+import {
   patientReportHeader,
   sheetName,
   MAP_PATIENT_FIELD,
-} = require("../../utils/status");
-const { calculateAge, convertTZ,getDateID } = require("../../utils/date");
-const utils = require("./utils");
-const { success } = require("../../response/success");
+} from "../../utils/status";
+import { QuerySnapshot } from "@google-cloud/firestore";
 
 
-exports.exportR2R = async (data, _context) => {
+const { generateZipFileRoundRobin } = require("../../utils/zip");
+
+
+export const exportR2R: OnCallHandler<ExportRequestToCallType> = async (data, _context) => {
   const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -28,7 +32,7 @@ exports.exportR2R = async (data, _context) => {
   const { volunteerSize: size } = value;
 
   // get and serialize user from database
-  const snapshot = await utils.getUnExportedR2RUsers();
+  const snapshot = await utils.getUnExportedR2RUsers() as QuerySnapshot<R2RAssistance>;
   const userList = utils.serializeData(snapshot);
 
   // create zip file
@@ -46,7 +50,7 @@ exports.exportR2R = async (data, _context) => {
   return result;
 };
 
-exports.exportR2C = async (data, _context) => {
+export const exportR2C: OnCallHandler<ExportRequestToCallType> = async (data, _context) => {
   const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -68,7 +72,7 @@ exports.exportR2C = async (data, _context) => {
   );
 };
 
-exports.exportMaster = async (req, res) => {
+export const exportMaster: OnRequestHandler = async (req, res) => {
   try {
     const snapshot = await admin
       .firestore()
@@ -78,7 +82,7 @@ exports.exportMaster = async (req, res) => {
     const header = ["ที่อยู่", "เขต", "แขวง", "จังหวัด"];
     const result = [header];
     snapshot.forEach((doc) => {
-      const data = doc.data();
+      const data = doc.data() as Patient;
 
       result.push([
         data.address,
@@ -93,7 +97,7 @@ exports.exportMaster = async (req, res) => {
 
     XLSX.utils.book_append_sheet(wb, ws, "รายงานที่อยู่ผู้ป่วย 4 สิงหาคม");
     const filename = `report.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
+    const opts: XLSX.WritingOptions = { bookType: "xlsx", type: 'binary' };
 
     // it must be save to tmp directory because it run on firebase
     const pathToSave = path.join("/tmp", filename);
@@ -109,11 +113,11 @@ exports.exportMaster = async (req, res) => {
     stream.pipe(res);
   } catch (err) {
     console.log(err);
-    return res.json({ success: false });
+    res.json({ success: false });
   }
 };
 
-exports.exportPatientForNurse = async (req, res) => {
+export const exportPatientForNurse: OnRequestHandler = async (req, res) => {
   try {
     const snapshot = await admin
       .firestore()
@@ -135,7 +139,7 @@ exports.exportPatientForNurse = async (req, res) => {
       results[i] = [[...reportHeader]];
     }
 
-    const updatedDocId = [];
+    const updatedDocId: string[] = [];
 
     snapshot.docs.forEach((doc) => {
       const data = doc.data();
@@ -166,7 +170,7 @@ exports.exportPatientForNurse = async (req, res) => {
     }
     // write workbook file
     const filename = `report.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
+    const opts: XLSX.WritingOptions = { bookType: "xlsx", type: "binary" };
 
     // it must be save to tmp directory because it run on firebase
     const pathToSave = path.join("/tmp", filename);
@@ -197,7 +201,7 @@ exports.exportPatientForNurse = async (req, res) => {
   }
 };
 
-exports.export36hrs = async (data, _context) => {
+export const export36hrs: OnCallHandler<ExportRequestToCallType> = async (data, _context) => {
   const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -209,19 +213,18 @@ exports.export36hrs = async (data, _context) => {
   const patientList = await utils.get36hrsUsers();
   const header = ["first name", "tel"];
 
-  const formatter = (doc) => [doc.firstName, `="${doc.personalPhoneNo}"`];
   return generateZipFileRoundRobin(
     volunteerSize,
     patientList,
     header,
-    formatter
+    formatter36Hr
   );
 };
 
 /**
  * one time used only
  */
-exports.exportAllPatient = async (req, res) => {
+export const exportAllPatient: OnRequestHandler = async (req, res) => {
   try {
     const { password } = req.query;
     if (password !== "SpkA43Zadkl") {
@@ -282,7 +285,7 @@ exports.exportAllPatient = async (req, res) => {
     }
     // write workbook file
     const filename = `report.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
+    const opts: XLSX.WritingOptions = { bookType: "xlsx", type: "binary" };
 
     // it must be save to tmp directory because it run on firebase
     const pathToSave = path.join("/tmp", filename);
@@ -303,7 +306,7 @@ exports.exportAllPatient = async (req, res) => {
   }
 };
 
-exports.exportRequestToCallDayOne = async (data, _context) => {
+export const exportRequestToCallDayOne: OnCallHandler<ExportRequestToCallType> = async (data, _context) => {
   const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
     throw new functions.https.HttpsError(
@@ -313,13 +316,13 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
   }
 
   const { volunteerSize } = value;
-  const patientList = [];
+  const patientList: Patient[] = [];
 
   const snapshot = await admin.firestore().collection(collection.patient).get();
   await Promise.all(
     snapshot.docs.map((doc) => {
       // WARNING SIDE EFFECT inside map
-      const docData = doc.data();
+      const docData = doc.data() as Patient;
       patientList.push(docData);
     })
   );
@@ -334,13 +337,7 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
     volunteerSize,
     patientList,
     headers,
-    (doc) => [
-      doc.personalID,
-      doc.firstName,
-      doc.lastName,
-      doc.personalPhoneNo,
-      doc.emergencyPhoneNo,
-    ]
+    formatPatient
   );
 };
 

@@ -1,7 +1,11 @@
-const { admin, collection } = require("../../init");
-const { statusList } = require("../../api/const");
+import { admin, collection } from "../../init"
+import { statusList } from "../../api/const";
+import { QuerySnapshot } from "@google-cloud/firestore";
+import { Patient, NotUpdatedList, R2RAssistance, R2C, WithID } from "../../types";
 
-exports.getUnExportedR2RUsers = () => {
+
+
+export const getUnExportedR2RUsers = () => {
   return admin
     .firestore()
     .collection(collection.r2rAssistance)
@@ -10,12 +14,10 @@ exports.getUnExportedR2RUsers = () => {
 };
 
 /**
- * marked users from R2R collection as exported
- * @param {FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>} snapshot
- * @returns
+ * @returns data of each snapshot with doc id included
  */
-exports.serializeData = (snapshot) => {
-  const result = [];
+export const serializeData = (snapshot: QuerySnapshot) => {
+  const result: any[] = [];
   snapshot.docs.forEach((doc) => {
     const data = doc.data();
     data.id = doc.id;
@@ -27,10 +29,8 @@ exports.serializeData = (snapshot) => {
 
 /**
  * marked users from R2R collection as exported
- * @param {FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>} snapshot
- * @returns
  */
-exports.updateExportedR2RUsers = (snapshot) => {
+export const updateExportedR2RUsers = (snapshot: QuerySnapshot<R2RAssistance>) => {
   return Promise.all(
     snapshot.docs.map((doc) => {
       const ref = admin
@@ -45,7 +45,7 @@ exports.updateExportedR2RUsers = (snapshot) => {
   );
 };
 
-exports.getUnExportedR2CUsers = () => {
+export const getUnExportedR2CUsers = () => {
   return admin
     .firestore()
     .collection(collection.patient)
@@ -55,16 +55,15 @@ exports.getUnExportedR2CUsers = () => {
     .get();
 };
 
-exports.get36hrsUsers = async () => {
+export const get36hrsUsers = async () => {
   const snapshot = await admin.firestore().collection(collection.patient).get();
 
-  const notUpdatedList = [];
-  const currentDate = new Date();
+  const notUpdatedList: NotUpdatedList[] = [];
   snapshot.forEach((doc) => {
-    const patient = doc.data();
+    const patient = doc.data() as Patient;
 
     const lastUpdatedDate = patient.lastUpdatedAt.toDate();
-    var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    const hours = Math.abs(new Date().getTime() - lastUpdatedDate.getTime()) / 36e5;
     const includeStatus = [
       statusList["unknown"],
       statusList["G1"],
@@ -87,31 +86,28 @@ exports.get36hrsUsers = async () => {
 
 /**
  * marked users from R2C collection as exported and return serialized data
- * @param {FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>} snapshot
  * @returns serialized snapshot data
  */
-exports.updateAndSerializeR2CData = async (snapshot) => {
-  const patientList = [];
+export const updateAndSerializeR2CData = async (snapshot: QuerySnapshot) => {
+  const patientList: WithID<R2C>[] = [];
   await Promise.all(
     snapshot.docs.map((doc) => {
       // WARNING SIDE EFFECT inside map
-      const data = doc.data();
-      const dataResult = this.makeR2CPayload(doc.id, data);
+      const data = doc.data() as R2C;
+      const dataResult = makeR2CPayload(doc.id, data);
       patientList.push(dataResult);
       // end of side effects
 
-      this.updateExportedR2CUser(doc.id);
+      updateExportedR2CUser(doc.id);
     })
   );
 
   return patientList;
 };
 
-exports.makeR2CPayload = (id, data) => {
+export const makeR2CPayload = (id: string, data: R2C) => {
   return {
     id,
-
-
     firstName: data.firstName,
     lastName: data.lastName,
     hasCalled: 0,
@@ -119,7 +115,7 @@ exports.makeR2CPayload = (id, data) => {
   };
 };
 
-exports.updateExportedR2CUser = (id) => {
+export const updateExportedR2CUser = (id: string) => {
   const ref = admin.firestore().collection(collection.patient).doc(id);
 
   ref.update({
@@ -127,12 +123,21 @@ exports.updateExportedR2CUser = (id) => {
   });
 };
 
-exports.formatterR2R = (doc) => [doc.id, doc.name, doc.personalPhoneNo];
+export const formatterR2R = (doc: WithID<R2RAssistance>) => [doc.id, doc.name, doc.personalPhoneNo];
 
-exports.formatterR2C = (doc) => [
+export const formatterR2C = (doc: WithID<R2C>) => [
   doc.id,
   doc.firstName,
   doc.hasCalled,
   `="${doc.personalPhoneNo}"`,
 ];
 
+export const formatter36Hr = (doc: NotUpdatedList) => [doc.firstName, `="${doc.personalPhoneNo}"`]
+
+export const formatPatient = (doc: Patient) => [
+  doc.personalID,
+  doc.firstName,
+  doc.lastName,
+  doc.personalPhoneNo,
+  doc.emergencyPhoneNo,
+]

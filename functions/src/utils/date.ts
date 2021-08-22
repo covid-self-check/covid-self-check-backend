@@ -8,7 +8,7 @@ enum TZ {
 }
 
 
-export const convertTZ = (date: Date, tzString: TZ) => {
+export const convertTZ = (date: Date, tzString: TZ = TZ.AsiaBangkok) => {
   return new Date(
     (typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
       timeZone: tzString,
