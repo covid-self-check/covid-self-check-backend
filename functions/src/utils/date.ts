@@ -1,7 +1,12 @@
 import * as moment from "moment";
 import { admin } from "../init";
+import { Patient } from "../types";
 
-exports.convertTZ = (date, tzString) => {
+enum TimeZone {
+  AsiaBangkok = "Asia/Bangkok"
+}
+
+export const convertTZ = (date: Date, tzString: TimeZone) => {
   return new Date(
     (typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
       timeZone: tzString,
@@ -9,15 +14,15 @@ exports.convertTZ = (date, tzString) => {
   );
 };
 
-exports.convertTimestampToStr = (data) => {
-  const tmp = { ...data };
-  for (const key in data) {
-    if (data[key] instanceof admin.firestore.Timestamp) {
-      console.log(key, " before convert: ", data[key].toDate());
-      const date = this.convertTZ(data[key].toDate(), "Asia/Bangkok");
-      console.log(key, " after convert: ", date);
+export const convertTimestampToStr = (data: Patient) => {
+  const tmp: { [key: string]: any } = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value instanceof admin.firestore.Timestamp) {
+      const date = convertTZ(value.toDate(), TimeZone.AsiaBangkok);
       const dateStr = moment(date).format("DD-MM-YYYY hh:mm:ss");
       tmp[key] = dateStr;
+    } else {
+      tmp[key] = value
     }
   }
   return tmp;
@@ -25,28 +30,22 @@ exports.convertTimestampToStr = (data) => {
 
 /**
  * convert date to MM-DD-YYYY hh:mm:ss format
- * @param {Date} date
- * @returns
  */
-exports.formatDateTime = (date) => {
+export const formatDateTime = (date: Date) => {
   return moment(date).format("MM-DD-YYYY hh:mm:ss");
 };
-exports.formatDateTimeAPI = (date) => {
+export const formatDateTimeAPI = (date: Date) => {
   return moment(date).format("YYYY-MM-DD");
 };
 
-/**
- *
- * @param {Date} date
- * @returns
- */
-exports.calculateAge = (date) => {
+
+export const calculateAge = (date: Date) => {
   var ageDifMs = Date.now() - date.getTime();
   var ageDate = new Date(ageDifMs); // miliseconds from epoch
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 };
 
-exports.getDateID = () => {
-  const date = this.convertTZ(new Date(), "Asia/Bangkok");
+export const getDateID = () => {
+  const date = convertTZ(new Date(), TimeZone.AsiaBangkok);
   return moment(date).format("YYYY-MM-DD");
 };
