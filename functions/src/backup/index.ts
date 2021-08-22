@@ -6,6 +6,7 @@ import * as functions from "firebase-functions";
 import { config } from "../config/index";
 
 import { google } from "googleapis";
+import { OnRunHandler } from "../types";
 
 const privateKey = replace(config.backupAccount.privateKey, /\\n/g, "\n");
 const isDevelopment =
@@ -26,12 +27,11 @@ const firestoreClient = google.firestore({
   auth: authClient,
 });
 
-exports.backup = async (context) => {
+export const backup: OnRunHandler = async (_context) => {
   if (isDevelopment) return;
-  // TODO: get project ID from env
   const projectId = admin.instanceId().app.options.projectId;
 
-  const timestamp = convertTZ(new Date(), "Asia/Bangkok").toISOString();
+  const timestamp = convertTZ(new Date()).toISOString();
 
   console.log(`Start to backup project ${projectId}`);
   await authPromise;
