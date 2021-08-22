@@ -11,7 +11,7 @@ exports.incrementR2CUser = async () => {
     .get();
 
   if (!snapshot.exists) {
-    return snapshot.ref.update({ r2ccount: 1 });
+    return snapshot.ref.create({ r2ccount: 1 });
   } else {
     return snapshot.ref.update(
       "r2ccount",
@@ -36,3 +36,4 @@ exports.incrementLegacyUser = async () => {
     );
   }
 };
+

@@ -1,5 +1,6 @@
 const { get36hrsUsers } = require("../exportController/utils");
 const { statusList } = require("../../api/const");
+const { admin, collection } = require("../../init");
 
 exports.calculateHours = (currentDate, lastUpdatedDate) => {
   return Math.abs(currentDate - lastUpdatedDate) / 36e5;
