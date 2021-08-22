@@ -5,4 +5,5 @@ module.exports = {
   requestController: require("./requestController"),
   firestoreController: require("./firestoreController"),
   pubsub: require("./pubsub"),
+  dashboard: require("./dashboard")
 };
