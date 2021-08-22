@@ -10,7 +10,7 @@ const AUTHORIZATION = functions.config().api.authorization;
 export const makeStatusAPIPayload = (data: Patient, lastFollowUp: FollowUp) => {
   const age = calculateAge(data.birthDate.toDate());
   const infected_discover_date = formatDateTimeAPI(data.createdDate.toDate());
-  var payload = {
+  const payload = {
     age: age,
     gender: data.gender,
     height: data.height,
