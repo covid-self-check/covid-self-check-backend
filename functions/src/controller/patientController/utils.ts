@@ -54,7 +54,7 @@ const checkAmedStatus = (status: number, prevStatus: number, TO_AMED_STATUS: any
   return status !== prevStatus && TO_AMED_STATUS.includes(status)
 }
 
-export const snapshotExists = (snapshot: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>) => {
+export const snapshotExists = (snapshot: any) => {
   if (snapshot.exists) {
     if (snapshot.data()?.toAmed === 1) {
       throw new functions.https.HttpsError(
@@ -76,7 +76,7 @@ export const updateSymptomAddCreatedDate = (
   obj.createdDate = timestamp;
 };
 
-export const updateSymptomCheckUser = (snapshot: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>, lineUserID: string) => {
+export const updateSymptomCheckUser = (snapshot: any, lineUserID: string) => {
   if (!snapshot.exists) {
     throw new functions.https.HttpsError(
       "not-found",
