@@ -16,7 +16,7 @@ export const convertTZ = (date: Date, tzString: TZ = TZ.AsiaBangkok) => {
   );
 };
 
-export const convertTimestampToStr = (data: Patient) => {
+export const convertTimestampToStr = (data: Omit<Patient, 'followUp'>) => {
   const tmp: { [key: string]: any } = {};
   for (const [key, value] of _.entries(data)) {
     if (value instanceof admin.firestore.Timestamp) {

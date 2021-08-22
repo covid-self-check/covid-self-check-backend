@@ -5,7 +5,7 @@ export const ImportPatientIdSchema = Joi.object({
     .items(
       Joi.object({
         id: Joi.string().required(),
-        status: Joi.string().valid(0, 1, 99).required(),
+        status: Joi.number().valid(0, 1, 99).required(),
         reason: Joi.when("status", {
           is: 99,
           then: Joi.string(),
