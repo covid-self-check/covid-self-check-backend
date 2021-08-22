@@ -20,3 +20,5 @@ export const validateRequestToRegisterSchema = (data: RequestToRegisterType): Re
 export const validateImportPatientIdSchema = (data: ImportPatientIdType): Result<ImportPatientIdType> => ImportPatientIdSchema.validate(data)
 export const validateImportRequestToRegisterSchema = (data: ImportRequestToRegisterType): Result<ImportRequestToRegisterType> => ImportRequestToRegisterSchema.validate(data)
 export const validateImportWhitelistSchema = (data: ImportWhitelistType): Result<ImportWhitelistType> => ImportWhitelistSchema.validate(data)
+
+export { DeletePatientType, ExportRequestToCallType, HistoryType, RegisterType, GetProfileType, RequestToRegisterType, ImportPatientIdType, ImportRequestToRegisterType, ImportWhitelistType }
