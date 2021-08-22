@@ -20,7 +20,7 @@ exports.getActiveUser = async ()=>{
     const patient = doc.data();
 
     const lastUpdatedDate = patient.lastUpdatedAt.toDate();
-    var hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    const hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
     const includeStatus = [
       statusList["unknown"],
       statusList["G1"],
