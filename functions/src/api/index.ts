@@ -1,22 +1,24 @@
 import axios from "axios";
-const { calculateAge, formatDateTimeAPI } = require("../utils/date");
+import { calculateAge, formatDateTimeAPI } from "../utils";
 import * as functions from "firebase-functions";
+import _ = require("lodash");
+import { FollowUp, Patient } from "../types";
+import { statusList } from "./const";
 const URL = "https://pedsanam.ydm.family/pedsanam/label_score";
 const AUTHORIZATION = functions.config().api.authorization;
-import { statusList } from "./const";
 
-exports.makeStatusAPIPayload = (data, lastFollowUp) => {
+export const makeStatusAPIPayload = (data: Patient, lastFollowUp: FollowUp) => {
   const age = calculateAge(data.birthDate.toDate());
-  const infected_discover_date = formatDateTimeAPI(data.createdDate);
+  const infected_discover_date = formatDateTimeAPI(data.createdDate.toDate());
   var payload = {
     age: age,
     gender: data.gender,
     height: data.height,
     weight: data.weight,
     infected_discover_date: infected_discover_date,
-    sp_o2: lastFollowUp.sp_o2 / 100,
-    sp_o2_ra: lastFollowUp.sp_o2_ra / 100,
-    sp_o2_after_eih: lastFollowUp.sp_o2_after_eih / 100,
+    sp_o2: (lastFollowUp.sp_o2 || 100) / 100,
+    sp_o2_ra: (lastFollowUp.sp_o2_ra || 100) / 100,
+    sp_o2_after_eih: (lastFollowUp.sp_o2_after_eih || 100) / 100,
     eih_result: lastFollowUp.eih_result,
     sym1_severe_cough: lastFollowUp.sym1_severe_cough,
     sym1_chest_tightness: lastFollowUp.sym1_chest_tightness,
@@ -53,17 +55,16 @@ exports.makeStatusAPIPayload = (data, lastFollowUp) => {
     fac_gi_symptoms: lastFollowUp.fac_gi_symptoms,
   };
 
-  var formBody = [];
-  for (var property in payload) {
-    var encodedKey = encodeURIComponent(property);
-    var encodedValue = encodeURIComponent(payload[property]);
+  const formBody = [];
+  for (const [property, value] of _.entries(payload)) {
+    const encodedKey = encodeURIComponent(property);
+    const encodedValue = encodeURIComponent(value);
     formBody.push(encodedKey + "=" + encodedValue);
   }
-  formBody = formBody.join("&");
-  return formBody;
+  return formBody.join("&");
 };
 
-exports.makeRequest = async (formPayload) => {
+export const makeRequest = async (formPayload: string) => {
   try {
     const response = await axios.post(URL, formPayload, {
       headers: {
@@ -72,7 +73,6 @@ exports.makeRequest = async (formPayload) => {
       },
     });
     const data = response.data;
-    console.log("here");
     return {
       inclusion_label: data.inclusion_label,
       inclusion_label_type: data.inclusion_label_type,

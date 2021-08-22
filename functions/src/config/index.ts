@@ -14,4 +14,7 @@ export const config = {
     channelId: functions.config().liff.channelid,
   },
   region: functions.config().region.location,
+  api: {
+    authorization: functions.config().api.authorization
+  }
 };
