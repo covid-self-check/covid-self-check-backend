@@ -9,7 +9,7 @@ import {
 } from "../../schema";
 import { admin, collection } from "../../init";
 import { success } from "../../response/success";
-import { OnCallHandler, Patient, R2C, R2RAssistance } from "../../types";
+import { OnCallHandler, Patient, R2RAssistance } from "../../types";
 const { incrementR2CUser } = require("./utils");
 
 export const requestToCall: OnCallHandler<GetProfileType> = async (data, _context) => {
