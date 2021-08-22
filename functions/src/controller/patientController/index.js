@@ -16,7 +16,8 @@ const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
 const { convertTimestampToStr } = require("../../utils");
 const { config } = require("../../config/index");
-const {
+
+import {
   setPatientStatus,
   snapshotExists,
   updateSymptomAddCreatedDate,
@@ -24,7 +25,7 @@ const {
   updateSymptomCheckAmed,
   updateSymptomUpdateStatus,
   setAmedStatus,
-} = require("./utils");
+} from "./utils";
 
 // Mon added this code
 const deletePatient = async (personalID) => {
@@ -114,7 +115,7 @@ exports.registerPatient = async (data, _context) => {
   }
 
   const createdDate = new Date();
-  setPatientStatus(obj, createdDate);
+  const patientWithStatus = setPatientStatus(obj, createdDate);
 
   //need db connection
   const snapshot = await admin
@@ -126,7 +127,7 @@ exports.registerPatient = async (data, _context) => {
   const whitelist = await admin
     .firestore()
     .collection(collection.whitelist)
-    .doc(obj.personalID)
+    .doc(patientWithStatus.personalID)
     .get();
 
   if (!whitelist.exists) {
@@ -139,7 +140,7 @@ exports.registerPatient = async (data, _context) => {
   snapshotExists(snapshot);
 
   //need db connection
-  await snapshot.ref.create(obj);
+  await snapshot.ref.create(patientWithStatus);
 
   return success(`Registration with ID: ${lineUserID} added`);
 };
