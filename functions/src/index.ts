@@ -55,8 +55,8 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   try {
     const event = req.body.events[0];
     const userId = event.source.userId;
-    const profile:any = await client.getProfile(userId);
-    const userObject = { userId: userId, profile:  profile };
+    const profile: any = await client.getProfile(userId);
+    const userObject = { userId: userId, profile: profile };
     console.log(userObject);
     // console.log(event)
     await eventHandler(event, userObject, client);
@@ -76,7 +76,7 @@ exports.registerParticipant = functions
 
 exports.getProfile = functions
   .region(region)
-  .https.onCall(patientController.getProfile);
+  .https.onCall(patientController.getProfileHandler);
 
 exports.exportRequestToRegister = functions
   .region(region)
@@ -110,7 +110,7 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
     return { result: `Content for authorized user` };
   })
 );
- 
+
 
 exports.backupFirestore = functions
   .region(region)
@@ -119,10 +119,10 @@ exports.backupFirestore = functions
   .onRun(backup);
 
 exports.updateTimeSeries = functions
-.region(region)
-.pubsub.schedule("every day 23:59")
-.timeZone("Asia/Bangkok")
-.onRun(pubsub.updateTimeSeries);
+  .region(region)
+  .pubsub.schedule("every day 23:59")
+  .timeZone("Asia/Bangkok")
+  .onRun(pubsub.updateTimeSeries);
 
 exports.initializeLegacyStat = functions
   .region(region)

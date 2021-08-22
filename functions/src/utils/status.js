@@ -1,4 +1,12 @@
 import { calculateAge } from "./date";
+import { statusList } from "../api/const";
+
+exports.TO_AMED_STATUS = [
+  statusList["Y1"],
+  statusList["Y2"],
+  statusList["R1"],
+  statusList["R2"],
+];
 
 exports.makeStatusPayload = (data) => {
   const { followUp } = data;

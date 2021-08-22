@@ -50,7 +50,7 @@ export const RegisterSchema = Joi.object({
   fac_pregnancy: Joi.number().allow(0, 1).required(),
 
   // optional
-  personalID: Joi.string().length(13).allow(null),
+  personalID: Joi.string().length(13).required(),
   passport: Joi.string()
     .min(7)
     .max(9)

@@ -1,4 +1,9 @@
-const {
+import * as _ from "lodash";
+import { statusList, statusListReverse } from "../../api/const";
+import { HistoryType } from "../../schema";
+import { Timestamp } from "@google-cloud/firestore";
+
+import {
   setPatientStatus,
   snapshotExists,
   updateSymptomAddCreatedDate,
@@ -6,14 +11,130 @@ const {
   updateSymptomCheckAmed,
   updateSymptomUpdateStatus,
   setAmedStatus,
-} = require("./utils");
+  createFollowUpObj
+} from "./utils";
 const { admin } = require("../../init");
-const functions = require("firebase-functions");
+
+const randomInt = (n: number = 1): number => {
+  return Math.floor(Math.random() * n)
+}
+const randomEIHResult = () => {
+  const results = ["positive", "negative", "neutral", "unknown"]
+  return results[randomInt(4)]
+}
+
+const randomStatus = () => {
+  const n = _.keys(statusListReverse).length
+  return statusListReverse[randomInt(n)]
+}
+
+const createMockFollowUpInput = (): Omit<HistoryType, 'noAuth' | 'lineIDToken' | 'lineUserID'> => {
+  return {
+    sp_o2: randomInt(100),
+    sp_o2_ra: randomInt(100),
+    sp_o2_after_eih: randomInt(100),
+    eih_result: randomEIHResult(),
+    sym1_severe_cough: randomInt(),
+    sym1_chest_tightness: randomInt(),
+    sym1_poor_appetite: randomInt(),
+    sym1_fatigue: randomInt(),
+    sym1_persistent_fever: randomInt(),
+    sym2_tired_body_ache: randomInt(),
+    sym2_cough: randomInt(),
+    sym2_fever: randomInt(),
+    sym2_liquid_stool: randomInt(),
+    sym2_cannot_smell: randomInt(),
+    sym2_rash: randomInt(),
+    sym2_red_eye: randomInt(),
+    fac_bed_ridden_status: randomInt(),
+    fac_uri_symptoms: randomInt(),
+    fac_olfactory_symptoms: randomInt(),
+    fac_diarrhea: randomInt(),
+    fac_dyspnea: randomInt(),
+    fac_chest_discomfort: randomInt(),
+    fac_gi_symptoms: randomInt(),
+  }
+}
+
+const createMockAPIResult = () => {
+  return {
+    inclusion_label: randomStatus(),
+    inclusion_label_type: "at_least",
+    triage_score: randomInt(150)
+  }
+}
+
+describe("createFollowUpObj", () => {
+  it("should set followUp payload correctly", () => {
+    const mockFollowUpInput = createMockFollowUpInput()
+    const { inclusion_label, inclusion_label_type, triage_score } = createMockAPIResult()
+
+    const status = statusList[inclusion_label]
+    const timestamp = Timestamp.now()
+    const prevStatus = statusList["unknown"]
+    const result = createFollowUpObj(
+      mockFollowUpInput,
+      status,
+      inclusion_label_type,
+      triage_score,
+      timestamp,
+      prevStatus
+    ) as { [key: string]: any }
+
+    for (const [key, value] of _.entries(mockFollowUpInput)) {
+      expect(result[key]).toEqual(value)
+    }
+
+    expect(result["status"]).toEqual(status)
+    expect(result["triage_score"]).toEqual(triage_score)
+    expect(result["status_label_type"]).toEqual(inclusion_label_type)
+    expect(result["lastUpdatedAt"]).toEqual(timestamp)
+    expect(result["createdDate"]).toEqual(timestamp)
+    expect(result["toAmed"]).toBeDefined()
+  })
+
+  it("should set toAmed value to 1 if toAmed is true", () => {
+    const mockFollowUpInput = createMockFollowUpInput()
+    const status = statusList["R2"]
+    const inclusion_label_type = "at_least"
+    const triage_score = randomInt(150)
+    const timestamp = Timestamp.now()
+    const prevStatus = statusList["unknown"]
+    const result = createFollowUpObj(
+      mockFollowUpInput,
+      status,
+      inclusion_label_type,
+      triage_score,
+      timestamp,
+      prevStatus
+    ) as { [key: string]: any }
+    expect(result["toAmed"]).toEqual(1)
+  })
+
+  it("should set toAmed value to 0 if toAmed is true", () => {
+    const mockFollowUpInput = createMockFollowUpInput()
+    const status = statusList["G2"]
+    const inclusion_label_type = "at_least"
+    const triage_score = randomInt(150)
+    const timestamp = Timestamp.now()
+    const prevStatus = statusList["unknown"]
+    const result = createFollowUpObj(
+      mockFollowUpInput,
+      status,
+      inclusion_label_type,
+      triage_score,
+      timestamp,
+      prevStatus
+    ) as { [key: string]: any }
+    expect(result["toAmed"]).toEqual(0)
+  })
+})
 
 describe("setPatientStatus", () => {
   it("should setPatientStatus correctly", () => {
     const mockObj = {};
     const createdDate = new Date();
+    // @ts-ignore
     const result = setPatientStatus(mockObj, createdDate);
     expect(result).toEqual({
       status: 0,
@@ -33,6 +154,7 @@ describe("snapshotExists", () => {
   it("throw amed", () => {
     function checkExists() {
       const mockSnapshot = { exists: true, data: () => ({ toAmed: 1 }) };
+      // @ts-ignore
       snapshotExists(mockSnapshot);
     }
     expect(checkExists).toThrowError(
@@ -42,6 +164,7 @@ describe("snapshotExists", () => {
   it("throw มีข้อมูลแล้ว", () => {
     function checkExists() {
       const mockSnapshot = { exists: true, data: () => ({ toAmed: 0 }) };
+      // @ts-ignore
       snapshotExists(mockSnapshot);
     }
     expect(checkExists).toThrowError("มีข้อมูลผู้ใช้ในระบบแล้ว");
@@ -69,6 +192,7 @@ describe("updateSymptomCheckUser", () => {
 
     function checkUser() {
       const mockSnapshot = { exists: false };
+      // @ts-ignore
       updateSymptomCheckUser(mockSnapshot, lineUserID);
     }
     expect(checkUser).toThrowError(`ไม่พบผู้ใช้ ${lineUserID}`);

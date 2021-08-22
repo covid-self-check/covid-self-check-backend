@@ -14,3 +14,13 @@ export type Patient = {
   isNurseExported: boolean
   toAmed: number
 } & Partial<FollowUp> & Omit<RegisterType, "noAuth" | "lineIDToken" | "lineUserID">
+
+
+export type UpdatedPatient = {
+  toAmed: number
+  status: number
+  triage_score: number
+  status_label_type: string
+  lastUpdatedAt: Timestamp
+  createdDate: Timestamp
+} & Partial<FollowUp>
