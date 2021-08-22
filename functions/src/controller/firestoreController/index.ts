@@ -5,11 +5,11 @@ import { statusListReverse } from "../../api/const"
 
 
 
-export const onRegisterPatient: OnCreateHandler<Patient> = async (snapshot, _context) => {
+export const onRegisterPatient: OnCreateHandler = async (snapshot, _context) => {
   try {
     const batch = admin.firestore().batch();
     // snapshot.status
-    const data = snapshot.data()
+    const data = snapshot.data() as Patient
     await utils.incrementTotalPatientCount(batch)
 
     await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
@@ -21,12 +21,12 @@ export const onRegisterPatient: OnCreateHandler<Patient> = async (snapshot, _con
   }
 }
 
-export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, _context) => {
+export const onUpdatePatient: OnUpdateHandler = async (change, _context) => {
   try {
     const batch = admin.firestore().batch();
 
-    const prevData = change.before.data();
-    const currentData = change.after.data();
+    const prevData = change.before.data() as Patient;
+    const currentData = change.after.data() as Patient;
 
     // if the change is relevant to update symptom
     if (prevData.status !== currentData.status) {
@@ -47,8 +47,8 @@ export const onUpdatePatient: OnUpdateHandler<Patient> = async (change, _context
   }
 }
 
-export const onDeletePatient: OnDeleteHandler<Patient> = async (snapshot, _context) => {
-  const data = snapshot.data()
+export const onDeletePatient: OnDeleteHandler = async (snapshot, _context) => {
+  const data = snapshot.data() as Patient
   try {
     const batch = admin.firestore().batch();
     // if the patient is not sent to amed yet, 
