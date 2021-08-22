@@ -2,26 +2,33 @@ const { admin, collection } = require("../../init");
 const { getDateID } = require("../../utils/date");
 const utils = require("./utils");
 const { success } = require("../../response/success");
+const { promises } = require("dns");
 
-exports.initializeTimeSeries = async () => {
+exports.updateTimeSeries = async () => {
   const id = getDateID();
   const snapshot = await admin
     .firestore()
     .collection(collection.timeSeries)
     .doc(id)
     .get();
+
+    const [dropOffRate,btw36hrsto72hrs,activeUser] = await Promise.all([this.calculateDropOffRate(),utils.getnumberusersbtw36hrsto72hrs(),utils.getActiveUser()]);
   if (!snapshot.exists) {
     await snapshot.ref.create({ 
       r2ccount: 0,
-      dropofrate: await this.calculateDropOffRate(),
-      usersbtw36hrsto72hrs: await utils.getnumberusersbtw36hrsto72hrs(),
-      activeUser: await utils.getActiveUser(),
-      terminateusers: 0
+      dropoffrate: dropOffRate,
+      usersbtw36hrsto72hrs: btw36hrsto72hrs,
+      activeUser: activeUser,
+      terminateUser: 0
+     });
+  } else {
+    await snapshot.ref.update({ 
+      dropoffrate: dropOffRate,
+      usersbtw36hrsto72hrs: btw36hrsto72hrs,
+      activeUser: activeUser
      });
   }
 };  
-
-
 // exports.initializeR2CStat = async (_context) => {
 //   const id = getDateID();
 //   const snapshot = await admin
