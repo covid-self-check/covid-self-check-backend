@@ -1,7 +1,8 @@
 import * as _ from "lodash";
 import { statusList, statusListReverse } from "../../api/const";
-import { HistoryType } from "../../schema";
+import { HistoryType, RegisterType } from "../../schema";
 import { Timestamp } from "@google-cloud/firestore";
+import * as faker from "faker"
 
 import {
   setPatientStatus,
@@ -15,9 +16,10 @@ import {
 } from "./utils";
 const { admin } = require("../../init");
 
-const randomInt = (n: number = 1): number => {
+const randomInt = (n = 1): number => {
   return Math.floor(Math.random() * n)
 }
+
 const randomEIHResult = () => {
   const results = ["positive", "negative", "neutral", "unknown"]
   return results[randomInt(4)]
@@ -131,19 +133,71 @@ describe("createFollowUpObj", () => {
 })
 
 describe("setPatientStatus", () => {
+  const createMockPatientObj = (): Omit<RegisterType, 'noAuth' | 'lineIDToken' | 'lineUserID'> => {
+    return {
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+
+      birthDate: faker.date.past(),
+      weight: randomInt(80),
+      height: randomInt(150),
+      gender: "male",
+
+      address: faker.address.streetAddress(),
+      province: faker.address.cityName(),
+      prefecture: faker.address.streetName(), //อำเภอ
+      district: faker.address.state(), //ตำบล
+      postNo: faker.address.zipCode(),
+
+      personalPhoneNo: faker.phone.phoneNumber(),
+      emergencyPhoneNo: faker.phone.phoneNumber(),
+
+      hasHelper: faker.datatype.boolean(),
+      digitalLiteracy: faker.datatype.boolean(),
+
+
+      gotFavipiravir: randomInt(),
+
+      // โรคประจำตัว
+      rf_copd_chronic_lung_disease: randomInt(),
+
+      rf_ckd_stagr_3_to_4: randomInt(),
+      rf_chronic_heart_disease: randomInt(),
+      rf_cva: randomInt(),
+      rf_t2dm: randomInt(),
+      rf_cirrhosis: randomInt(),
+      rf_immunocompromise: randomInt(),
+
+      fac_diabetes: randomInt(),
+      fac_dyslipidemia: randomInt(),
+      fac_hypertension: randomInt(),
+      fac_heart_diseases: randomInt(),
+      fac_esrd: randomInt(),
+      fac_cancer: randomInt(),
+      fac_tuberculosis: randomInt(),
+      fac_hiv: randomInt(),
+      fac_asthma: randomInt(),
+      fac_pregnancy: randomInt(),
+
+      // optional
+      personalID: "1111111111111",
+    }
+  }
+
   it("should setPatientStatus correctly", () => {
 
     const createdDate = new Date();
-    const mockObj = { birthDate: createdDate };
-    // @ts-ignore
+    const mockObj = createMockPatientObj()
+
     const result = setPatientStatus(mockObj, createdDate);
     expect(result).toEqual({
+      ...mockObj,
       status: 0,
       needFollowUp: true,
       followUp: [],
       createdDate: admin.firestore.Timestamp.fromDate(createdDate),
       lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
-      birthDate: admin.firestore.Timestamp.fromDate(createdDate),
+      birthDate: admin.firestore.Timestamp.fromDate(mockObj.birthDate),
 
       isRequestToCallExported: false,
       isRequestToCall: false,
@@ -157,7 +211,6 @@ describe("snapshotExists", () => {
   it("throw amed", () => {
     function checkExists() {
       const mockSnapshot = { exists: true, data: () => ({ toAmed: 1 }) };
-      // @ts-ignore
       snapshotExists(mockSnapshot);
     }
     expect(checkExists).toThrowError(
@@ -167,7 +220,6 @@ describe("snapshotExists", () => {
   it("throw มีข้อมูลแล้ว", () => {
     function checkExists() {
       const mockSnapshot = { exists: true, data: () => ({ toAmed: 0 }) };
-      // @ts-ignore
       snapshotExists(mockSnapshot);
     }
     expect(checkExists).toThrowError("มีข้อมูลผู้ใช้ในระบบแล้ว");
@@ -195,7 +247,6 @@ describe("updateSymptomCheckUser", () => {
 
     function checkUser() {
       const mockSnapshot = { exists: false };
-      // @ts-ignore
       updateSymptomCheckUser(mockSnapshot, lineUserID);
     }
     expect(checkUser).toThrowError(`ไม่พบผู้ใช้ ${lineUserID}`);
