@@ -1,7 +1,7 @@
-import XLSX from "xlsx";
-import JSZip from "jszip";
+import * as XLSX from "xlsx";
+import * as JSZip from "jszip";
 
-export const makeAoA = (size) => {
+export const makeAoA = (size: number) => {
   const aoa = new Array(size);
 
   for (let i = 0; i < size; i++) {
@@ -13,10 +13,8 @@ export const makeAoA = (size) => {
 
 /**
  * fill AOA with data
- * @param {any[][]} aoa
- * @param {any[]} data
  */
-export const fillWith = (aoa, data) => {
+export const fillWith = (aoa: any[][], data: any[]) => {
   const size = aoa.length;
 
   for (let i = 0; i < data.length; i++) {
@@ -26,16 +24,11 @@ export const fillWith = (aoa, data) => {
 
 /**
  * prepare zip file
- * @param {JSZip} zip
- * @param {any[][]} aoa
- * @param {string[]} headers
- * @param {() => any[]} formatter
- * @returns
  */
-export const prepareZipFile = (zip, aoa, headers, formatter) => {
+export const prepareZipFile = (zip: JSZip, aoa: any[][], headers: string[], formatter: (el: any) => any[]) => {
   aoa.forEach((arr, i) => {
     const result = [[...headers]];
-    arr.forEach((el) => {
+    arr.forEach((el: any) => {
       result.push(formatter(el));
     });
 
@@ -54,10 +47,10 @@ export const prepareZipFile = (zip, aoa, headers, formatter) => {
  * @param {() => any[]} formatter - function that return element of each row
  */
 export const generateZipFileRoundRobin = async (
-  size,
-  data,
-  headers,
-  formatter
+  size: number,
+  data: any[],
+  headers: string[],
+  formatter: (el: any) => any[]
 ) => {
   const aoa = makeAoA(size);
 
