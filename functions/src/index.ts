@@ -14,14 +14,14 @@ import { success } from "./response/success";
 import * as express from "express";
 import * as cors from "cors";
 import { backup } from "./backup";
-import { config as c } from "./config"
+
 
 
 const config = {
   channelAccessToken: functions.config().line.channel_token,
   channelSecret: functions.config().line.channel_secret,
 };
-const region = c.region
+const region = require("./config").region
 const client = new line.Client(config);
 
 import {
