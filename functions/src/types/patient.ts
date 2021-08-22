@@ -3,7 +3,7 @@ import { HistoryType, RegisterType } from '../schema'
 
 export type FollowUp = Omit<HistoryType, "noAuth" | "lineIDToken" | "lineUserID">
 
-export type Patient = {
+export type Patient = Partial<FollowUp> & {
   followUp: FollowUp[]
   status: number
   needFollowUp: boolean
@@ -13,7 +13,8 @@ export type Patient = {
   isRequestToCall: boolean
   isNurseExported: boolean
   toAmed: number
-} & Partial<FollowUp> & Omit<RegisterType, "noAuth" | "lineIDToken" | "lineUserID">
+  birthDate: Timestamp
+} & Omit<RegisterType, "noAuth" | "lineIDToken" | "lineUserID" | "birthDate">
 
 
 export type UpdatedPatient = {

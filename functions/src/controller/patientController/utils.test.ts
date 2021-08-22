@@ -132,8 +132,9 @@ describe("createFollowUpObj", () => {
 
 describe("setPatientStatus", () => {
   it("should setPatientStatus correctly", () => {
-    const mockObj = {};
+
     const createdDate = new Date();
+    const mockObj = { birthDate: createdDate };
     // @ts-ignore
     const result = setPatientStatus(mockObj, createdDate);
     expect(result).toEqual({
@@ -142,6 +143,8 @@ describe("setPatientStatus", () => {
       followUp: [],
       createdDate: admin.firestore.Timestamp.fromDate(createdDate),
       lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
+      birthDate: admin.firestore.Timestamp.fromDate(createdDate),
+
       isRequestToCallExported: false,
       isRequestToCall: false,
       isNurseExported: false,

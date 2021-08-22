@@ -1,12 +1,13 @@
-const { admin } = require("../../init");
-const functions = require("firebase-functions");
+import { admin } from "../../init";
+import * as  functions from "firebase-functions";
 import { RegisterType, HistoryType } from '../../schema';
 import { Patient, UpdatedPatient } from '../../types'
-const { TO_AMED_STATUS } = require("../../utils/status")
+import { TO_AMED_STATUS } from "../../utils"
 
 
 export const setPatientStatus = (obj: Omit<RegisterType, 'noAuth' | 'lineIDToken' | 'lineUserID'>, createdDate: Date): Patient => {
   const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
+  const birthDateTimestamp = admin.firestore.Timestamp.fromDate(obj.birthDate)
 
   return {
     status: 0,
@@ -18,7 +19,8 @@ export const setPatientStatus = (obj: Omit<RegisterType, 'noAuth' | 'lineIDToken
     isRequestToCall: false,
     isNurseExported: false,
     toAmed: 0,
-    ...obj
+    ...obj,
+    birthDate: birthDateTimestamp
   }
 };
 
