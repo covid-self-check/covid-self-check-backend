@@ -2,7 +2,7 @@
 import { admin, collection } from "../../init"
 import { WriteBatch } from "@google-cloud/firestore"
 import { PatientCountHandler } from "../../types"
-import * as moment from "moment";
+import { getDateID } from "../../utils/date"
 
 export const incrementTotalPatientCount = async (batch: WriteBatch) => {
   const docRef = admin
@@ -78,17 +78,4 @@ export const incrementTerminateUser = async (batch: WriteBatch) => {
   } else {
     batch.update(ref,"terminateUser",admin.firestore.FieldValue.increment(1));
   }
-};
-
-const getDateID = () => {
-  const date = convertTZ(new Date(), "Asia/Bangkok");
-  return moment(date).format("YYYY-MM-DD");
-};
-
-const convertTZ = (date:Date, tzString:string) => {
-  return new Date(
-    (typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
-      timeZone: tzString,
-    })
-  );
 };
