@@ -1,14 +1,18 @@
 import axios from "axios";
-const { calculateAge, formatDateTimeAPI } = require("../utils/date");
 import * as functions from "firebase-functions";
+import { statusList } from "./const";
+import { calculateAge, formatDateTimeAPI } from "../utils/date";
+import { FollowUp, Patient } from "../types";
+import * as _ from "lodash";
+
+
 const URL = "https://pedsanam.ydm.family/pedsanam/label_score";
 const AUTHORIZATION = functions.config().api.authorization;
-import { statusList } from "./const";
 
-exports.makeStatusAPIPayload = (data, lastFollowUp) => {
+export const makeStatusAPIPayload = (data: Patient, lastFollowUp: FollowUp) => {
   const age = calculateAge(data.birthDate.toDate());
-  const infected_discover_date = formatDateTimeAPI(data.createdDate);
-  var payload = {
+  const infected_discover_date = formatDateTimeAPI(data.createdDate.toDate());
+  const payload = {
     age: age,
     gender: data.gender,
     height: data.height,
@@ -53,17 +57,16 @@ exports.makeStatusAPIPayload = (data, lastFollowUp) => {
     fac_gi_symptoms: lastFollowUp.fac_gi_symptoms,
   };
 
-  var formBody = [];
-  for (var property in payload) {
-    var encodedKey = encodeURIComponent(property);
-    var encodedValue = encodeURIComponent(payload[property]);
+  const formBody = [];
+  for (const [key, value] of _.entries(payload)) {
+    const encodedKey = encodeURIComponent(key);
+    const encodedValue = encodeURIComponent(value);
     formBody.push(encodedKey + "=" + encodedValue);
   }
-  formBody = formBody.join("&");
-  return formBody;
+  return formBody.join("&");
 };
 
-exports.makeRequest = async (formPayload) => {
+export const makeRequest = async (formPayload: string) => {
   try {
     const response = await axios.post(URL, formPayload, {
       headers: {
@@ -72,7 +75,6 @@ exports.makeRequest = async (formPayload) => {
       },
     });
     const data = response.data;
-    console.log("here");
     return {
       inclusion_label: data.inclusion_label,
       inclusion_label_type: data.inclusion_label_type,

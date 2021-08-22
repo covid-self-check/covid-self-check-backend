@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 
-exports.config = {
+export const config = {
   backupAccount: {
     clientEmail: functions.config().backup_account.client_email,
     privateKey: functions.config().backup_account.private_key,

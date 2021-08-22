@@ -35,6 +35,7 @@ export type Patient = {
   rf_ckd_stagr_3_to_4: number
   rf_chronic_heart_disease: number
   rf_cva: number
+  rf_t2dm: number,
   rf_cirrhosis: number
   rf_immunocompromise: number
 

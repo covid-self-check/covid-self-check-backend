@@ -62,7 +62,7 @@ const getPatientTextColor = (statusNumber) => {
   return statusNumberMap[statusNumber];
 };
 
-const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
+const sendPatientStatus = async (userId, statusObj, channelAccessToken) => {
   const date = convertTimestampToStr({ dateObj: statusObj.lastUpdatedAt });
   let message = `วันที่: ${date.dateObj} 
     \nข้อมูลทั่วไป:
@@ -128,4 +128,4 @@ const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
   await axios(axiosConfig);
 };
 
-module.exports = { sendPatientstatus };
+module.exports = { sendPatientStatus };

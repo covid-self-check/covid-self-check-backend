@@ -12,10 +12,11 @@ const { getProfile } = require("../../middleware/authentication");
 const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
 const { statusList, statusListReverse } = require("../../api/const");
-const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
+const { sendPatientStatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
-const { convertTimestampToStr } = require("../../utils/date");
-const { config } = require("../../config/index");
+const { convertTimestampToStr } = require("../../utils");
+const { config } = require("../../config");
+
 const {
   setPatientStatus,
   snapshotExists,
@@ -285,7 +286,7 @@ exports.updateSymptom = async (data, _context) => {
   }
 
   try {
-    await sendPatientstatus(
+    await sendPatientStatus(
       lineUserID,
       objWithOutCreatedDate,
       config.line.channelAccessToken
