@@ -12,25 +12,19 @@ import {
   //end mon code
 } from "../../schema";
 import { admin, collection } from "../../init";
+import { success } from "../../response/success";
+import { statusList } from "../../api/const"
+import { convertTimestampToStr, TO_AMED_STATUS } from "../../utils"
+import { config } from "../../config/index"
+import * as utils from "./utils";
+import { Patient, OnCallHandler } from "../../types";
+
+
+
 const { getProfile } = require("../../middleware/authentication");
-const { success } = require("../../response/success");
 const { makeStatusAPIPayload, makeRequest } = require("../../api");
-const { statusList } = require("../../api/const");
 const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
 const { notifyToLine } = require("../../linenotify");
-const { convertTimestampToStr } = require("../../utils");
-const { config } = require("../../config/index");
-const { TO_AMED_STATUS } = require("../../utils/status")
-
-import {
-  setPatientStatus,
-  snapshotExists,
-  updateSymptomCheckUser,
-  updateSymptomCheckAmed,
-  createFollowUpObj,
-} from "./utils";
-import { OnCallHandler } from "../../types/handler";
-import { Patient } from "../../types";
 
 // Mon added this code
 const deletePatient = async (personalID: string) => {
@@ -120,7 +114,7 @@ export const registerPatient: OnCallHandler<RegisterType> = async (data, _contex
   }
 
   const createdDate = new Date();
-  const patientWithStatus = setPatientStatus(obj, createdDate);
+  const patientWithStatus = utils.setPatientStatus(obj, createdDate);
 
   //need db connection
   const snapshot = await admin
@@ -142,7 +136,7 @@ export const registerPatient: OnCallHandler<RegisterType> = async (data, _contex
     );
   }
 
-  snapshotExists(snapshot);
+  utils.snapshotExists(snapshot);
 
   //need db connection
   await snapshot.ref.create(patientWithStatus);
@@ -225,7 +219,7 @@ export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) 
     .doc(lineUserID)
     .get();
 
-  updateSymptomCheckUser(snapshot, lineUserID);
+  utils.updateSymptomCheckUser(snapshot, lineUserID);
   const snapshotData = snapshot.data() as Patient;
   const {
     followUp,
@@ -234,7 +228,7 @@ export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) 
     status: previousStatus,
   } = snapshotData;
 
-  updateSymptomCheckAmed(snapshotData);
+  utils.updateSymptomCheckAmed(snapshotData);
 
   const formPayload = makeStatusAPIPayload(snapshotData, obj);
   const { inclusion_label, inclusion_label_type, triage_score } =
@@ -242,7 +236,7 @@ export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) 
 
   const status = statusList[inclusion_label];
 
-  const followUpObj = createFollowUpObj(
+  const followUpObj = utils.createFollowUpObj(
     obj,
     status,
     inclusion_label_type,

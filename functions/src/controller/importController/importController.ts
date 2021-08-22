@@ -1,52 +1,20 @@
 import * as functions from "firebase-functions";
-const {
+import {
   validateImportPatientIdSchema,
   validateImportWhitelistSchema,
   validateImportRequestToRegisterSchema,
-} = require("../../schema");
-const { admin, collection } = require("../../init");
-const { success } = require("../../response/success");
+  ImportPatientIdType,
+  ImportRequestToRegisterType,
+  ImportWhitelistType,
+} from "../../schema";
+import { admin, collection } from "../../init";
+import { success } from "../../response/success";
+import { OnCallHandler } from "../../types";
+import { WriteResult } from "@google-cloud/firestore";
 
-// exports.importFinishR2C = async (data, _context) => {
-//     const { value, error } = importPatientIdSchema.validate(data)
-//     if (error) {
-//         console.log(error.details)
-//         throw new functions.https.HttpsError(
-//             'invalid-argument',
-//             'ข้อมูลไม่ถูกต้อง',
-//             error.details
-//         )
-//     }
-//     const { ids } = value
-//     const snapshot = await admin
-//         .firestore()
-//         .collection('patient')
-//         .where('isRequestToCall', '==', true)
-//         .where('isRequestToCallExported', '==', true)
-//         .get()
+type MapUser = { [key: string]: { status: number } }
 
-//     const batch = admin.firestore().batch()
-
-//     snapshot.docs.forEach((doc) => {
-//         const hasCalled = ids.includes(doc.id)
-//         const docRef = admin.firestore().collection('patient').doc(doc.id)
-//         if (hasCalled) {
-//             batch.update(docRef, {
-//                 isRequestToCall: false,
-//                 isRequestToCallExported: false,
-//             })
-//         } else {
-//             batch.update(docRef, {
-//                 isRequestToCallExported: false,
-//             })
-//         }
-//     })
-
-//     await batch.commit()
-//     return success()
-// }
-
-exports.importFinishR2C = async (data, _context) => {
+export const importFinishR2C: OnCallHandler<ImportPatientIdType> = async (data, _context) => {
   const { value, error } = validateImportPatientIdSchema(data);
   if (error) {
     console.log(error.details);
@@ -58,7 +26,7 @@ exports.importFinishR2C = async (data, _context) => {
   }
 
   const { users } = value;
-  const map = {};
+  const map: MapUser = {};
   for (const user of users) {
     const { id, ...obj } = user;
     map[user.id] = obj;
@@ -77,13 +45,13 @@ exports.importFinishR2C = async (data, _context) => {
     .doc("stat");
 
   const batch = admin.firestore().batch();
-  const promises = [];
+  const promises: Promise<void>[] = [];
   snapshot.docs.forEach((doc) => {
     const docRef = admin.firestore().collection(collection.patient).doc(doc.id);
     // if user is not imported, there will not be updated
 
     if (!map[doc.id]) return;
-    const { status, reason } = map[doc.id];
+    const { status } = map[doc.id];
     switch (status) {
       // not called
       case 0:
@@ -134,7 +102,7 @@ exports.importFinishR2C = async (data, _context) => {
   return success();
 };
 
-exports.importFinishR2R = async (data, _context) => {
+export const importFinishR2R: OnCallHandler<ImportRequestToRegisterType> = async (data, _context) => {
   const { value, error } = validateImportRequestToRegisterSchema(data);
   if (error) {
     console.log(error.details);
@@ -146,7 +114,7 @@ exports.importFinishR2R = async (data, _context) => {
   }
 
   const { users } = value;
-  const map = {};
+  const map: MapUser = {};
   for (const user of users) {
     const { id, ...obj } = user;
     map[user.id] = obj;
@@ -185,7 +153,7 @@ exports.importFinishR2R = async (data, _context) => {
   return success();
 };
 
-exports.importWhitelist = async (data, _context) => {
+export const importWhitelist: OnCallHandler<ImportWhitelistType> = async (data, _context) => {
   const { value, error } = validateImportWhitelistSchema(data);
   if (error) {
     console.log(error.details);
@@ -198,7 +166,7 @@ exports.importWhitelist = async (data, _context) => {
 
   const { users } = value;
 
-  const promises = [];
+  const promises: Promise<WriteResult>[] = [];
   users.forEach((user) => {
     promises.push(
       admin.firestore().collection("whitelist").doc(user.id).set({

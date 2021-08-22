@@ -5,7 +5,7 @@ export const ImportRequestToRegisterSchema = Joi.object({
     .items(
       Joi.object({
         id: Joi.string().required(),
-        status: Joi.string().valid(0, 1).required(),
+        status: Joi.number().valid(0, 1).required(),
       })
     )
     .unique((a, b) => a.id === b.id)
