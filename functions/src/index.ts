@@ -2,26 +2,29 @@
 import * as functions from "firebase-functions";
 const {
   authenticateVolunteer,
-  getProfile,
+  getProfile: getProfileMW,
   authenticateVolunteerRequest,
 } = require("./middleware/authentication");
-const { admin, initializeApp } = require("./init");
 const { eventHandler } = require("./handler/eventHandler");
+import { admin, initializeApp } from "./init";
 // const line = require("@line/bot-sdk");
 import * as line from "@line/bot-sdk"
+import { validateGetProfileSchema } from "./schema";
+import { success } from "./response/success";
+import * as express from "express";
+import * as cors from "cors";
+import { backup } from "./backup";
+import { config as c } from "./config"
+
+
 const config = {
   channelAccessToken: functions.config().line.channel_token,
   channelSecret: functions.config().line.channel_secret,
 };
+const region = c.region
 const client = new line.Client(config);
-import { validateGetProfileSchema } from "./schema";
-const { success } = require("./response/success");
-const express = require("express");
-const cors = require("cors");
-const { backup } = require("./backup");
-const region = require("./config/index").config.region;
 
-const {
+import {
   exportController,
   patientController,
   requestController,
@@ -29,7 +32,8 @@ const {
   pubsub,
   firestoreController,
   dashboard
-} = require("./controller");
+} from "./controller";
+import { Patient, Series } from "./types";
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -51,7 +55,7 @@ app.get(
 
 
 
-exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
+export const webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
   try {
     const event = req.body.events[0];
@@ -67,74 +71,74 @@ exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   }
 });
 
-exports.deletePatient = functions
+export const deletePatient = functions
   .region(region)
   .https.onCall(authenticateVolunteer(patientController.requestDeletePatient));
 
-exports.registerParticipant = functions
+export const registerParticipant = functions
   .region(region)
   .https.onCall(patientController.registerPatient);
 
-exports.getProfile = functions
+export const getProfile = functions
   .region(region)
   .https.onCall(patientController.getProfileHandler);
 
-exports.exportRequestToRegister = functions
+export const exportRequestToRegister = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.exportR2R));
-exports.export36hrs = functions
+export const export36hrs = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.export36hrs));
 
-exports.exportRequestToCall = functions
+export const exportRequestToCall = functions
   .region(region)
   .https.onCall(authenticateVolunteer(exportController.exportR2C));
 
-exports.exportRequestToCallDayOne = functions
+export const exportRequestToCallDayOne = functions
   .region(region)
   .https.onCall(
     authenticateVolunteer(exportController.exportRequestToCallDayOne)
   );
 
-exports.importFinishedRequestToCall = functions
+export const importFinishedRequestToCall = functions
   .region(region)
   .https.onCall(authenticateVolunteer(importController.importFinishR2C));
-exports.importFinishedRequestToRegister = functions
+export const importFinishedRequestToRegister = functions
   .region(region)
   .https.onCall(authenticateVolunteer(importController.importFinishR2R));
-exports.importWhitelist = functions
+export const importWhitelist = functions
   .region(region)
   .https.onCall(authenticateVolunteer(importController.importWhitelist));
 
-exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
+export const thisEndpointNeedsAuth = functions.region(region).https.onCall(
   authenticateVolunteer(async (data: any, context: functions.https.CallableContext) => {
     return { result: `Content for authorized user` };
   })
 );
 
-exports.accumulativeData = functions
+export const accumulativeData = functions
   .region(region)
   .https.onCall(authenticateVolunteer(dashboard.getAccumulative));
 
-exports.backupFirestore = functions
+export const backupFirestore = functions
   .region(region)
   .pubsub.schedule("every day 18:00")
   .timeZone("Asia/Bangkok")
   .onRun(backup);
 
-exports.updateTimeSeries = functions
+export const updateTimeSeries = functions
   .region(region)
   .pubsub.schedule("every day 23:59")
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.updateTimeSeries);
 
-exports.initializeLegacyStat = functions
+export const initializeLegacyStat = functions
   .region(region)
   .pubsub.schedule("every day 00:00")
   .timeZone("Asia/Bangkok")
   .onRun(pubsub.initializeLegacyStat);
 
-exports.getNumberOfPatients = functions
+export const getNumberOfPatients = functions
   .region(region)
   .https.onRequest(async (req, res) => {
     const snapshot = await admin.firestore().collection("patient").get();
@@ -142,52 +146,53 @@ exports.getNumberOfPatients = functions
     res.status(200).json(success(snapshot.size));
   });
 
-exports.getNumberOfPatientsV2 = functions
+export const getNumberOfPatientsV2 = functions
   .region(region)
   .https.onRequest(async (req, res) => {
     const snapshot = await admin
       .firestore()
       .collection("userCount")
-      .document("users")
+      .doc("users")
       .get();
-    res.status(200).json(success(snapshot[0].data().count));
+    const data = snapshot.data() as Series
+    res.status(200).json(success(data.count));
   });
 
-exports.requestToRegister = functions
+export const requestToRegister = functions
   .region(region)
   .https.onCall(requestController.requestToRegister);
 
-exports.check = functions.region(region).https.onRequest(async (req, res) => {
+export const check = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.requestToCall = functions
+export const requestToCall = functions
   .region(region)
   .https.onCall(requestController.requestToCall);
 
-exports.updateSymptom = functions
+export const updateSymptom = functions
   .region(region)
   .https.onCall(patientController.updateSymptom);
 
-exports.createReport = functions.region(region).https.onRequest(app);
+export const createReport = functions.region(region).https.onRequest(app);
 
-exports.onRegisterPatient = functions
+export const onRegisterPatient = functions
   .region(region)
   .firestore.document("patient/{id}")
   .onCreate(firestoreController.onRegisterPatient)
 
-exports.onUpdateSymptom = functions
+export const onUpdateSymptom = functions
   .region(region)
   .firestore.document("patient/{id}")
   .onUpdate(firestoreController.onUpdatePatient)
 
-exports.onDeletePatient = functions
+export const onDeletePatient = functions
   .region(region)
   .firestore.document("patient/{id}")
   .onDelete(firestoreController.onDeletePatient)
 
 // ******************************* unused ******************************************
-exports.getFollowupHistory = functions
+export const getFollowupHistory = functions
   .region(region)
   .https.onCall(async (data, context) => {
     const { value, error } = validateGetProfileSchema(data);
@@ -200,7 +205,7 @@ exports.getFollowupHistory = functions
       );
     }
     const { lineUserID, lineIDToken, noAuth } = value;
-    const { data: errorData, error: authError } = await getProfile({
+    const { data: errorData, error: authError } = await getProfileMW({
       lineUserID,
       lineIDToken,
       noAuth,
@@ -225,10 +230,11 @@ exports.getFollowupHistory = functions
         `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
       );
     }
-    return success(snapshot.data().followUp);
+    const patient = snapshot.data() as Patient
+    return success(patient.followUp);
   });
 
-exports.fetchYellowPatients = functions
+export const fetchYellowPatients = functions
   .region(region)
   .https.onCall(async (data) => {
     // const snapshot = await admin
@@ -247,7 +253,7 @@ exports.fetchYellowPatients = functions
     return success();
   });
 
-exports.fetchGreenPatients = functions
+export const fetchGreenPatients = functions
   .region(region)
   .https.onCall(async (data) => {
     // const snapshot = await admin
@@ -265,7 +271,7 @@ exports.fetchGreenPatients = functions
     // return success(patientList);
     return success();
   });
-exports.fetchRedPatients = functions
+export const fetchRedPatients = functions
   .region(region)
   .https.onCall(async (data) => {
     // const snapshot = await admin
@@ -283,7 +289,7 @@ exports.fetchRedPatients = functions
     return success();
   });
 
-// exports.testExportRequestToCall = functions.region(region).https.onRequest(
+// export const testExportRequestToCall = functions.region(region).https.onRequest(
 //   authenticateVolunteerRequest(async (req, res) => {
 //     const { value, error } = exportRequestToCallSchema.validate(req.body);
 //     if (error) {
