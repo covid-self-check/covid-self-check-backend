@@ -1,17 +1,17 @@
-const { get36hrsUsers } = require("../exportController/utils");
-const { statusList } = require("../../api/const");
-const { admin, collection } = require("../../init");
+import { get36hrsUsers } from "../exportController/utils";
+import { statusList } from "../../api/const";
+import { admin, collection } from "../../init";
 
-exports.calculateHours = (currentDate, lastUpdatedDate) => {
-  return Math.abs(currentDate - lastUpdatedDate) / 36e5;
+export const calculateHours = (currentDate: Date, lastUpdatedDate: Date) => {
+  return Math.abs(currentDate.getTime() - lastUpdatedDate.getTime()) / 36e5;
 };
 
-exports.getnumberusersbtw36hrsto72hrs = async () => {
+export const getnumberusersbtw36hrsto72hrs = async () => {
   const temp_notUpdatedList = await get36hrsUsers();
   return temp_notUpdatedList.length;
 };
 
-exports.getActiveUser = async ()=>{
+export const getActiveUser = async () => {
   const snapshot = await admin.firestore().collection(collection.patient).get();
 
   const notUpdatedList = [];
@@ -20,7 +20,7 @@ exports.getActiveUser = async ()=>{
     const patient = doc.data();
 
     const lastUpdatedDate = patient.lastUpdatedAt.toDate();
-    const hours = Math.abs(currentDate - lastUpdatedDate) / 36e5;
+    const hours = calculateHours(currentDate, lastUpdatedDate)
     const includeStatus = [
       statusList["unknown"],
       statusList["G1"],
