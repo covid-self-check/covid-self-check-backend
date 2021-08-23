@@ -1,4 +1,4 @@
-const { jsonController } = require("../jsonHandler");
+import { jsonController } from "../jsonHandler";
 
 export const handleFollow = async (event: any, userObject: any, client: any) => {
   const replyToken = await event.replyToken;

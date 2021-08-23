@@ -1,6 +1,6 @@
-const { jsonController } = require("../jsonHandler");
-const { requestCall } = require("../../linefunctions/requestCallHandler");
-const { requestGuide } = require("../../linefunctions/requestGuideHandler");
+import { jsonController } from "../jsonHandler";
+import { requestCall } from "../../linefunctions/requestCallHandler";
+import { requestGuide } from "../../linefunctions/requestGuideHandler";
 
 export const handleMessage = async (event: any, userObject: any, client: any) => {
   const replyToken = await event.replyToken;
