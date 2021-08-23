@@ -1,7 +1,7 @@
 import { jsonController } from "../handler/jsonHandler";
 import { success } from "../response/success";
 
-const requestGuide = async (userObject, client, replyToken) => {
+export const requestGuide = async (userObject: any, client: any, replyToken: any) => {
   // const snapshot = await admin
   //   .firestore()
   //   .collection("patient")
@@ -37,4 +37,3 @@ const requestGuide = async (userObject, client, replyToken) => {
   // });
   return success();
 };
-module.exports = { requestGuide };

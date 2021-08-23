@@ -18,7 +18,7 @@ import {
 import { QuerySnapshot } from "@google-cloud/firestore";
 
 
-const { generateZipFileRoundRobin } = require("../../utils/zip");
+import { generateZipFileRoundRobin } from "../../utils/zip";
 
 
 export const exportR2R: OnCallHandler<ExportRequestToCallType> = async (data, _context) => {

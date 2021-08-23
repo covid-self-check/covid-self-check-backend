@@ -1,8 +1,8 @@
-const { jsonController } = require("../jsonHandler");
-const { requestCall } = require("../../linefunctions/requestCallHandler");
-const { requestGuide } = require("../../linefunctions/requestGuideHandler");
+import { jsonController } from "../jsonHandler";
+import { requestCall } from "../../linefunctions/requestCallHandler";
+import { requestGuide } from "../../linefunctions/requestGuideHandler";
 
-const handleMessage = async (event, userObject, client) => {
+export const handleMessage = async (event: any, userObject: any, client: any) => {
   const replyToken = await event.replyToken;
   const message = await event.message.text;
   // console.log(message)
@@ -45,6 +45,4 @@ const handleMessage = async (event, userObject, client) => {
   }
 };
 
-module.exports = {
-  handleMessage,
-};
+

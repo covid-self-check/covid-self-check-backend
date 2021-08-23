@@ -15,16 +15,16 @@ import { admin, collection } from "../../init";
 import { success } from "../../response/success";
 import { statusList } from "../../api/const"
 import { convertTimestampToStr, TO_AMED_STATUS } from "../../utils"
-import { config } from "../../config/index"
+import config from "../../config"
 import * as utils from "./utils";
 import { Patient, OnCallHandler } from "../../types";
 
 
 
-const { getProfile } = require("../../middleware/authentication");
-const { makeStatusAPIPayload, makeRequest } = require("../../api");
-const { sendPatientstatus } = require("../../linefunctions/linepushmessage");
-const { notifyToLine } = require("../../linenotify");
+import { getProfile } from "../../middleware/authentication";
+import { makeStatusAPIPayload, makeRequest } from "../../api";
+import { sendPatientstatus } from "../../linefunctions/linepushmessage";
+import { notifyToLine } from "../../linenotify";
 
 // Mon added this code
 const deletePatient = async (personalID: string) => {
@@ -281,3 +281,47 @@ export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) 
 
   return success({ status: inclusion_label });
 };
+
+export const getFollowupHistory: OnCallHandler<GetProfileType> = async (data, context) => {
+  const { value, error } = validateGetProfileSchema(data);
+  if (error) {
+    console.log(error.details);
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "ข้อมูลไม่ถูกต้อง",
+      error.details
+    );
+  }
+
+  const { lineUserID, lineIDToken, noAuth } = value;
+  const { data: errorData, error: authError } = await getProfile({
+    lineUserID,
+    lineIDToken,
+    noAuth,
+  });
+
+  if (authError) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      errorData.error_description
+    );
+  }
+
+  const snapshot = await admin
+    .firestore()
+    .collection("patient")
+    .doc(lineUserID)
+    .get();
+
+  if (!snapshot.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
+    );
+  }
+
+  const patient = snapshot.data() as Patient
+  return success(patient.followUp);
+
+
+}

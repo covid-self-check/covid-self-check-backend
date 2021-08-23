@@ -2,13 +2,14 @@ import { admin } from "../init";
 import axios from "axios";
 
 import * as functions from "firebase-functions";
+import { LineCredential, OnCallHandler, OnRequestHandler } from "../types";
 
 /**
  * Authenticate middleware for volunteer system
  * @param {*} func function to call if authenticate success
  * @returns error 401 if not authorized email
  */
-exports.authenticateVolunteer = (func) => {
+export const authenticateVolunteer = (func: OnCallHandler): OnCallHandler => {
   return async (data, context) => {
     if (
       data.noAuth &&
@@ -40,7 +41,7 @@ exports.authenticateVolunteer = (func) => {
  * @param {*} func function to call if authenticate success
  * @returns error 401 if not authorized email
  */
-exports.authenticateVolunteerRequest = (func) => {
+export const authenticateVolunteerRequest = (func: OnRequestHandler): OnRequestHandler => {
   return async (req, res) => {
     try {
       if (
@@ -48,11 +49,10 @@ exports.authenticateVolunteerRequest = (func) => {
         functions.config().environment &&
         functions.config().environment.isdevelopment
       ) {
-        console.log("in if");
-        return await func(req, res);
+        await func(req, res);
       }
 
-      const tokenId = req.get("Authorization").split("Bearer ")[1];
+      const tokenId = req.get("Authorization")!.split("Bearer ")[1];
       const decoded = await admin.auth().verifyIdToken(tokenId);
       const email = decoded.email || null;
       const userInfo = await admin
@@ -62,19 +62,20 @@ exports.authenticateVolunteerRequest = (func) => {
         .get();
 
       if (userInfo.empty) {
-        return res
+        res
           .status(401)
           .json({ status: "error", message: "Not authorized" });
+        return;
       }
       try {
-        return await func(req, res);
+        await func(req, res);
       } catch (e) {
         console.log(e);
-        return res.status(500).json({ status: "error", message: "Unknown" });
+        res.status(500).json({ status: "error", message: "Unknown" });
       }
     } catch (e) {
       console.log(e);
-      return res
+      res
         .status(401)
         .json({ status: "error", message: "Not signed in" });
     }
@@ -86,7 +87,7 @@ exports.authenticateVolunteerRequest = (func) => {
  * @param {*} data
  * @returns
  */
-exports.getProfile = async (data) => {
+export const getProfile = async (data: LineCredential) => {
   if (
     data.noAuth &&
     functions.config().environment &&

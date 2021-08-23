@@ -2,12 +2,12 @@ import axios from "axios";
 import { success } from "../response/success";
 import * as functions from "firebase-functions";
 
-exports.notifyToLine = async (message) => {
+export const notifyToLine = async (message: string) => {
   try {
     const token = functions.config().linenotify.token;
     const params = new URLSearchParams();
     params.append("message", message);
-    const response = await axios.post(
+    await axios.post(
       "https://notify-api.line.me/api/notify",
       params,
       {

@@ -1,11 +1,11 @@
 describe("endpoints", () => {
   jest.doMock("./config/index", () => ({
-    config: {
+    default: {
       region: "region",
       line: {
-        channel_token: "channel_token",
-        channel_secret: "channel_secret",
-        r2r_uri: "r2r_uri",
+        channelAccessToken: "channel_token",
+        channelSecret: "channel_secret",
+        r2rUri: "r2r_uri",
       },
     },
   }));
