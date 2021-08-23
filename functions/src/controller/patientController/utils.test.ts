@@ -211,6 +211,8 @@ describe("snapshotExists", () => {
   it("throw amed", () => {
     function checkExists() {
       const mockSnapshot = { exists: true, data: () => ({ toAmed: 1 }) };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       snapshotExists(mockSnapshot);
     }
     expect(checkExists).toThrowError(
@@ -220,6 +222,8 @@ describe("snapshotExists", () => {
   it("throw มีข้อมูลแล้ว", () => {
     function checkExists() {
       const mockSnapshot = { exists: true, data: () => ({ toAmed: 0 }) };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       snapshotExists(mockSnapshot);
     }
     expect(checkExists).toThrowError("มีข้อมูลผู้ใช้ในระบบแล้ว");
@@ -247,6 +251,8 @@ describe("updateSymptomCheckUser", () => {
 
     function checkUser() {
       const mockSnapshot = { exists: false };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       updateSymptomCheckUser(mockSnapshot, lineUserID);
     }
     expect(checkUser).toThrowError(`ไม่พบผู้ใช้ ${lineUserID}`);

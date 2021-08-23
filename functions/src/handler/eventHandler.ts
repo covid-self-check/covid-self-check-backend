@@ -7,12 +7,10 @@ import { handleMessage } from "./subhandler/messageHandler";
 export const eventHandler: LineHandler = async (event, userObject, client) => {
   switch (await event.type) {
     case "follow":
-      const followEvent = event as FollowEvent
-      await handleFollow(followEvent, userObject, client);
+      await handleFollow(event as FollowEvent, userObject, client);
       break;
     case "message":
-      const messageEvent = event as MessageEvent
-      await handleMessage(messageEvent, userObject, client);
+      await handleMessage(event as MessageEvent, userObject, client);
       break;
     default:
       break;
