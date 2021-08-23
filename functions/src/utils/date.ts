@@ -1,7 +1,6 @@
 import * as moment from "moment";
 import * as _ from "lodash";
 import { admin } from "../init";
-import { Patient } from "../types";
 
 enum TZ {
   AsiaBangkok = "Asia/Bangkok"
@@ -16,7 +15,7 @@ export const convertTZ = (date: Date, tzString: TZ = TZ.AsiaBangkok) => {
   );
 };
 
-export const convertTimestampToStr = (data: Omit<Patient, 'followUp'>) => {
+export const convertTimestampToStr = (data: any) => {
   const tmp: { [key: string]: any } = {};
   for (const [key, value] of _.entries(data)) {
     if (value instanceof admin.firestore.Timestamp) {

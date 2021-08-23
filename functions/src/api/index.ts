@@ -1,7 +1,7 @@
 import axios from "axios";
 import { calculateAge, formatDateTimeAPI } from "../utils";
 import * as functions from "firebase-functions";
-import _ = require("lodash");
+import * as _ from "lodash";
 import { FollowUp, Patient } from "../types";
 import { statusList } from "./const";
 const URL = "https://pedsanam.ydm.family/pedsanam/label_score";

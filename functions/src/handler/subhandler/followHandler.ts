@@ -1,9 +1,9 @@
-const { jsonController } = require("../jsonHandler");
+import { jsonController } from "../jsonHandler";
 
-const handleFollow = async (event, userObject, client) => {
+export const handleFollow = async (event: any, userObject: any, client: any) => {
   const replyToken = await event.replyToken;
   try {
-    let greeting = jsonController("greeting");
+    // let greeting = jsonController("greeting");
     await client.replyMessage(replyToken, [
       jsonController("welcomepos1"),
       jsonController("welcomepos2"),
@@ -18,6 +18,4 @@ const handleFollow = async (event, userObject, client) => {
   }
 };
 
-module.exports = {
-  handleFollow,
-};
+

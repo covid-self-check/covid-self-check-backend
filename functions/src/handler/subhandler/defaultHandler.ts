@@ -1,4 +1,4 @@
-const handleDefault = async (event, userObject, client) => {
+export const handleDefault = async (event: any, userObject: any, client: any) => {
   const replyToken = event.replyToken;
   await client.replyMessage(replyToken, {
     type: "text",
@@ -6,6 +6,3 @@ const handleDefault = async (event, userObject, client) => {
   });
 };
 
-module.exports = {
-  handleDefault,
-};
