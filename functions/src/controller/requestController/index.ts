@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 // import { getProfile } from "../../middleware/authentication";
-const { getProfile } = require("../../middleware/authentication")
+import { getProfile } from "../../middleware/authentication";
 import {
   GetProfileType,
   RequestToRegisterType,
@@ -10,7 +10,7 @@ import {
 import { admin, collection } from "../../init";
 import { success } from "../../response/success";
 import { OnCallHandler, Patient, R2RAssistance } from "../../types";
-const { incrementR2CUser } = require("./utils");
+import { incrementR2CUser } from "./utils";
 
 export const requestToCall: OnCallHandler<GetProfileType> = async (data, _context) => {
   const { value, error } = validateGetProfileSchema(data);
@@ -38,19 +38,20 @@ export const requestToCall: OnCallHandler<GetProfileType> = async (data, _contex
     .collection(collection.patient)
     .doc(lineUserID)
     .get();
-  const patient = snapshot.data() as Patient;
   if (!snapshot.exists) {
-    if (patient.toAmed === 1) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "your information is already handle by Amed"
-      );
-    }
     throw new functions.https.HttpsError(
       "not-found",
       `ไม่พบผู้ใช้ ${lineUserID}`
     );
   }
+  const patient = snapshot.data() as Patient;
+  if (patient.toAmed === 1) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "your information is already handle by Amed"
+    );
+  }
+
   const { isRequestToCall } = patient;
 
   if (isRequestToCall) {

@@ -16,7 +16,7 @@ import * as guide from "../json/guide.json";
 import * as r2cQuestion from "../json/r2cQuestion.json";
 import * as closeRegistration from "../json/closeRegistration.json";
 
-import { config } from "../config/index";
+import config from "../config";
 const tutorial2 = {
   type: "template",
   altText: "กรอกเบอร์โทรศัพท์",
@@ -33,7 +33,7 @@ const tutorial2 = {
   },
 };
 
-const map = {
+const map: { [key: string]: any } = {
   greeting,
   welcomepos1,
   welcomepos2,
@@ -53,4 +53,4 @@ const map = {
   closeRegistration,
 };
 
-module.exports = { jsonController: (json) => map[json] };
+export const jsonController = (json: string) => map[json]

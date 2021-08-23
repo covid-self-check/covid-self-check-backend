@@ -15,7 +15,7 @@ import { admin, collection } from "../../init";
 import { success } from "../../response/success";
 import { statusList } from "../../api/const"
 import { convertTimestampToStr, TO_AMED_STATUS } from "../../utils"
-import { config } from "../../config/index"
+import config from "../../config"
 import * as utils from "./utils";
 import { Patient, OnCallHandler } from "../../types";
 

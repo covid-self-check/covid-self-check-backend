@@ -3,7 +3,7 @@ import { convertTZ } from "../utils/date";
 import { replace } from "lodash";
 import * as functions from "firebase-functions";
 
-import { config } from "../config/index";
+import config from "../config";
 
 import { google } from "googleapis";
 import { OnRunHandler } from "../types";
