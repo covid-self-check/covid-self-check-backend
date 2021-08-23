@@ -1,7 +1,7 @@
 import { handleFollow } from "./subhandler/followHandler";
 import { handleMessage } from "./subhandler/messageHandler";
 
-const eventHandler = async (event, userObject, client) => {
+export const eventHandler = async (event: any, userObject: any, client: any) => {
   switch (await event.type) {
     case "follow":
       await handleFollow(event, userObject, client);
@@ -13,4 +13,4 @@ const eventHandler = async (event, userObject, client) => {
       break;
   }
 };
-module.exports = { eventHandler };
+

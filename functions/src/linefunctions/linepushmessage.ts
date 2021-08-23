@@ -1,7 +1,11 @@
-import { convertTimestampToStr } from "../utils/date";
+import _ = require("lodash");
+import { convertTimestampToStr } from "../utils";
 import axios from "axios";
-const baseURL = "https://api.line.me/v2/bot/message/push";
 import { statusList } from "../api/const";
+import { UpdatedPatient } from "../types";
+const baseURL = "https://api.line.me/v2/bot/message/push";
+
+type StatusObj = Omit<UpdatedPatient, 'createdDate'>
 
 const symptomMapper = {
   sym1_severe_cough: "มีอาการไอต่อเนื่อง",
@@ -28,17 +32,17 @@ const conditionMapper = {
   fac_gi_symptoms: "แน่นหน้าอก",
 };
 
-const getPatientCondition = (statusObj, mapper) => {
+const getPatientCondition = (statusObj: StatusObj, mapper: any) => {
   const conditions = [];
-  for (let key in statusObj) {
-    if (statusObj[key] === 1 && key in mapper) {
+  for (const [key, value] of _.entries(statusObj)) {
+    if (value === 1 && key in mapper) {
       conditions.push(mapper[key]);
     }
   }
   return conditions.join(", ");
 };
 
-exports.statusMap = {
+export const statusMap = {
   G1: "เขียวอ่อน",
   G2: "เขียวเข้ม",
   Y1: "เหลืองอ่อน",
@@ -48,7 +52,7 @@ exports.statusMap = {
   unknown: "ไม่สามารถระบุได้",
 };
 
-const statusNumberMap = {
+const statusNumberMap: { [key: number]: string } = {
   1: "เขียวอ่อน",
   2: "เขียวเข้ม",
   3: "เหลืองอ่อน",
@@ -58,29 +62,26 @@ const statusNumberMap = {
   0: "ไม่สามารถระบุได้",
 };
 
-const getPatientTextColor = (statusNumber) => {
+const getPatientTextColor = (statusNumber: number) => {
   return statusNumberMap[statusNumber];
 };
 
-const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
+export const sendPatientstatus = async (userId: string, statusObj: StatusObj, channelAccessToken: string) => {
   const date = convertTimestampToStr({ dateObj: statusObj.lastUpdatedAt });
-  let message = `วันที่: ${date.dateObj} 
+  const message = `วันที่: ${date.dateObj} 
     \nข้อมูลทั่วไป:
     - ค่าออกซิเจนปลายนิ้ว: ${statusObj.sp_o2 || "-"}  
     - ค่าออกซิเจนปลายนิ้ว ขณะหายใจปกติ: ${statusObj.sp_o2_ra || "-"}
-    - ค่าออกซิเจนปลายนิ้ว หลังลุกนั่ง 1 นาที: ${
-      statusObj.sp_o2_after_eih || "-"
+    - ค่าออกซิเจนปลายนิ้ว หลังลุกนั่ง 1 นาที: ${statusObj.sp_o2_after_eih || "-"
     }`;
   const patientCondition = getPatientCondition(statusObj, conditionMapper);
   const patientsymptom = getPatientCondition(statusObj, symptomMapper);
-  let symptom = `\n\nอาการที่พบ: ${
-    patientsymptom === "" ? "-" : patientsymptom
-  }`;
-  let condition = `\n\nอัปเดตโรคประจำตัว: ${
-    patientCondition === "" ? "-" : patientCondition
-  }`;
+  const symptom = `\n\nอาการที่พบ: ${patientsymptom === "" ? "-" : patientsymptom
+    }`;
+  const condition = `\n\nอัปเดตโรคประจำตัว: ${patientCondition === "" ? "-" : patientCondition
+    }`;
   const patientColor = getPatientTextColor(statusObj.status);
-  let conclude = `\n\nผลลัพธ์:
+  const conclude = `\n\nผลลัพธ์:
     - ระดับ: ${patientColor}`;
   const messagePayload = [
     {
@@ -113,19 +114,29 @@ const sendPatientstatus = async (userId, statusObj, channelAccessToken) => {
     default:
       resultMessagePayload = messagePayload.slice(0, 1);
   }
-  const axiosConfig = {
-    method: "POST",
+  // const axiosConfig = {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //     Authorization: "Bearer " + channelAccessToken,
+  //   },
+  //   data: {
+  //     to: userId,
+  //     messages: resultMessagePayload,
+  //   },
+  //   baseURL,
+  // };
+
+  const data = {
+    to: userId,
+    messages: resultMessagePayload,
+  }
+  // await axios(axiosConfig);
+  await axios.post(baseURL, data, {
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + channelAccessToken,
-    },
-    data: {
-      to: userId,
-      messages: resultMessagePayload,
-    },
-    baseURL,
-  };
-  await axios(axiosConfig);
+    }
+  })
 };
 
-module.exports = { sendPatientstatus };

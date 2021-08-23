@@ -1,8 +1,9 @@
 import { admin } from "../init";
 import { jsonController } from "../handler/jsonHandler";
 import { success } from "../response/success";
+import { Patient } from "../types";
 
-const requestCall = async (userObject, client, replyToken) => {
+export const requestCall = async (userObject: any, client: any, replyToken: any) => {
   const snapshot = await admin
     .firestore()
     .collection("patient")
@@ -16,7 +17,7 @@ const requestCall = async (userObject, client, replyToken) => {
 
   await client.replyMessage(replyToken, jsonController("tutorial1"));
 
-  const { isRequestToCall } = snapshot.data();
+  const { isRequestToCall } = snapshot.data() as Patient;
 
   if (isRequestToCall) {
     return success(
@@ -29,4 +30,4 @@ const requestCall = async (userObject, client, replyToken) => {
   });
   return success();
 };
-module.exports = { requestCall };
+
