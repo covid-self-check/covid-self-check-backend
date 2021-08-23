@@ -348,7 +348,7 @@ exports.exportTimeSeries = async (req, res) => {
   try {
     const snapshot = await admin.firestore().collection(collection.timeSeries).get();
 
-    const headers = ['date','active users','drop off Rate', 'r2account', 'terminate users','activebtw 36 to 72 hrs']
+    const headers = ['date','active users','drop off Rate', 'r2cccount', 'terminate users','activebtw 36 to 72 hrs']
     const result = [headers]
     snapshot.forEach((doc) => {
       const data = doc.data();
