@@ -3,6 +3,7 @@ import * as  functions from "firebase-functions";
 import { RegisterType, HistoryType } from '../../schema';
 import { Patient, UpdatedPatient } from '../../types'
 import { TO_AMED_STATUS } from "../../utils"
+import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 
 
 export const setPatientStatus = (obj: Omit<RegisterType, 'noAuth' | 'lineIDToken' | 'lineUserID'>, createdDate: Date): Patient => {
@@ -54,7 +55,7 @@ const checkAmedStatus = (status: number, prevStatus: number, TO_AMED_STATUS: any
   return status !== prevStatus && TO_AMED_STATUS.includes(status)
 }
 
-export const snapshotExists = (snapshot: any) => {
+export const snapshotExists = (snapshot: DocumentSnapshot) => {
   if (snapshot.exists) {
     if (snapshot.data()?.toAmed === 1) {
       throw new functions.https.HttpsError(
@@ -76,7 +77,7 @@ export const updateSymptomAddCreatedDate = (
   obj.createdDate = timestamp;
 };
 
-export const updateSymptomCheckUser = (snapshot: any, lineUserID: string) => {
+export const updateSymptomCheckUser = (snapshot: DocumentSnapshot, lineUserID: string) => {
   if (!snapshot.exists) {
     throw new functions.https.HttpsError(
       "not-found",
