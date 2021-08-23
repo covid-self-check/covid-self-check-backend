@@ -2,7 +2,6 @@
 import * as functions from "firebase-functions";
 import {
   authenticateVolunteer,
-  getProfile as getLineProfile,
   authenticateVolunteerRequest,
 } from "./middleware/authentication";
 import { admin, initializeApp } from "./init";
@@ -10,7 +9,6 @@ import { eventHandler } from "./handler/eventHandler";
 // const line = require("@line/bot-sdk");
 import * as line from "@line/bot-sdk"
 import config from "./config"
-import { validateGetProfileSchema } from "./schema";
 import { success } from "./response/success";
 import * as  express from "express";
 import * as cors from "cors";
@@ -24,7 +22,7 @@ import {
   firestoreController,
   dashboard
 } from "./controller";
-import { Patient, Series } from "./types";
+import { Series } from "./types";
 const client = new line.Client({
   channelAccessToken: config.line.channelAccessToken,
   channelSecret: config.line.channelSecret
@@ -194,97 +192,9 @@ export const onDeletePatient = functions
 // ******************************* unused ******************************************
 export const getFollowupHistory = functions
   .region(region)
-  .https.onCall(async (data, context) => {
-    const { value, error } = validateGetProfileSchema(data);
-    if (error) {
-      console.log(error.details);
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "ข้อมูลไม่ถูกต้อง",
-        error.details
-      );
-    }
-    const { lineUserID, lineIDToken, noAuth } = value;
-    const { data: errorData, error: authError } = await getLineProfile({
-      lineUserID,
-      lineIDToken,
-      noAuth,
-    });
-    if (authError) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        errorData.error_description
-      );
-    }
+  .https.onCall(patientController.getFollowupHistory);
 
-    // const snapshot = await admin.firestore().collection('followup').where("personalId","==","1").get()
-    const snapshot = await admin
-      .firestore()
-      .collection("patient")
-      .doc(lineUserID)
-      .get();
 
-    if (!snapshot.exists) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        `ไม่พบข้อมูลผู้ใช้ ${lineUserID}`
-      );
-    }
-    const patient = snapshot.data() as Patient
-    return success(patient.followUp);
-  });
 
-export const fetchYellowPatients = functions
-  .region(region)
-  .https.onCall(async (data) => {
-    // const snapshot = await admin
-    //   .firestore()
-    //   .collection("patient")
-    //   .where("status", "==", data.status)
-    //   .get();
 
-    // var patientList = [];
 
-    // snapshot.forEach((doc) => {
-    //   const data = doc.data();
-    //   patientList.push(data);
-    // });
-    // return success(patientList);
-    return success();
-  });
-
-export const fetchGreenPatients = functions
-  .region(region)
-  .https.onCall(async (data) => {
-    // const snapshot = await admin
-    //   .firestore()
-    //   .collection("patient")
-    //   .where("status", "==", "เขียว")
-    //   .get();
-
-    // var patientList = [];
-
-    // snapshot.forEach((doc) => {
-    //   const data = doc.data();
-    //   patientList.push(data);
-    // });
-    // return success(patientList);
-    return success();
-  });
-export const fetchRedPatients = functions
-  .region(region)
-  .https.onCall(async (data) => {
-    // const snapshot = await admin
-    //   .firestore()
-    //   .collection("patient")
-    //   .where("status", "==", "แดง")
-    //   .get();
-
-    // var patientList = [];
-    // snapshot.forEach((doc) => {
-    //   const data = doc.data();
-    //   patientList.push(data);
-    // });
-    // return success(patientList);
-    return success();
-  });
