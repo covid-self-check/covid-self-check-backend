@@ -186,6 +186,8 @@ exports.onDeletePatient = functions
   .firestore.document("patient/{id}")
   .onDelete(firestoreController.onDeletePatient)
 
+exports.exportStatistics = functions.region(region).https.onRequest(exportController.exportTimeSeries);
+
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
   .region(region)
