@@ -1,10 +1,13 @@
 import { jsonController } from "../jsonHandler";
 import { requestCall } from "../../linefunctions/requestCallHandler";
 import { requestGuide } from "../../linefunctions/requestGuideHandler";
+import { LineHandler } from "../../types";
+import { MessageEvent, TextEventMessage } from "@line/bot-sdk"
 
-export const handleMessage = async (event: any, userObject: any, client: any) => {
+
+export const handleMessage: LineHandler<MessageEvent> = async (event, userObject, client) => {
   const replyToken = await event.replyToken;
-  const message = await event.message.text;
+  const message = await (event.message as TextEventMessage).text;
   // console.log(message)
   try {
     switch (message) {

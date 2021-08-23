@@ -1,13 +1,18 @@
+import { FollowEvent, MessageEvent } from "@line/bot-sdk";
+import { LineHandler } from "../types";
 import { handleFollow } from "./subhandler/followHandler";
 import { handleMessage } from "./subhandler/messageHandler";
 
-export const eventHandler = async (event: any, userObject: any, client: any) => {
+
+export const eventHandler: LineHandler = async (event, userObject, client) => {
   switch (await event.type) {
     case "follow":
-      await handleFollow(event, userObject, client);
+      const followEvent = event as FollowEvent
+      await handleFollow(followEvent, userObject, client);
       break;
     case "message":
-      await handleMessage(event, userObject, client);
+      const messageEvent = event as MessageEvent
+      await handleMessage(messageEvent, userObject, client);
       break;
     default:
       break;

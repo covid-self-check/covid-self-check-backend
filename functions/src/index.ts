@@ -22,7 +22,7 @@ import {
   firestoreController,
   dashboard
 } from "./controller";
-import { Series } from "./types";
+import { Series, UserObject } from "./types";
 const client = new line.Client({
   channelAccessToken: config.line.channelAccessToken,
   channelSecret: config.line.channelSecret
@@ -31,6 +31,7 @@ const client = new line.Client({
 const region = config.region
 const app = express();
 app.use(cors({ origin: true }));
+
 
 // The Firebase Admin SDK to access Firestore.
 initializeApp();
@@ -56,10 +57,15 @@ export const exportNurse = functions
 export const webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
   try {
-    const event = req.body.events[0];
+    const { events } = (req.body as line.WebhookRequestBody)
+    const event = events[0]
     const userId = event.source.userId;
-    const profile: any = await client.getProfile(userId);
-    const userObject = { userId: userId, profile: profile };
+    if (!userId) {
+      throw new Error('userId not found')
+    }
+
+    const profile: line.Profile = await client.getProfile(userId);
+    const userObject: UserObject = { userId: userId, profile: profile };
     console.log(userObject);
     // console.log(event)
     await eventHandler(event, userObject, client);
