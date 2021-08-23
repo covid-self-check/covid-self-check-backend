@@ -12,7 +12,7 @@ const {
   sheetName,
   MAP_PATIENT_FIELD,
 } = require("../../utils/status");
-const { calculateAge, convertTZ,getDateID } = require("../../utils/date");
+const { calculateAge, convertTZ, getDateID } = require("../../utils/date");
 const utils = require("./utils");
 const { success } = require("../../response/success");
 
@@ -344,3 +344,39 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
   );
 };
 
+exports.exportTimeSeries = async (req, res) => {
+  try {
+    const snapshot = await admin.firestore().collection(collection.timeSeries).get();
+
+    const headers = ['date','active users','drop off Rate', 'r2account', 'terminate users','activebtw 36 to 72 hrs']
+    const result = [headers]
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log(data)
+      result.push([doc.id,data.activeUser,data.dropoffrate,data.r2account,data.terminateUser,data.usersbtw36hrsto72hrs])
+    })
+    console.log(result)
+    const wb = XLSX.utils.book_new();
+
+    const ws = XLSX.utils.aoa_to_sheet(result);
+    XLSX.utils.book_append_sheet(wb, ws,"statistics");
+    const filename = `daily_statistics.xlsx`;
+    const opts = { bookType: "xlsx", type: "binary" };
+
+    // it must be save to tmp directory because it run on firebase
+    const pathToSave = path.join("/tmp", filename);
+    XLSX.writeFile(wb, pathToSave, opts);
+
+    const stream = fs.createReadStream(pathToSave);
+    // prepare http header
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    stream.pipe(res);
+  } catch (err) {
+    console.log(err)
+    return res.json({ success: false });
+  }
+}
