@@ -51,7 +51,7 @@ app.get(
 
 app.get(
   "/exportTimeSeries",
-  authenticateVolunteerRequest(exportController.exportPatientForNurse)
+  authenticateVolunteerRequest(exportController.exportTimeSeries)
 );
 
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
