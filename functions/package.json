@@ -62,7 +62,7 @@
     "typescript": "^4.3.5"
   },
   "lint-staged": {
-    "*.{js,json,yml}": "prettier --write",
-    "*.js": "eslint --fix"
+    "*.{js,json,yml,ts}": "prettier --write",
+    "*.js,ts": "eslint --fix"
   }
 }
