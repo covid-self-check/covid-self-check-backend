@@ -45,11 +45,14 @@ initializeApp();
 // app.get("/patient", exportController.exportAllPatient);
 
 app.get(
-  "/",
+  "/exportPatientForNurse",
   authenticateVolunteerRequest(exportController.exportPatientForNurse)
 );
 
-
+app.get(
+  "/exportTimeSeries",
+  authenticateVolunteerRequest(exportController.exportPatientForNurse)
+);
 
 exports.webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
@@ -186,7 +189,6 @@ exports.onDeletePatient = functions
   .firestore.document("patient/{id}")
   .onDelete(firestoreController.onDeletePatient)
 
-exports.exportStatistics = functions.region(region).https.onRequest(exportController.exportTimeSeries);
 
 // ******************************* unused ******************************************
 exports.getFollowupHistory = functions
