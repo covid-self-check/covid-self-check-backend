@@ -16,7 +16,6 @@ const { calculateAge, convertTZ, getDateID } = require("../../utils/date");
 const utils = require("./utils");
 const { success } = require("../../response/success");
 
-
 exports.exportR2R = async (data, _context) => {
   const { value, error } = validateExportRequestToCallSchema(data);
   if (error) {
@@ -346,20 +345,37 @@ exports.exportRequestToCallDayOne = async (data, _context) => {
 
 exports.exportTimeSeries = async (req, res) => {
   try {
-    const snapshot = await admin.firestore().collection(collection.timeSeries).get();
+    const snapshot = await admin
+      .firestore()
+      .collection(collection.timeSeries)
+      .get();
 
-    const headers = ['date','active users','drop off Rate', 'r2cccount', 'terminate users','activebtw 36 to 72 hrs']
-    const result = [headers]
+    const headers = [
+      "date",
+      "active users",
+      "drop off Rate",
+      "r2cccount",
+      "terminate users",
+      "activebtw 36 to 72 hrs",
+    ];
+    const result = [headers];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log(data)
-      result.push([doc.id,data.activeUser,data.dropoffrate,data.r2account,data.terminateUser,data.usersbtw36hrsto72hrs])
-    })
-    console.log(result)
+      console.log(data);
+      result.push([
+        doc.id,
+        data.activeUser,
+        data.dropoffrate,
+        data.r2account,
+        data.terminateUser,
+        data.usersbtw36hrsto72hrs,
+      ]);
+    });
+    console.log(result);
     const wb = XLSX.utils.book_new();
 
     const ws = XLSX.utils.aoa_to_sheet(result);
-    XLSX.utils.book_append_sheet(wb, ws,"statistics");
+    XLSX.utils.book_append_sheet(wb, ws, "statistics");
     const filename = `daily_statistics.xlsx`;
     const opts = { bookType: "xlsx", type: "binary" };
 
@@ -376,7 +392,7 @@ exports.exportTimeSeries = async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     stream.pipe(res);
   } catch (err) {
-    console.log(err)
+    console.log(err);
     return res.json({ success: false });
   }
-}
+};
