@@ -116,8 +116,12 @@ exports.thisEndpointNeedsAuth = functions.region(region).https.onCall(
 );
 
 exports.accumulativeData = functions
-.region(region)
-.https.onCall(authenticateVolunteer(dashboard.getAccumulative)); 
+  .region(region)
+  .https.onCall(authenticateVolunteer(dashboard.getAccumulative)); 
+
+exports.resetUserCount = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(dashboard.resetUserCount)); 
 
 exports.backupFirestore = functions
   .region(region)
