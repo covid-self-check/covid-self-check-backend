@@ -1,5 +1,5 @@
-import XLSX from "xlsx";
-import JSZip from "jszip";
+import * as XLSX from "xlsx";
+import * as JSZip from "jszip";
 
 export const makeAoA = (size) => {
   const aoa = new Array(size);
