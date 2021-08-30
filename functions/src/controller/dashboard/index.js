@@ -1,6 +1,7 @@
 const { count } = require("console");
 const { admin, collection } = require("../../init");
-const { statusListReverse } =require("../../api/const");
+const { statusListReverse } = require("../../api/const");
+const { success } = require("../../response/success");
 
 exports.getAccumulative = async() => {
     const [g1,g2,r1,r2,y1,y2,users,unknown,legacyRef] = await Promise.all([getCount(collection.userCount,"G1"),getCount(collection.userCount,"G2"),getCount(collection.userCount,"R1"),getCount(collection.userCount,"R2"),getCount(collection.userCount,"Y1"),getCount(collection.userCount,"Y2"),getCount(collection.userCount,"users"),getCount(collection.userCount,"unknown"),getCount(collection.legacyStat,"stat")]);
@@ -50,6 +51,7 @@ exports.resetUserCount = async() => {
         check++;
     });
     await batch.commit();
+    return success();
 }
 
 const getPatient = async() => {
