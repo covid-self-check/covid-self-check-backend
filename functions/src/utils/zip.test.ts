@@ -15,15 +15,15 @@ jest.mock("jszip", () => {
   });
 });
 
+const {
+  makeAoA,
+  fillWith,
+  prepareZipFile,
+  generateZipFileRoundRobin,
+} = require("./zip");
 
 describe("zip", () => {
 
-  const {
-    makeAoA,
-    fillWith,
-    prepareZipFile,
-    generateZipFileRoundRobin,
-  } = require("./zip");
 
   const JSZip = require("jszip");
 
