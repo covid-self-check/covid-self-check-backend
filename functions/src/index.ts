@@ -48,18 +48,15 @@ initializeApp();
 //   exportController.exportPatientForNurse
 // );
 
-export const exportNurse = functions
-  .region(region)
-  .https.onRequest(authenticateVolunteerRequest(exportController.exportPatientForNurse))
-// app.get(
-//   "/exportPatientForNurse",
-//   authenticateVolunteerRequest(exportController.exportPatientForNurse)
-// );
+app.get(
+  "/exportPatientForNurse",
+  authenticateVolunteerRequest(exportController.exportPatientForNurse)
+);
 
-// app.get(
-//   "/exportTimeSeries",
-//   authenticateVolunteerRequest(exportController.exportTimeSeries)
-// );
+app.get(
+  "/exportTimeSeries",
+  authenticateVolunteerRequest(exportController.exportTimeSeries)
+);
 
 export const webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
