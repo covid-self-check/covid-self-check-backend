@@ -2,7 +2,37 @@ import { admin, collection } from "../../init"
 import { statusList } from "../../api/const";
 import { QuerySnapshot } from "@google-cloud/firestore";
 import { Patient, NotUpdatedList, R2RAssistance, R2C, WithID } from "../../types";
+import { Response } from "express";
+import * as XLSX from "xlsx";
+import * as fs from "fs";
+import * as path from "path";
 
+
+export const streamXLSXFile = (
+  res: Response,
+  wb: XLSX.WorkBook,
+  filename: string,
+): void => {
+  const opts: XLSX.WritingOptions = { bookType: "xlsx", type: "binary" };
+
+  // it must be save to `/tmp` directory because it run on firebase
+  const pathToSave = path.join("/tmp", filename)
+
+  // write file
+  XLSX.writeFile(wb, pathToSave, opts)
+
+  // create read stream
+  const stream = fs.createReadStream(pathToSave);
+
+  // prepare http header
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+  stream.pipe(res);
+}
 
 
 export const getUnExportedR2RUsers = () => {

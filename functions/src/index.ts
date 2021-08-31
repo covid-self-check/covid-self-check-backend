@@ -48,11 +48,15 @@ initializeApp();
 //   exportController.exportPatientForNurse
 // );
 
-export const exportNurse = functions
-  .region(region)
-  .https.onRequest(authenticateVolunteerRequest(exportController.exportPatientForNurse))
+app.get(
+  "/exportPatientForNurse",
+  authenticateVolunteerRequest(exportController.exportPatientForNurse)
+);
 
-
+app.get(
+  "/exportTimeSeries",
+  authenticateVolunteerRequest(exportController.exportTimeSeries)
+);
 
 export const webhook = functions.region(region).https.onRequest(async (req, res) => {
   res.sendStatus(200);
@@ -120,9 +124,15 @@ export const thisEndpointNeedsAuth = functions.region(region).https.onCall(
   })
 );
 
+
 export const accumulativeData = functions
   .region(region)
   .https.onCall(authenticateVolunteer(dashboard.getAccumulative));
+
+
+export const resetUserCount = functions
+  .region(region)
+  .https.onCall(authenticateVolunteer(dashboard.resetUserCount));
 
 export const backupFirestore = functions
   .region(region)
@@ -194,6 +204,7 @@ export const onDeletePatient = functions
   .region(region)
   .firestore.document("patient/{id}")
   .onDelete(firestoreController.onDeletePatient)
+
 
 // ******************************* unused ******************************************
 export const getFollowupHistory = functions
