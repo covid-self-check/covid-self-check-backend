@@ -1,14 +1,12 @@
-import * as fs from "fs";
-import * as path from "path";
 import * as _ from "lodash";
 import * as XLSX from "xlsx";
-import * as  functions from "firebase-functions";
+import * as functions from "firebase-functions";
+import * as utils from "./utils";
 import { admin, collection } from "../../init";
 import { ExportRequestToCallType, validateExportRequestToCallSchema } from "../../schema";
 import { OnCallHandler, OnRequestHandler, Patient, R2RAssistance } from "../../types";
 import { formatPatient, formatter36Hr } from "./utils";
 import { calculateAge, convertTZ } from "../../utils/date";
-import * as utils from "./utils";
 import { statusList } from "../../api/const"
 import {
   patientReportHeader,
@@ -16,8 +14,6 @@ import {
   MAP_PATIENT_FIELD,
 } from "../../utils/status";
 import { QuerySnapshot } from "@google-cloud/firestore";
-
-
 import { generateZipFileRoundRobin } from "../../utils/zip";
 
 
@@ -96,21 +92,8 @@ export const exportMaster: OnRequestHandler = async (req, res) => {
     const ws = XLSX.utils.aoa_to_sheet(result);
 
     XLSX.utils.book_append_sheet(wb, ws, "รายงานที่อยู่ผู้ป่วย 4 สิงหาคม");
-    const filename = `report.xlsx`;
-    const opts: XLSX.WritingOptions = { bookType: "xlsx", type: 'binary' };
 
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
-
-    const stream = fs.createReadStream(pathToSave);
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    stream.pipe(res);
+    utils.streamXLSXFile(res, wb, "report.xlsx")
   } catch (err) {
     console.log(err);
     res.json({ success: false });
@@ -168,23 +151,8 @@ export const exportPatientForNurse: OnRequestHandler = async (req, res) => {
       const ws = XLSX.utils.aoa_to_sheet(results[i]);
       XLSX.utils.book_append_sheet(wb, ws, sheetName[i]);
     }
-    // write workbook file
-    const filename = `report.xlsx`;
-    const opts: XLSX.WritingOptions = { bookType: "xlsx", type: "binary" };
 
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
-    // create read stream
-    const stream = fs.createReadStream(pathToSave);
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-
-    stream.pipe(res);
+    utils.streamXLSXFile(res, wb, "report.xlsx")
 
     await Promise.all([
       updatedDocId.map((id) => {
@@ -245,7 +213,7 @@ export const exportAllPatient: OnRequestHandler = async (req, res) => {
       results[i] = [[...patientReportHeader]];
     }
     snapshot.docs.forEach((doc) => {
-      const data = doc.data();
+      const data = doc.data() as Patient;
       const arr = [
         data.personalID,
         data.firstName,
@@ -283,23 +251,8 @@ export const exportAllPatient: OnRequestHandler = async (req, res) => {
       const ws = XLSX.utils.aoa_to_sheet(results[i]);
       XLSX.utils.book_append_sheet(wb, ws, sheets[i]);
     }
-    // write workbook file
-    const filename = `report.xlsx`;
-    const opts: XLSX.WritingOptions = { bookType: "xlsx", type: "binary" };
 
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
-    // create read stream
-    const stream = fs.createReadStream(pathToSave);
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-
-    stream.pipe(res);
+    utils.streamXLSXFile(res, wb, "report.xlsx")
   } catch (err) {
     console.log(err);
     res.json({ success: false });
@@ -352,9 +305,9 @@ export const exportTimeSeries: OnRequestHandler = async (req, res) => {
       "date",
       "active users",
       "drop off Rate",
-      "r2cccount",
+      "r2c count",
       "terminate users",
-      "activebtw 36 to 72 hrs",
+      "active btw 36 to 72 hrs",
     ];
     const result = [headers];
     snapshot.forEach((doc) => {
@@ -369,26 +322,13 @@ export const exportTimeSeries: OnRequestHandler = async (req, res) => {
         data.usersbtw36hrsto72hrs,
       ]);
     });
-    console.log(result);
+
     const wb = XLSX.utils.book_new();
 
     const ws = XLSX.utils.aoa_to_sheet(result);
+
     XLSX.utils.book_append_sheet(wb, ws, "statistics");
-    const filename = `daily_statistics.xlsx`;
-    const opts = { bookType: "xlsx", type: "binary" };
-
-    // it must be save to tmp directory because it run on firebase
-    const pathToSave = path.join("/tmp", filename);
-    XLSX.writeFile(wb, pathToSave, opts);
-
-    const stream = fs.createReadStream(pathToSave);
-    // prepare http header
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    stream.pipe(res);
+    utils.streamXLSXFile(res, wb, "daily_statistics.xlsx")
   } catch (err) {
     console.log(err);
     res.json({ success: false });

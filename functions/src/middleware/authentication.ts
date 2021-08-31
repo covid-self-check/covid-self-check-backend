@@ -2,7 +2,7 @@ import { admin } from "../init";
 import axios from "axios";
 
 import * as functions from "firebase-functions";
-import { LineCredential, OnCallHandler, OnRequestHandler } from "../types";
+import { LineCredential, OnCallHandler } from "../types";
 
 /**
  * Authenticate middleware for volunteer system
@@ -41,8 +41,8 @@ export const authenticateVolunteer = (func: OnCallHandler): OnCallHandler => {
  * @param {*} func function to call if authenticate success
  * @returns error 401 if not authorized email
  */
-export const authenticateVolunteerRequest = (func: OnRequestHandler): OnRequestHandler => {
-  return async (req, res) => {
+export function authenticateVolunteerRequest(func: any): any {
+  return async (req: any, res: any) => {
     try {
       if (
         req.body.noAuth &&
