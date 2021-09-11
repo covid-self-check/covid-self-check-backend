@@ -12,7 +12,7 @@ export const onRegisterPatient: OnCreateHandler = async (snapshot, _context) => 
     const data = snapshot.data() as Patient
     await utils.incrementTotalPatientCount(batch)
 
-    await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[data.status])
+    await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[data.followUp[data.followUp.length - 1].status])
 
     await batch.commit()
 
@@ -26,19 +26,19 @@ export const onUpdatePatient: OnUpdateHandler = async (change, _context) => {
     const batch = admin.firestore().batch();
 
     const prevData = change.before.data() as Patient;
+    const prevStatus = prevData.followUp[prevData.followUp.length - 1].status;
+
+
     const currentData = change.after.data() as Patient;
+    const currentStatus = currentData.followUp[currentData.followUp.length - 1].status;
 
     // if the change is relevant to update symptom
-    if (prevData.status !== currentData.status) {
+    if (prevStatus !== currentStatus) {
       // decrement from old color
-      await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[prevData.status])
+      await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[prevStatus])
 
       // increment new color
-      await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[currentData.status])
-
-      if (currentData.toAmed === 1) {
-        await utils.decrementTotalPatientCount(batch);
-      }
+      await utils.incrementTotalPatientCountByStatus(batch, statusListReverse[currentStatus])
       await batch.commit();
     }
 
@@ -49,15 +49,11 @@ export const onUpdatePatient: OnUpdateHandler = async (change, _context) => {
 
 export const onDeletePatient: OnDeleteHandler = async (snapshot, _context) => {
   const data = snapshot.data() as Patient
+  const currentStatus = data.followUp[data.followUp.length - 1].status;
   try {
     const batch = admin.firestore().batch();
-    // if the patient is not sent to amed yet, 
-    // additional decrement total patient count is required
-    if (data.toAmed === 0) {
-      await utils.decrementTotalPatientCount(batch);
-    }
 
-    await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[data.status]);
+    await utils.decrementTotalPatientCountByStatus(batch, statusListReverse[currentStatus]);
 
     await utils.incrementTerminateUser(batch);
 
