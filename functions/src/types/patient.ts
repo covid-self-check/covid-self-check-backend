@@ -18,7 +18,6 @@ export type Patient = Partial<FollowUp> & {
 
 
 export type UpdatedPatient = {
-  toAmed: number
   status: number
   triage_score: number
   status_label_type: string

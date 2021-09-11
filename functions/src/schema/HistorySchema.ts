@@ -16,6 +16,10 @@ export const HistorySchema = Joi.object({
   //height
   //weight
   //infected discover date
+  age: Joi.number().required(),
+  weight: Joi.number().required(),
+  height: Joi.number().required(),
+  gender: Joi.string().valid("male", "female", "unknown").required(),
   sp_o2: Joi.number().default(100),
   sp_o2_ra: Joi.number().default(100),
   sp_o2_after_eih: Joi.number().default(100),
@@ -47,16 +51,25 @@ export const HistorySchema = Joi.object({
   sym2_red_eye: Joi.number().allow(0, 1).required(),
 
   //----Should be in register----
-  // fac_diabetes: Joi.number().allow(0, 1).required(),
-  // fac_dyslipidemia: Joi.number().allow(0, 1).required(),
-  // fac_hypertension: Joi.number().allow(0, 1).required(),
-  // fac_heart_diseases: Joi.number().allow(0, 1).required(),
-  // fac_esrd: Joi.number().allow(0, 1).required(),
-  // fac_cancer: Joi.number().allow(0, 1).required(),
-  // fac_tuberculosis: Joi.number().allow(0, 1).required(),
-  // fac_hiv: Joi.number().allow(0, 1).required(),
-  // fac_asthma: Joi.number().allow(0, 1).required(),
-  // fac_pregnancy: Joi.number().allow(0, 1).required(),
+  rf_copd_chronic_lung_disease: Joi.number().allow(0, 1).required(),
+
+  rf_ckd_stagr_3_to_4: Joi.number().allow(0, 1).required(),
+  rf_chronic_heart_disease: Joi.number().allow(0, 1).required(),
+  rf_cva: Joi.number().allow(0, 1).required(),
+  rf_t2dm: Joi.number().allow(0, 1).required(),
+  rf_cirrhosis: Joi.number().allow(0, 1).required(),
+  rf_immunocompromise: Joi.number().allow(0, 1).required(),
+
+  fac_diabetes: Joi.number().allow(0, 1).required(),
+  fac_dyslipidemia: Joi.number().allow(0, 1).required(),
+  fac_hypertension: Joi.number().allow(0, 1).required(),
+  fac_heart_diseases: Joi.number().allow(0, 1).required(),
+  fac_esrd: Joi.number().allow(0, 1).required(),
+  fac_cancer: Joi.number().allow(0, 1).required(),
+  fac_tuberculosis: Joi.number().allow(0, 1).required(),
+  fac_hiv: Joi.number().allow(0, 1).required(),
+  fac_asthma: Joi.number().allow(0, 1).required(),
+  fac_pregnancy: Joi.number().allow(0, 1).required(),
   fac_bed_ridden_status: Joi.number().allow(0, 1).required(),
   fac_uri_symptoms: Joi.number().allow(0, 1).required(),
   fac_olfactory_symptoms: Joi.number().allow(0, 1).required(),
