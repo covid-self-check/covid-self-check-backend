@@ -1,5 +1,5 @@
 import { admin } from "../init";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 import * as functions from "firebase-functions";
 import { LineCredential, OnCallHandler } from "../types";
@@ -115,6 +115,6 @@ export const getProfile = async (data: LineCredential) => {
     const userProfile = response.data;
     return { data: userProfile, error: false };
   } catch (e) {
-    return { data: e.response.data, error: true };
+    return { data: (e as AxiosError).response?.data, error: true };
   }
 };
