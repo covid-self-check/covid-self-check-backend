@@ -11,9 +11,8 @@ export const updateTimeSeries = async () => {
     .doc(id)
     .get();
 
-  const [dropOffRate, btw36hrsto72hrs, activeUser] = await Promise.all([
+  const [dropOffRate, activeUser] = await Promise.all([
     calculateDropOffRate(),
-    utils.getnumberusersbtw36hrsto72hrs(),
     utils.getActiveUser()
   ]);
 
@@ -21,14 +20,12 @@ export const updateTimeSeries = async () => {
     await snapshot.ref.create({
       r2ccount: 0,
       dropoffrate: dropOffRate,
-      usersbtw36hrsto72hrs: btw36hrsto72hrs,
       activeUser: activeUser,
       terminateUser: 0
     });
   } else {
     await snapshot.ref.update({
       dropoffrate: dropOffRate,
-      usersbtw36hrsto72hrs: btw36hrsto72hrs,
       activeUser: activeUser
     });
   }
