@@ -1,5 +1,4 @@
 import { jsonController } from "../jsonHandler";
-import { requestCall } from "../../linefunctions/requestCallHandler";
 import { requestGuide } from "../../linefunctions/requestGuideHandler";
 import { LineHandler } from "../../types";
 import { MessageEvent, TextEventMessage } from "@line/bot-sdk"
@@ -31,9 +30,6 @@ export const handleMessage: LineHandler<MessageEvent> = async (event, userObject
         break;
       case "สอนการใช้งาน":
         await requestGuide(userObject, client, replyToken);
-        break;
-      case "ติดต่ออาสาสมัคร":
-        await requestCall(userObject, client, replyToken);
         break;
       default:
         await client.replyMessage(replyToken, jsonController("defaultReply"));
