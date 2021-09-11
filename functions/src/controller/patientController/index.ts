@@ -1,11 +1,9 @@
 import * as functions from "firebase-functions";
 import {
-  validateRegisterSchema,
   validateGetProfileSchema,
   validateHistorySchema,
   //mon added this
   validateDeletePatientSchema,
-  RegisterType,
   DeletePatientType,
   GetProfileType,
   HistoryType,
@@ -14,7 +12,7 @@ import {
 import { admin, collection } from "../../init";
 import { success } from "../../response/success";
 import { statusList } from "../../api/const"
-import { convertTimestampToStr, TO_AMED_STATUS } from "../../utils"
+import { convertTimestampToStr } from "../../utils"
 import config from "../../config"
 import * as utils from "./utils";
 import { Patient, OnCallHandler } from "../../types";
@@ -24,7 +22,6 @@ import { Patient, OnCallHandler } from "../../types";
 import { getProfile } from "../../middleware/authentication";
 import { makeStatusAPIPayload, makeRequest } from "../../api";
 import { sendPatientstatus } from "../../linefunctions/linepushmessage";
-import { notifyToLine } from "../../linenotify";
 
 // Mon added this code
 const deletePatient = async (personalID: string) => {
@@ -91,58 +88,6 @@ export const requestDeletePatient: OnCallHandler<DeletePatientType> = async (dat
 };
 // end of mon's code
 
-export const registerPatient: OnCallHandler<RegisterType> = async (data, _context) => {
-  const { value, error } = validateRegisterSchema(data);
-
-  if (error) {
-    console.log(error.details);
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "ข้อมูลไม่ถูกต้อง",
-      error.details
-    );
-  }
-
-  const { lineUserID, lineIDToken, noAuth, ...obj } = value;
-  const { error: authError } = await getProfile({
-    lineUserID,
-    lineIDToken,
-    noAuth,
-  });
-  if (authError) {
-    throw new functions.https.HttpsError("unauthenticated", "ไม่ได้รับอนุญาต");
-  }
-
-  const createdDate = new Date();
-  const patientWithStatus = utils.setPatientStatus(obj, createdDate);
-
-  //need db connection
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.patient)
-    .doc(lineUserID)
-    .get();
-
-  const whitelist = await admin
-    .firestore()
-    .collection(collection.whitelist)
-    .doc(patientWithStatus.personalID)
-    .get();
-
-  if (!whitelist.exists) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "You are not in our whitelist"
-    );
-  }
-
-  utils.snapshotExists(snapshot);
-
-  //need db connection
-  await snapshot.ref.create(patientWithStatus);
-
-  return success(`Registration with ID: ${lineUserID} added`);
-};
 
 export const getProfileHandler: OnCallHandler<GetProfileType> = async (data, _context) => {
   const { value, error } = validateGetProfileSchema(data);
@@ -211,26 +156,9 @@ export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) 
 
   const date = new Date();
   const createdTimeStamp = admin.firestore.Timestamp.fromDate(date);
+  // utils.updateSymptomCheckAmed(snapshotData);
 
-  //need db connection
-  const snapshot = await admin
-    .firestore()
-    .collection(collection.patient)
-    .doc(lineUserID)
-    .get();
-
-  utils.updateSymptomCheckUser(snapshot, lineUserID);
-  const snapshotData = snapshot.data() as Patient;
-  const {
-    followUp,
-    firstName,
-    lastName,
-    status: previousStatus,
-  } = snapshotData;
-
-  utils.updateSymptomCheckAmed(snapshotData);
-
-  const formPayload = makeStatusAPIPayload(snapshotData, obj);
+  const formPayload = makeStatusAPIPayload(obj);
   const { inclusion_label, inclusion_label_type, triage_score } =
     await makeRequest(formPayload);
 
@@ -241,38 +169,28 @@ export const updateSymptom: OnCallHandler<HistoryType> = async (data, _context) 
     status,
     inclusion_label_type,
     triage_score,
-    createdTimeStamp,
-    previousStatus
+    createdTimeStamp
   )
+  const snapshot = await admin
+    .firestore()
+    .collection(collection.patient)
+    .doc(lineUserID)
+    .get();
 
-  const { createdDate, ...objWithOutCreatedDate } = followUpObj;
-
-  if (!followUp) {
-    await snapshot.ref.set({
-      ...objWithOutCreatedDate,
+  if (!snapshot.exists) {
+    await snapshot.ref.create({
       followUp: [followUpObj],
     });
   } else {
     await snapshot.ref.update({
-      ...objWithOutCreatedDate,
       followUp: admin.firestore.FieldValue.arrayUnion(followUpObj),
     });
   }
 
   try {
-    if (TO_AMED_STATUS.includes(status)) {
-      await notifyToLine(
-        `ผู้ป่วย: ${firstName} ${lastName} มีการเปลี่ยนแปลงอาการฉุกเฉิน`
-      );
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  try {
     await sendPatientstatus(
       lineUserID,
-      objWithOutCreatedDate,
+      followUpObj,
       config.line.channelAccessToken
     );
   } catch (err) {

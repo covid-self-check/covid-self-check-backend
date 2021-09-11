@@ -1,11 +1,8 @@
 import * as _ from "lodash";
 import { statusList, statusListReverse } from "../../api/const";
-import { HistoryType, RegisterType } from "../../schema";
+import { HistoryType } from "../../schema";
 import { Timestamp } from "@google-cloud/firestore";
-import * as faker from "faker"
-
 import {
-  setPatientStatus,
   snapshotExists,
   updateSymptomAddCreatedDate,
   updateSymptomCheckUser,
@@ -25,6 +22,17 @@ const randomEIHResult = () => {
   return results[randomInt(4)]
 }
 
+const randomGender = (): "male" | "female" | "unknown" => {
+  const n = randomInt(3);
+  if (n === 0) {
+    return "male"
+  } else if (n === 2) {
+    return "female"
+  } else {
+    return "unknown"
+  }
+}
+
 const randomStatus = () => {
   const n = _.keys(statusListReverse).length
   return statusListReverse[randomInt(n)]
@@ -32,6 +40,10 @@ const randomStatus = () => {
 
 const createMockFollowUpInput = (): Omit<HistoryType, 'noAuth' | 'lineIDToken' | 'lineUserID'> => {
   return {
+    age: randomInt(80),
+    gender: randomGender(),
+    height: randomInt(200),
+    weight: randomInt(100),
     sp_o2: randomInt(100),
     sp_o2_ra: randomInt(100),
     sp_o2_after_eih: randomInt(100),
@@ -55,6 +67,23 @@ const createMockFollowUpInput = (): Omit<HistoryType, 'noAuth' | 'lineIDToken' |
     fac_dyspnea: randomInt(),
     fac_chest_discomfort: randomInt(),
     fac_gi_symptoms: randomInt(),
+    rf_ckd_stagr_3_to_4: randomInt(),
+    rf_chronic_heart_disease: randomInt(),
+    rf_cva: randomInt(),
+    rf_t2dm: randomInt(),
+    rf_cirrhosis: randomInt(),
+    rf_immunocompromise: randomInt(),
+    fac_diabetes: randomInt(),
+    fac_dyslipidemia: randomInt(),
+    fac_hypertension: randomInt(),
+    fac_heart_diseases: randomInt(),
+    fac_esrd: randomInt(),
+    fac_cancer: randomInt(),
+    fac_tuberculosis: randomInt(),
+    fac_hiv: randomInt(),
+    fac_asthma: randomInt(),
+    fac_pregnancy: randomInt(),
+    rf_copd_chronic_lung_disease: randomInt()
   }
 }
 
@@ -73,14 +102,12 @@ describe("createFollowUpObj", () => {
 
     const status = statusList[inclusion_label]
     const timestamp = Timestamp.now()
-    const prevStatus = statusList["unknown"]
     const result = createFollowUpObj(
       mockFollowUpInput,
       status,
       inclusion_label_type,
       triage_score,
-      timestamp,
-      prevStatus
+      timestamp
     ) as { [key: string]: any }
 
     for (const [key, value] of _.entries(mockFollowUpInput)) {
@@ -92,120 +119,9 @@ describe("createFollowUpObj", () => {
     expect(result["status_label_type"]).toEqual(inclusion_label_type)
     expect(result["lastUpdatedAt"]).toEqual(timestamp)
     expect(result["createdDate"]).toEqual(timestamp)
-    expect(result["toAmed"]).toBeDefined()
   })
 
-  it("should set toAmed value to 1 if toAmed is true", () => {
-    const mockFollowUpInput = createMockFollowUpInput()
-    const status = statusList["R2"]
-    const inclusion_label_type = "at_least"
-    const triage_score = randomInt(150)
-    const timestamp = Timestamp.now()
-    const prevStatus = statusList["unknown"]
-    const result = createFollowUpObj(
-      mockFollowUpInput,
-      status,
-      inclusion_label_type,
-      triage_score,
-      timestamp,
-      prevStatus
-    ) as { [key: string]: any }
-    expect(result["toAmed"]).toEqual(1)
-  })
-
-  it("should set toAmed value to 0 if toAmed is true", () => {
-    const mockFollowUpInput = createMockFollowUpInput()
-    const status = statusList["G2"]
-    const inclusion_label_type = "at_least"
-    const triage_score = randomInt(150)
-    const timestamp = Timestamp.now()
-    const prevStatus = statusList["unknown"]
-    const result = createFollowUpObj(
-      mockFollowUpInput,
-      status,
-      inclusion_label_type,
-      triage_score,
-      timestamp,
-      prevStatus
-    ) as { [key: string]: any }
-    expect(result["toAmed"]).toEqual(0)
-  })
 })
-
-describe("setPatientStatus", () => {
-  const createMockPatientObj = (): Omit<RegisterType, 'noAuth' | 'lineIDToken' | 'lineUserID'> => {
-    return {
-      firstName: faker.name.firstName(),
-      lastName: faker.name.lastName(),
-
-      birthDate: faker.date.past(),
-      weight: randomInt(80),
-      height: randomInt(150),
-      gender: "male",
-
-      address: faker.address.streetAddress(),
-      province: faker.address.cityName(),
-      prefecture: faker.address.streetName(), //อำเภอ
-      district: faker.address.state(), //ตำบล
-      postNo: faker.address.zipCode(),
-
-      personalPhoneNo: faker.phone.phoneNumber(),
-      emergencyPhoneNo: faker.phone.phoneNumber(),
-
-      hasHelper: faker.datatype.boolean(),
-      digitalLiteracy: faker.datatype.boolean(),
-
-
-      gotFavipiravir: randomInt(),
-
-      // โรคประจำตัว
-      rf_copd_chronic_lung_disease: randomInt(),
-
-      rf_ckd_stagr_3_to_4: randomInt(),
-      rf_chronic_heart_disease: randomInt(),
-      rf_cva: randomInt(),
-      rf_t2dm: randomInt(),
-      rf_cirrhosis: randomInt(),
-      rf_immunocompromise: randomInt(),
-
-      fac_diabetes: randomInt(),
-      fac_dyslipidemia: randomInt(),
-      fac_hypertension: randomInt(),
-      fac_heart_diseases: randomInt(),
-      fac_esrd: randomInt(),
-      fac_cancer: randomInt(),
-      fac_tuberculosis: randomInt(),
-      fac_hiv: randomInt(),
-      fac_asthma: randomInt(),
-      fac_pregnancy: randomInt(),
-
-      // optional
-      personalID: "1111111111111",
-    }
-  }
-
-  it("should setPatientStatus correctly", () => {
-
-    const createdDate = new Date();
-    const mockObj = createMockPatientObj()
-
-    const result = setPatientStatus(mockObj, createdDate);
-    expect(result).toEqual({
-      ...mockObj,
-      status: 0,
-      needFollowUp: true,
-      followUp: [],
-      createdDate: admin.firestore.Timestamp.fromDate(createdDate),
-      lastUpdatedAt: admin.firestore.Timestamp.fromDate(createdDate),
-      birthDate: admin.firestore.Timestamp.fromDate(mockObj.birthDate),
-
-      isRequestToCallExported: false,
-      isRequestToCall: false,
-      isNurseExported: false,
-      toAmed: 0,
-    });
-  });
-});
 
 describe("snapshotExists", () => {
   it("throw amed", () => {

@@ -37,9 +37,6 @@ describe("endpoints", () => {
     }),
   }));
 
-  jest.doMock("./backup", () => ({
-    backup: jest.fn(),
-  }));
   require(".");
 
   it("should run something useful (will implement in future", () => {
