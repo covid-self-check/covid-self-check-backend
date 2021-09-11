@@ -1,29 +1,7 @@
-import { admin } from "../../init";
 import * as  functions from "firebase-functions";
-import { RegisterType, HistoryType } from '../../schema';
-import { Patient, UpdatedPatient } from '../../types'
-import { TO_AMED_STATUS } from "../../utils"
+import { HistoryType } from '../../schema';
+import { UpdatedPatient } from '../../types'
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
-
-
-export const setPatientStatus = (obj: Omit<RegisterType, 'noAuth' | 'lineIDToken' | 'lineUserID'>, createdDate: Date): Patient => {
-  const createdTimestamp = admin.firestore.Timestamp.fromDate(createdDate);
-  const birthDateTimestamp = admin.firestore.Timestamp.fromDate(obj.birthDate)
-
-  return {
-    status: 0,
-    needFollowUp: true,
-    followUp: [],
-    createdDate: createdTimestamp,
-    lastUpdatedAt: createdTimestamp,
-    isRequestToCallExported: false,
-    isRequestToCall: false,
-    isNurseExported: false,
-    toAmed: 0,
-    ...obj,
-    birthDate: birthDateTimestamp
-  }
-};
 
 
 export const createFollowUpObj = (
@@ -32,11 +10,7 @@ export const createFollowUpObj = (
   inclusion_label_type: string,
   triage_score: number,
   createdTimeStamp: any,
-  prevStatus: number,
 ): UpdatedPatient => {
-
-  // set To Amed Status
-  const toAmed = checkAmedStatus(status, prevStatus, TO_AMED_STATUS)
 
   // update other status
   return {
@@ -46,13 +20,8 @@ export const createFollowUpObj = (
     status_label_type: inclusion_label_type,
     lastUpdatedAt: createdTimeStamp,
     createdDate: createdTimeStamp,
-    toAmed: toAmed ? 1 : 0
   }
 
-}
-
-const checkAmedStatus = (status: number, prevStatus: number, TO_AMED_STATUS: any,): boolean => {
-  return status !== prevStatus && TO_AMED_STATUS.includes(status)
 }
 
 export const snapshotExists = (snapshot: DocumentSnapshot) => {
