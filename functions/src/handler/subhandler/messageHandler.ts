@@ -1,5 +1,4 @@
 import { jsonController } from "../jsonHandler";
-import { requestGuide } from "../../linefunctions/requestGuideHandler";
 import { LineHandler } from "../../types";
 import { MessageEvent, TextEventMessage } from "@line/bot-sdk"
 
