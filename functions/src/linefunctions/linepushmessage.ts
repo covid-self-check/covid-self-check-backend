@@ -3,11 +3,15 @@
 import axios from "axios";
 import { statusList } from "../api/const";
 import { UpdatedPatient } from "../types";
-import { greenMessages, redMessages, yellowMessages } from "../messages/triageResults";
+import {
+  greenMessages,
+  redMessages,
+  yellowMessages,
+} from "../messages/triageResults";
 import { Message } from "@line/bot-sdk/dist/types";
 const baseURL = "https://api.line.me/v2/bot/message/push";
 
-type StatusObj = Omit<UpdatedPatient, 'createdDate'>
+type StatusObj = Omit<UpdatedPatient, "createdDate">;
 
 // const symptomMapper = {
 //   sym1_severe_cough: "มีอาการไอต่อเนื่อง",
@@ -68,11 +72,15 @@ export const statusMap = {
 //   return statusNumberMap[statusNumber];
 // };
 
-export const sendPatientstatus = async (userId: string, statusObj: StatusObj, channelAccessToken: string) => {
+export const sendPatientstatus = async (
+  userId: string,
+  statusObj: StatusObj,
+  channelAccessToken: string
+) => {
   // const date = convertTimestampToStr({ dateObj: statusObj.lastUpdatedAt });
-  // const message = `วันที่: ${date.dateObj} 
+  // const message = `วันที่: ${date.dateObj}
   //   \nข้อมูลทั่วไป:
-  //   - ค่าออกซิเจนปลายนิ้ว: ${statusObj.sp_o2 || "-"}  
+  //   - ค่าออกซิเจนปลายนิ้ว: ${statusObj.sp_o2 || "-"}
   //   - ค่าออกซิเจนปลายนิ้ว ขณะหายใจปกติ: ${statusObj.sp_o2_ra || "-"}
   //   - ค่าออกซิเจนปลายนิ้ว หลังลุกนั่ง 1 นาที: ${statusObj.sp_o2_after_eih || "-"
   //   }`;
@@ -86,7 +94,6 @@ export const sendPatientstatus = async (userId: string, statusObj: StatusObj, ch
   // const conclude = `\n\nผลลัพธ์:
   //   - ระดับ: ${patientColor}`;
 
-  
   const defaultMessage: Message = {
     type: "text",
     text: "Error Triage Result Unknown",
@@ -95,12 +102,12 @@ export const sendPatientstatus = async (userId: string, statusObj: StatusObj, ch
   let resultMessagePayload = [];
   switch (statusObj.status) {
     case statusList["G1"]:
-      resultMessagePayload = greenMessages
-      break;
     case statusList["G2"]:
+      resultMessagePayload = greenMessages;
+      break;
     case statusList["Y1"]:
     case statusList["Y2"]:
-      resultMessagePayload = yellowMessages
+      resultMessagePayload = yellowMessages;
       break;
     case statusList["R2"]:
     case statusList["R3"]:
@@ -125,13 +132,12 @@ export const sendPatientstatus = async (userId: string, statusObj: StatusObj, ch
   const data = {
     to: userId,
     messages: resultMessagePayload,
-  }
+  };
   // await axios(axiosConfig);
   await axios.post(baseURL, data, {
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + channelAccessToken,
-    }
-  })
+    },
+  });
 };
-
