@@ -13,7 +13,7 @@ import * as tutorial1 from "../json/tutorial1.json";
 
 import * as faqCarousel from "../json/faq/faqCarousel.json";
 
-import * as SymptomCarousel from "../json/symptom/symptomCarousel.json"; 
+import * as symptomCarousel from "../json/symptom/symptomCarousel.json"; 
 
 import * as guide from "../json/guide.json";
 import * as r2cQuestion from "../json/r2cQuestion.json";
@@ -41,7 +41,7 @@ const map: { [key: string]: any } = {
   welcomepos1,
   help,
   faqCarousel,
-  SymptomCarousel,
+  symptomCarousel,
   symptomDiagnostic,
   info1,
   info2,
