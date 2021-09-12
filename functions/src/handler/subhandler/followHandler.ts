@@ -8,7 +8,6 @@ export const handleFollow: LineHandler<FollowEvent> = async (event, userObject, 
     // let greeting = jsonController("greeting");
     await client.replyMessage(replyToken, [
       jsonController("welcomepos1"),
-      jsonController("welcomepos2"),
       jsonController("greeting"),
     ]);
   } catch (error) {
