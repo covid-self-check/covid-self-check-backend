@@ -1,0 +1,23 @@
+{
+  "type": "template",
+  "altText": "ข้อควรรู้สำหรับผู้ป่วย",
+  "template": {
+    "type": "image_carousel",
+    "columns": [
+      {
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/FAQ%2Fcover_faq.jpg?alt=media&token=b5537548-c65c-4494-8ee0-ddc8288b2cc9",
+        "action": {
+          "type": "message",
+          "text": "รายละเอียดข้อควรรู้"
+        }
+      },
+      {
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/FAQ%2Fcover_insurance.jpg?alt=media&token=8ead3f10-6198-4518-9cd3-16d5ccb23855",
+        "action": {
+          "type": "message",
+          "text": "สิทธิการเบิกประกัน"
+        }
+      }
+    ]
+  }
+}
