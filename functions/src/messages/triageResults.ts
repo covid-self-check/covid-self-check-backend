@@ -64,9 +64,9 @@ const yellowFaviImage: Message = {
 const yellowContactImage: Message = {
   type: "image",
   originalContentUrl:
-    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FYellow%2Fblurcat.jpg?alt=media&token=22933801-afe4-4b8a-9d57-22d94352bc1c",
+    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FYellow%2Fcontact.jpg?alt=media&token=0bf82b15-0a86-4d6f-b22a-039c37a388ef",
   previewImageUrl:
-    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FYellow%2Fblurcat.jpg?alt=media&token=22933801-afe4-4b8a-9d57-22d94352bc1c",
+    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FYellow%2Fcontact.jpg?alt=media&token=0bf82b15-0a86-4d6f-b22a-039c37a388ef",
 };
 
 const yellowMessages = [
@@ -95,9 +95,9 @@ const redSleepingPostureImage: Message = {
 const redContactImage: Message = {
   type: "image",
   originalContentUrl:
-    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FRed%2Fblurcat.jpg?alt=media&token=ad8d2760-e3d9-471d-ae00-acabe8fcc627",
+    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FRed%2Fcontact.jpg?alt=media&token=137c5664-6673-4cc2-a2e0-5b2736fdb524",
   previewImageUrl:
-    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FRed%2Fblurcat.jpg?alt=media&token=ad8d2760-e3d9-471d-ae00-acabe8fcc627",
+    "https://firebasestorage.googleapis.com/v0/b/comcovid-prod.appspot.com/o/TriageResults%2FRed%2Fcontact.jpg?alt=media&token=137c5664-6673-4cc2-a2e0-5b2736fdb524",
 };
 
 const redMessages = [
