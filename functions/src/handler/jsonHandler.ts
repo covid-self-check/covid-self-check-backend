@@ -1,6 +1,5 @@
 import * as greeting from "../json/greeting.json";
 import * as welcomepos1 from "../json/welcomepos1.json";
-import * as welcomepos2 from "../json/welcomepos2.json";
 import * as help from "../json/help.json";
 import * as symptomDiagnostic from "../json/symptomDiagnostic.json";
 import * as info1 from "../json/info1.json";
@@ -36,7 +35,6 @@ const tutorial2 = {
 const map: { [key: string]: any } = {
   greeting,
   welcomepos1,
-  welcomepos2,
   help,
   symptomDiagnostic,
   info1,
