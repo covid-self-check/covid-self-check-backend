@@ -1,14 +1,15 @@
 import { LineHandler } from "../../types";
-import { jsonController } from "../jsonHandler";
+
 import { FollowEvent } from "@line/bot-sdk"
+import messageMap from "../../messages";
 
 export const handleFollow: LineHandler<FollowEvent> = async (event, userObject, client) => {
   const replyToken = await event.replyToken;
   try {
     // let greeting = jsonController("greeting");
     await client.replyMessage(replyToken, [
-      jsonController("welcomepos1"),
-      jsonController("greeting"),
+      messageMap.greetingPhoto,
+      messageMap.greetingMessage,
     ]);
   } catch (error) {
     console.log(error);
