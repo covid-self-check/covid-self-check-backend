@@ -3,8 +3,6 @@ import { admin } from "../../init"
 import * as utils from "./utils"
 import { statusListReverse } from "../../api/const"
 
-
-
 export const onRegisterPatient: OnCreateHandler = async (snapshot, _context) => {
   try {
     const batch = admin.firestore().batch();
