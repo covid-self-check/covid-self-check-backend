@@ -29,7 +29,7 @@ jobs:
         working-directory: ${{env.working-directory}}
       - name: Coveralls
         uses: coverallsapp/github-action@master
-        path-to-lcov: ./functions/coverage/lcov.info
+        path-to-lcov: "./functions/coverage/lcov.info"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: install firebase
