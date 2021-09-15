@@ -28,8 +28,8 @@ jobs:
         run: yarn test:ci
         working-directory: ${{env.working-directory}}
       - name: Coveralls
-        uses: coverallsapp/github-action@master\
-        path-to-lcov: ./functions/coverage/lcov.info
+        uses: coverallsapp/github-action@master
+        working-directory: ${{env.working-directory}}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: install firebase
