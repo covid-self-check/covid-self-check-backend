@@ -27,3 +27,7 @@ jobs:
       - name: test
         run: yarn test:ci
         working-directory: ${{env.working-directory}}
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
