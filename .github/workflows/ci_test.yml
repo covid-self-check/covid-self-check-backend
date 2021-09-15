@@ -26,7 +26,7 @@ jobs:
         working-directory: ${{env.working-directory}}
       - name: test
         run: yarn test:ci
-        working-directory: ${{env.working-directory}}
+        path-to-lcov: "./functions/coverage/lcov.info"
       - name: Coveralls
         uses: coverallsapp/github-action@master
         working-directory: ${{env.working-directory}}
