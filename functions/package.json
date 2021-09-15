@@ -15,7 +15,7 @@
     "prepare": "cd .. && husky install functions/.husky",
     "precommit": "lint-staged",
     "test": "yarn jest --watch --verbose",
-    "test:ci": "yarn jest --collectCoverage",
+    "test:ci": "yarn jest --collectCoverage -ci",
     "build": "yarn lint && tsc -p tsconfig.build.json",
     "predeploy": "tsc -p tsconfig.build.json"
   },

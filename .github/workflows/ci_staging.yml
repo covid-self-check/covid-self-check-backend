@@ -27,9 +27,11 @@ jobs:
       - name: test
         run: yarn test:ci
         working-directory: ${{env.working-directory}}
-      - name: test
-        run: yarn test:ci
+      - name: Coveralls
+        uses: coverallsapp/github-action@master\
         working-directory: ${{env.working-directory}}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: install firebase
         run: yarn global add firebase-tools
       - name: deploy
