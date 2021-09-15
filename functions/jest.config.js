@@ -8,4 +8,5 @@ module.exports = {
     "^.+\\.js?$": "babel-jest",
   },
   testPathIgnorePatterns: ["<rootDir>/lib/"],
+  collectCoverageFrom: ["src/**/*.{ts,js}"],
 };
