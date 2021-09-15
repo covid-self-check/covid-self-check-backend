@@ -1,8 +1,0 @@
-
-[1m[31mError:[39m[22m No project active, but project aliases are available.
-
-Run [1mfirebase use <alias>[22m with one of these options:
-
-  development (backend-covid-7dfa5)
-  production (comcovid-prod)
-  staging (comcovid-staging-4b21d)

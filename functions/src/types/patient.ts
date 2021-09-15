@@ -1,16 +1,16 @@
 import { Timestamp } from "@google-cloud/firestore"
-import { HistoryType, RegisterType } from '../schema'
+import { HistoryType } from '../schema'
 
 export type FollowUp = Omit<HistoryType, "noAuth" | "lineIDToken" | "lineUserID">
 
 export type Patient = {
-  followUp: FollowUp[]
+  followUp: UpdatedPatient[]
+}
+
+export type UpdatedPatient = {
   status: number
-  needFollowUp: boolean
-  createdDate: Timestamp
+  triage_score: number
+  status_label_type: string
   lastUpdatedAt: Timestamp
-  isRequestToCallExported: boolean
-  isRequestToCall: boolean
-  isNurseExported: boolean
-  toAmed: number
-} & Partial<FollowUp> & Omit<RegisterType, "noAuth" | "lineIDToken" | "lineUserID">
+  createdDate: Timestamp
+} & Partial<FollowUp>
